@@ -1350,7 +1350,165 @@ function HostsScreen({ onSelect }: { onSelect: (h: HostItem) => void }) {
   );
 }
 
+function MapScreen({ onSelectHost }: { onSelectHost: (h: HostItem) => void }) {
+  const [typeFilter, setTypeFilter] = useState<"all" | "person" | "gym">("all");
+  const [activity, setActivity] = useState<"All" | (typeof HOST_ACTIVITIES)[number]>("All");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const visible = useMemo(() => {
+    return HOSTS.filter((h) => {
+      if (typeFilter !== "all" && h.type !== typeFilter) return false;
+      if (activity !== "All" && !h.activities.includes(activity)) return false;
+      return true;
+    });
+  }, [typeFilter, activity]);
+
+  const selected = visible.find((h) => h.id === selectedId) ?? null;
+
+  return (
+    <div className="h-full relative">
+      <div className="absolute inset-0">
+        <HostsMap
+          hosts={visible}
+          selectedId={selectedId}
+          onSelect={(id) => setSelectedId(id)}
+        />
+      </div>
+
+      {/* Top overlay: search + type pills */}
+      <div className="absolute inset-x-0 top-0 z-10 px-4 pt-3 pb-2 bg-gradient-to-b from-background/95 to-background/0">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search this area"
+              className="pl-9 rounded-full bg-card border-border shadow-elegant"
+            />
+          </div>
+          <button className="h-10 w-10 shrink-0 rounded-full bg-card border border-border flex items-center justify-center shadow-elegant">
+            <SlidersHorizontal className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {(["all", "person", "gym"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTypeFilter(t)}
+              className={cn(
+                "px-3 py-1 rounded-full text-xs border shadow-sm",
+                typeFilter === t
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-card text-foreground border-border",
+              )}
+            >
+              {t === "all" ? "All" : t === "person" ? "Trainers" : "Gyms"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Activity chips strip */}
+      <div className="absolute inset-x-0 top-[112px] z-10 px-4">
+        <div className="flex gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {(["All", ...HOST_ACTIVITIES] as const).map((a) => (
+            <button
+              key={a}
+              onClick={() => setActivity(a)}
+              className={cn(
+                "shrink-0 px-3 py-1 rounded-full text-[11px] border shadow-sm",
+                activity === a
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-foreground border-border",
+              )}
+            >
+              {a}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Bottom: selected host card or count */}
+      <div className="absolute inset-x-0 bottom-0 z-10 p-3">
+        {selected ? (
+          <Card
+            onClick={() => onSelectHost(selected)}
+            className="cursor-pointer overflow-hidden border-border/60 shadow-elegant active:scale-[0.99] transition-transform"
+          >
+            <div className="p-3 flex gap-3">
+              <div
+                className="h-14 w-14 shrink-0 rounded-xl flex items-center justify-center text-background font-semibold"
+                style={{ background: selected.image }}
+              >
+                {selected.type === "gym" ? (
+                  <Building2 className="h-5 w-5" />
+                ) : (
+                  selected.name
+                    .split(" ")
+                    .map((p) => p[0])
+                    .join("")
+                    .slice(0, 2)
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2">
+                  <h4 className="font-semibold text-sm leading-tight truncate">
+                    {selected.name}
+                  </h4>
+                  <span className="text-sm font-semibold whitespace-nowrap">
+                    ${selected.pricePerHour}
+                    <span className="text-[10px] font-normal text-muted-foreground">/hr</span>
+                  </span>
+                </div>
+                <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Star className="h-3 w-3 fill-primary text-primary" />
+                    {selected.rating}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    {selected.location}
+                  </span>
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {selected.activities.slice(0, 3).map((a) => (
+                    <span
+                      key={a}
+                      className="px-2 py-0.5 rounded-full text-[10px] bg-muted text-foreground border border-border"
+                    >
+                      {a}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="border-t px-3 py-2 flex items-center justify-between text-xs">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedId(null);
+                }}
+                className="text-muted-foreground"
+              >
+                Close
+              </button>
+              <span className="font-semibold text-primary inline-flex items-center gap-1">
+                View profile <ChevronRight className="h-3 w-3" />
+              </span>
+            </div>
+          </Card>
+        ) : (
+          <div className="mx-auto inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-border shadow-elegant text-xs">
+            <MapPin className="h-3 w-3 text-primary" />
+            {visible.length} hosts in this area
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ScreenHeader({ title, onBack }: { title: string; onBack: () => void }) {
+
 
   return (
     <div className="px-5 py-3 flex items-center gap-3 border-b bg-background sticky top-0 z-10">
