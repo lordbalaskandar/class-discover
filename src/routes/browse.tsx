@@ -119,11 +119,38 @@ function BrowsePage() {
     updateSearch({ q, location });
   };
 
-  const hasFilters = search.q || search.activity || search.location || search.type !== "all";
+  const hasFilters = search.q || search.activity || search.location || search.type !== "all" || search.category !== "all";
+  const categoryLabel = search.category === "trainer" ? "trainers" : search.category === "class" ? "classes" : "listings";
 
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
+
+      {/* Category tabs */}
+      <section className="border-b">
+        <div className="container mx-auto px-4 pt-4">
+          <div className="flex gap-1">
+            {([
+              { key: "all", label: "All" },
+              { key: "class", label: "Classes" },
+              { key: "trainer", label: "Trainers" },
+            ] as const).map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => updateSearch({ category: t.key })}
+                className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
+                  search.category === t.key
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Search bar */}
       <section className="border-b bg-muted/30">
@@ -134,7 +161,7 @@ function BrowsePage() {
               <Input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Search classes, activities or studios"
+                placeholder={search.category === "trainer" ? "Search trainers, activities or cities" : "Search classes, activities or studios"}
                 className="pl-9 h-11"
               />
             </div>
@@ -164,7 +191,7 @@ function BrowsePage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate({ search: { q: "", activity: "", location: "", type: "all", sort: "newest" } })}
+                  onClick={() => navigate({ search: { q: "", activity: "", location: "", category: "all", type: "all", sort: "newest" } })}
                   className="h-7 text-xs"
                 >
                   <X className="h-3 w-3" /> Clear
