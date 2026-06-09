@@ -72,6 +72,7 @@ type Screen =
   | "confirmation"
   | "bookings"
   | "profile"
+  | "saved"
   | "filters";
 
 type HostItem = {
