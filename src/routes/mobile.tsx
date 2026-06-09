@@ -454,8 +454,22 @@ function UserFlow() {
           )}
           {screen === "profile" && (
             <ProfileScreen
+              savedCount={savedIds.size}
               onBookings={() => setScreen("bookings")}
               onBrowse={() => setScreen("browse")}
+              onSaved={() => setScreen("saved")}
+            />
+          )}
+          {screen === "saved" && (
+            <SavedScreen
+              savedIds={savedIds}
+              onToggleSaved={toggleSaved}
+              onBack={() => setScreen("profile")}
+              onBrowse={() => setScreen("browse")}
+              onOpen={(id) => {
+                setSelectedId(id);
+                setScreen("class");
+              }}
             />
           )}
         </div>
