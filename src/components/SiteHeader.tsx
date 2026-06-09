@@ -79,8 +79,8 @@ export function SiteHeader() {
             </DropdownMenu>
           ) : (
             <>
-              <Button variant="ghost" onClick={() => navigate({ to: "/auth" })}>Sign in</Button>
-              <Button onClick={() => navigate({ to: "/auth" })} className="bg-gradient-hero hover:opacity-90 shadow-elegant">
+              <Button variant="ghost" onClick={openAuthModal}>Sign in</Button>
+              <Button onClick={openAuthModal} className="bg-gradient-hero hover:opacity-90 shadow-elegant">
                 Get started
               </Button>
             </>
