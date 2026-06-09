@@ -1401,6 +1401,7 @@ function HostFlow() {
                 setScreen("manage");
               }}
               onEarnings={() => setScreen("earnings")}
+              onMetrics={() => setScreen("metrics")}
             />
           )}
           {screen === "create" && (
@@ -1413,10 +1414,14 @@ function HostFlow() {
             <HostManageScreen
               cls={selected}
               onBack={() => setScreen("dashboard")}
+              onMetrics={() => setScreen("metrics")}
             />
           )}
           {screen === "earnings" && (
             <HostEarningsScreen onBack={() => setScreen("dashboard")} />
+          )}
+          {screen === "metrics" && (
+            <HostMetricsScreen onBack={() => setScreen("dashboard")} />
           )}
           {screen === "hostProfile" && (
             <HostProfileScreen
