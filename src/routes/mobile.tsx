@@ -247,6 +247,8 @@ function MobileShowcase() {
                 ["booking", "Booking"],
                 ["payment", "Payment"],
                 ["confirmation", "Confirmation"],
+                ["bookings", "My bookings"],
+                ["profile", "Profile"],
               ] as [Screen, string][]
             ).map(([s, label]) => (
               <button
