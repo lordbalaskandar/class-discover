@@ -17,6 +17,7 @@ import { useAuthModal } from "@/components/AuthModal";
 export function SiteHeader() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { open: openAuthModal } = useAuthModal();
   const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
