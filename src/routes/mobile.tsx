@@ -490,13 +490,16 @@ function ScreenScroll({ children }: { children: React.ReactNode }) {
 function BrowseScreen({
   onSelect,
   onHost,
+  filtersOpenInitially = false,
 }: {
   onSelect: (id: string) => void;
   onHost: (id: string) => void;
+  filtersOpenInitially?: boolean;
 }) {
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(filtersOpenInitially);
   const [filters, setFilters] = useState({
     category: "all" as "all" | "class" | "trainer",
+    activity: "all" as "all" | "Yoga" | "BJJ" | "Running" | "HIIT" | "Climbing",
     when: "any" as "any" | "today" | "tomorrow" | "this_week" | "this_weekend",
     duration: "any" as "any" | "short" | "medium" | "long",
     capacity: "any" as "any" | "private" | "small" | "medium" | "large",
@@ -506,6 +509,7 @@ function BrowseScreen({
   });
   const activeCount =
     (filters.category !== "all" ? 1 : 0) +
+    (filters.activity !== "all" ? 1 : 0) +
     (filters.when !== "any" ? 1 : 0) +
     (filters.duration !== "any" ? 1 : 0) +
     (filters.capacity !== "any" ? 1 : 0) +
