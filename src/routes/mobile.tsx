@@ -2658,19 +2658,21 @@ function SavedScreen({
   );
 }
 
-function ProfileScreen({
+type ProfileSection = "pPayment" | "pNotifications" | "pBecomeHost" | "pHelp";
 
+function ProfileScreen({
   onBookings,
   onBrowse,
   onSaved,
+  onOpenSection,
   savedCount,
 }: {
   onBookings: () => void;
   onBrowse: () => void;
   onSaved: () => void;
+  onOpenSection: (s: ProfileSection) => void;
   savedCount: number;
 }) {
-  void onBrowse;
   const stats = [
     { label: "Booked", value: "12" },
     { label: "Hosts", value: "7" },
@@ -2678,15 +2680,15 @@ function ProfileScreen({
   ];
   const rows: { label: string; sub: string; onClick?: () => void }[] = [
     { label: "My bookings", sub: "View upcoming & past classes", onClick: onBookings },
-    { label: "Payment methods", sub: "Visa •••• 4242" },
+    { label: "Payment methods", sub: "Visa •••• 4242", onClick: () => onOpenSection("pPayment") },
     {
       label: "Saved classes",
       sub: savedCount === 0 ? "No saved classes yet" : `${savedCount} saved`,
       onClick: onSaved,
     },
-    { label: "Notifications", sub: "Push & email" },
-    { label: "Become a host", sub: "Share your craft on Dryvon" },
-    { label: "Help & support", sub: "FAQ, contact us" },
+    { label: "Notifications", sub: "Push & email", onClick: () => onOpenSection("pNotifications") },
+    { label: "Become a host", sub: "Share your craft on Dryvon", onClick: () => onOpenSection("pBecomeHost") },
+    { label: "Help & support", sub: "FAQ, contact us", onClick: () => onOpenSection("pHelp") },
   ];
 
   return (
