@@ -1564,6 +1564,20 @@ function HostDashboardScreen({
             <p className="font-display text-lg font-semibold">4.9</p>
           </div>
         </div>
+
+        <button
+          onClick={onMetrics}
+          className="mt-3 w-full p-3 rounded-xl border bg-card flex items-center gap-3 active:scale-[0.99] transition-transform"
+        >
+          <div className="h-9 w-9 rounded-lg bg-primary/15 flex items-center justify-center">
+            <Activity className="h-4 w-4 text-primary" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="font-medium text-sm">Advanced metrics</p>
+            <p className="text-[11px] text-muted-foreground">Visibility, retention, conversion</p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </button>
       </div>
 
       <div className="px-5">
