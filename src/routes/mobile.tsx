@@ -627,8 +627,135 @@ function HostScreen({
           </div>
         </div>
 
+        {/* AI analysis */}
+        <Card className="mt-5 p-4 bg-gradient-to-br from-primary/10 to-transparent border-primary/30">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="text-[10px] uppercase tracking-widest text-primary font-semibold">
+                AI review summary
+              </span>
+            </div>
+            <Badge variant="secondary" className="text-[10px]">
+              {cls.reviews} reviews
+            </Badge>
+          </div>
+          <p className="text-sm text-foreground/85 leading-relaxed">
+            {isGym
+              ? "Students consistently praise the welcoming open-mat culture and the coaches' technical feedback. A few mention the space gets busy on Saturdays — earlier sessions tend to be quieter."
+              : "Students describe Maya's sessions as calm, beginner-friendly, and physically thorough. The outdoor setting and a gentle savasana are repeat highlights."}
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {[
+              { label: "Vibe", score: isGym ? 92 : 96 },
+              { label: "Skill", score: isGym ? 95 : 91 },
+              { label: "Value", score: isGym ? 88 : 90 },
+              { label: "Beginner friendly", score: isGym ? 78 : 97 },
+            ].map((s) => (
+              <div key={s.label}>
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-muted-foreground">{s.label}</span>
+                  <span className="font-semibold">{s.score}</span>
+                </div>
+                <div className="h-1.5 mt-1 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full bg-primary" style={{ width: `${s.score}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {(isGym
+              ? ["Skilled coaches", "Welcoming", "Great open mats", "Busy weekends"]
+              : ["Calm energy", "Beginner friendly", "Clear cues", "Great setting"]
+            ).map((t) => (
+              <span
+                key={t}
+                className="text-[10px] px-2 py-0.5 rounded-full bg-background border"
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+        </Card>
+
+        {/* Reviews */}
+        <div className="mt-5">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-sm">Reviews</h3>
+            <span className="text-xs text-muted-foreground inline-flex items-center gap-1">
+              <Star className="h-3 w-3 fill-primary text-primary" />
+              {cls.rating} · {cls.reviews}
+            </span>
+          </div>
+
+          {/* Rating distribution */}
+          <Card className="p-3 mb-2">
+            {[
+              { stars: 5, pct: 84 },
+              { stars: 4, pct: 11 },
+              { stars: 3, pct: 3 },
+              { stars: 2, pct: 1 },
+              { stars: 1, pct: 1 },
+            ].map((r) => (
+              <div key={r.stars} className="flex items-center gap-2 py-0.5">
+                <span className="text-[11px] w-3 text-muted-foreground">{r.stars}</span>
+                <Star className="h-3 w-3 fill-primary text-primary" />
+                <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full bg-primary" style={{ width: `${r.pct}%` }} />
+                </div>
+                <span className="text-[10px] text-muted-foreground w-7 text-right">{r.pct}%</span>
+              </div>
+            ))}
+          </Card>
+
+          <div className="space-y-2">
+            {(isGym
+              ? [
+                  { name: "Alex M.", initials: "AM", rating: 5, date: "2 weeks ago", text: "Coaches actually watch your rolls and give real feedback. Felt at home on day one." },
+                  { name: "Priya S.", initials: "PS", rating: 5, date: "1 month ago", text: "Best open mat in SoMa. Wide skill range and zero ego." },
+                  { name: "Devon W.", initials: "DW", rating: 4, date: "1 month ago", text: "Saturday class was packed — try a weekday if you're new." },
+                ]
+              : [
+                  { name: "Riya P.", initials: "RP", rating: 5, date: "1 week ago", text: "Maya's cues are so clear. First yoga class I didn't feel lost in." },
+                  { name: "Mika C.", initials: "MC", rating: 5, date: "3 weeks ago", text: "The sunrise setting at Dolores is unreal. Worth waking up for." },
+                  { name: "Toni B.", initials: "TB", rating: 4, date: "1 month ago", text: "Beautiful flow, just bring an extra layer — it's chilly before 8." },
+                ]
+            ).map((r) => (
+              <Card key={r.name} className="p-3">
+                <div className="flex items-center gap-2">
+                  <div className="h-8 w-8 rounded-full bg-gradient-hero text-primary-foreground flex items-center justify-center text-[11px] font-semibold">
+                    {r.initials}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm leading-tight">{r.name}</p>
+                    <p className="text-[10px] text-muted-foreground">{r.date}</p>
+                  </div>
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={cn(
+                          "h-3 w-3",
+                          i < r.rating
+                            ? "fill-primary text-primary"
+                            : "text-muted-foreground/40",
+                        )}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <p className="text-sm text-foreground/85 mt-2 leading-relaxed">{r.text}</p>
+              </Card>
+            ))}
+          </div>
+
+          <button className="w-full mt-2 text-xs text-primary font-medium py-2">
+            See all {cls.reviews} reviews
+          </button>
+        </div>
+
         {isGym && (
-          <div className="mt-5">
+          <div className="mt-5 pb-4">
             <h3 className="font-semibold text-sm mb-2">Special events</h3>
             <Card className="p-3 bg-gradient-to-br from-primary/10 to-transparent border-primary/30">
               <div className="flex items-center gap-2 mb-1">
