@@ -306,20 +306,30 @@ function PhoneStatusBar() {
   );
 }
 
-function PhoneTabBar({ screen, onHome }: { screen: Screen; onHome: () => void }) {
+function PhoneTabBar({
+  screen,
+  onHome,
+  onBookings,
+  onProfile,
+}: {
+  screen: Screen;
+  onHome: () => void;
+  onBookings: () => void;
+  onProfile: () => void;
+}) {
   const tabs = [
-    { id: "browse" as Screen, icon: Home, label: "Browse" },
-    { id: "bookings" as const, icon: CalendarDays, label: "Bookings" },
-    { id: "profile" as const, icon: UserIcon, label: "Profile" },
+    { id: "browse" as Screen, icon: Home, label: "Browse", onClick: onHome },
+    { id: "bookings" as Screen, icon: CalendarDays, label: "Bookings", onClick: onBookings },
+    { id: "profile" as Screen, icon: UserIcon, label: "Profile", onClick: onProfile },
   ];
   return (
     <div className="border-t bg-card flex items-center justify-around py-2 px-4">
       {tabs.map((t) => {
-        const active = t.id === "browse" && screen === "browse";
+        const active = screen === t.id;
         return (
           <button
             key={t.label}
-            onClick={t.id === "browse" ? onHome : undefined}
+            onClick={t.onClick}
             className={cn(
               "flex flex-col items-center gap-0.5 px-3 py-1 text-[10px]",
               active ? "text-primary" : "text-muted-foreground",
