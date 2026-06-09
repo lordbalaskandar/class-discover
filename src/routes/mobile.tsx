@@ -509,6 +509,8 @@ function BrowseScreen({
     type: "all" as "all" | "scheduled" | "on_request",
     spots: "any" as "any" | "available",
     sort: "newest" as "newest" | "soonest" | "duration",
+    distance: "any" as "any" | "1" | "5" | "10" | "25" | "50",
+    date: undefined as Date | undefined,
   });
   const activeCount =
     (filters.category !== "all" ? 1 : 0) +
