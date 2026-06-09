@@ -662,6 +662,19 @@ function BrowseScreen({
               ]}
             />
             <FilterGroup
+              label="Activity"
+              value={filters.activity}
+              onChange={(v) => setFilters((f) => ({ ...f, activity: v as typeof f.activity }))}
+              options={[
+                { v: "all", l: "All" },
+                { v: "Yoga", l: "Yoga" },
+                { v: "BJJ", l: "BJJ" },
+                { v: "Running", l: "Running" },
+                { v: "HIIT", l: "HIIT" },
+                { v: "Climbing", l: "Climbing" },
+              ]}
+            />
+            <FilterGroup
               label="When"
               value={filters.when}
               onChange={(v) => setFilters((f) => ({ ...f, when: v as typeof f.when }))}
