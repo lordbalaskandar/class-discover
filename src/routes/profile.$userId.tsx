@@ -111,6 +111,20 @@ function ProfilePage() {
     },
   });
 
+  const { data: events = [] } = useQuery({
+    queryKey: ["profile-events", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("special_events")
+        .select("id, title, event_date, location, capacity, image_url")
+        .eq("host_id", userId)
+        .eq("is_published", true)
+        .order("event_date", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as EventRow[];
+    },
+  });
+
   const isOwner = currentUserId === userId;
   const visibleClasses = useMemo(
     () => classes.filter((c) => isOwner || c.is_active),
