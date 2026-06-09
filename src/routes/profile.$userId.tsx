@@ -14,7 +14,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { ACTIVITIES } from "@/lib/activities";
-import { Calendar, Clock, MapPin, Pencil, Save, Sparkles, Users, X } from "lucide-react";
+import { Building2, Calendar, CalendarHeart, Clock, MapPin, Pencil, Save, Sparkles, User as UserIcon, Users, X } from "lucide-react";
 import { toast } from "sonner";
 
 const profileSearchSchema = z.object({
