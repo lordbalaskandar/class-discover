@@ -58,6 +58,7 @@ export const Route = createFileRoute("/mobile")({
 type Screen =
   | "browse"
   | "host"
+  | "gym"
   | "class"
   | "booking"
   | "payment"
