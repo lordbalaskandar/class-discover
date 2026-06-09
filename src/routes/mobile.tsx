@@ -118,6 +118,8 @@ const HOSTS: HostItem[] = [
     classId: "2",
     image: "linear-gradient(135deg,#2c2c2e,#5c5c5e)",
     bio: "Combat sports & strength gym. Open mats nightly.",
+    lat: 37.7785,
+    lng: -122.4056,
   },
   {
     id: "h3",
@@ -132,6 +134,8 @@ const HOSTS: HostItem[] = [
     classId: "3",
     image: "linear-gradient(135deg,#84a98c,#52796f)",
     bio: "Endurance coach. Trail runs & threshold work.",
+    lat: 37.8915,
+    lng: -122.5239,
   },
   {
     id: "h4",
@@ -146,6 +150,8 @@ const HOSTS: HostItem[] = [
     classId: "1",
     image: "linear-gradient(135deg,#7c83fd,#96baff)",
     bio: "Climbing coach — bouldering technique & projecting.",
+    lat: 37.7587,
+    lng: -122.3884,
   },
   {
     id: "h5",
@@ -160,6 +166,8 @@ const HOSTS: HostItem[] = [
     classId: "2",
     image: "linear-gradient(135deg,#3a506b,#5bc0be)",
     bio: "Boutique club with daily group classes.",
+    lat: 37.7625,
+    lng: -122.4194,
   },
   {
     id: "h6",
@@ -174,6 +182,8 @@ const HOSTS: HostItem[] = [
     classId: "3",
     image: "linear-gradient(135deg,#e63946,#f1a208)",
     bio: "Former amateur boxer. 1-on-1 pad work & conditioning.",
+    lat: 37.7825,
+    lng: -122.4001,
   },
 ];
 
