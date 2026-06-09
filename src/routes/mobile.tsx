@@ -2538,18 +2538,24 @@ function HostEarningsScreen({ onBack }: { onBack: () => void }) {
   );
 }
 
-function HostProfileScreen({ onDashboard }: { onDashboard: () => void }) {
+function HostProfileScreen({
+  onDashboard,
+  onOpenSection,
+}: {
+  onDashboard: () => void;
+  onOpenSection: (s: HostScreenId) => void;
+}) {
   const stats = [
     { label: "Classes", value: "128" },
     { label: "Students", value: "1.2k" },
     { label: "Rating", value: "4.9" },
   ];
-  const rows = [
-    { label: "Class templates", sub: "5 saved" },
-    { label: "Payout settings", sub: "Bank •••• 6201" },
-    { label: "Availability", sub: "Mon–Sat mornings" },
-    { label: "Reviews", sub: "184 reviews" },
-    { label: "Help & support", sub: "FAQ, contact us" },
+  const rows: { id: HostScreenId; label: string; sub: string }[] = [
+    { id: "hpTemplates", label: "Class templates", sub: "5 saved" },
+    { id: "hpPayouts", label: "Payout settings", sub: "Bank •••• 6201" },
+    { id: "hpAvailability", label: "Availability", sub: "Mon–Sat mornings" },
+    { id: "hpReviews", label: "Reviews", sub: "184 reviews" },
+    { id: "hpSupport", label: "Help & support", sub: "FAQ, contact us" },
   ];
   return (
     <ScreenScroll>
@@ -2580,18 +2586,321 @@ function HostProfileScreen({ onDashboard }: { onDashboard: () => void }) {
 
       <div className="px-5 mt-4 space-y-2 pb-4">
         {rows.map((r) => (
-          <Card key={r.label} className="p-3 flex items-center gap-3">
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm">{r.label}</p>
-              <p className="text-[11px] text-muted-foreground truncate">{r.sub}</p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </Card>
+          <button
+            key={r.id}
+            onClick={() => onOpenSection(r.id)}
+            className="w-full text-left"
+          >
+            <Card className="p-3 flex items-center gap-3 hover:bg-muted transition-colors">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm">{r.label}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{r.sub}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Card>
+          </button>
         ))}
 
         <Button onClick={onDashboard} variant="outline" className="w-full mt-2">
           Back to dashboard
         </Button>
+      </div>
+    </ScreenScroll>
+  );
+}
+
+function HostTemplatesScreen({ onBack }: { onBack: () => void }) {
+  const templates = [
+    { title: "Sunrise Vinyasa Flow", activity: "Yoga", duration: "60 min", price: 22, uses: 42 },
+    { title: "Lunchtime Mobility", activity: "Mobility", duration: "45 min", price: 18, uses: 18 },
+    { title: "Evening Power Flow", activity: "Yoga", duration: "75 min", price: 28, uses: 31 },
+    { title: "Yin & Restore", activity: "Yoga", duration: "60 min", price: 20, uses: 12 },
+    { title: "Core & Breath", activity: "Pilates", duration: "45 min", price: 19, uses: 7 },
+  ];
+  return (
+    <ScreenScroll>
+      <ScreenHeader title="Class templates" onBack={onBack} />
+      <div className="px-5 pb-4 space-y-2">
+        <p className="text-xs text-muted-foreground mb-1">
+          Reuse a template to publish a class in seconds.
+        </p>
+        {templates.map((t) => (
+          <Card key={t.title} className="p-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-medium text-sm truncate">{t.title}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {t.activity} · {t.duration} · ${t.price}
+                </p>
+              </div>
+              <Badge variant="secondary" className="text-[10px] shrink-0">
+                Used {t.uses}×
+              </Badge>
+            </div>
+            <div className="flex gap-2 mt-3">
+              <Button size="sm" className="flex-1 h-8 text-xs">Use template</Button>
+              <Button size="sm" variant="outline" className="h-8 text-xs">Edit</Button>
+            </div>
+          </Card>
+        ))}
+        <Button variant="outline" className="w-full mt-2">
+          <Plus className="h-4 w-4 mr-1" /> New template
+        </Button>
+      </div>
+    </ScreenScroll>
+  );
+}
+
+function HostPayoutsScreen({ onBack }: { onBack: () => void }) {
+  const payouts = [
+    { date: "May 28", amount: 1240, status: "Paid" },
+    { date: "May 14", amount: 980, status: "Paid" },
+    { date: "Apr 30", amount: 1105, status: "Paid" },
+    { date: "Apr 16", amount: 860, status: "Paid" },
+  ];
+  return (
+    <ScreenScroll>
+      <ScreenHeader title="Payout settings" onBack={onBack} />
+      <div className="px-5 pb-4 space-y-3">
+        <Card className="p-4">
+          <p className="text-xs text-muted-foreground">Next payout</p>
+          <p className="font-display text-2xl font-semibold mt-1">$842.50</p>
+          <p className="text-[11px] text-muted-foreground">Scheduled June 11</p>
+        </Card>
+
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
+            Payout method
+          </p>
+          <Card className="p-3 flex items-center gap-3">
+            <div className="h-9 w-9 rounded-md bg-muted flex items-center justify-center">
+              <DollarSign className="h-4 w-4" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm">Chase Checking</p>
+              <p className="text-[11px] text-muted-foreground">Bank •••• 6201</p>
+            </div>
+            <Badge variant="secondary" className="text-[10px]">Default</Badge>
+          </Card>
+          <Button variant="outline" size="sm" className="w-full mt-2 h-8 text-xs">
+            <Plus className="h-3.5 w-3.5 mr-1" /> Add payout method
+          </Button>
+        </div>
+
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
+            Schedule
+          </p>
+          <Card className="p-3 space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Frequency</span>
+              <span className="font-medium">Bi-weekly</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Currency</span>
+              <span className="font-medium">USD</span>
+            </div>
+          </Card>
+        </div>
+
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
+            Recent payouts
+          </p>
+          <Card className="p-2 divide-y">
+            {payouts.map((p) => (
+              <div key={p.date} className="flex items-center justify-between px-2 py-2 text-sm">
+                <span>{p.date}</span>
+                <span className="font-medium">${p.amount.toLocaleString()}</span>
+                <Badge variant="secondary" className="text-[10px]">{p.status}</Badge>
+              </div>
+            ))}
+          </Card>
+        </div>
+      </div>
+    </ScreenScroll>
+  );
+}
+
+function HostAvailabilityScreen({ onBack }: { onBack: () => void }) {
+  const days = [
+    { d: "Mon", slots: ["7–9a", "12–1p"] },
+    { d: "Tue", slots: ["7–9a"] },
+    { d: "Wed", slots: ["7–9a", "6–8p"] },
+    { d: "Thu", slots: ["7–9a"] },
+    { d: "Fri", slots: ["7–9a", "12–1p"] },
+    { d: "Sat", slots: ["8–11a"] },
+    { d: "Sun", slots: [] },
+  ];
+  return (
+    <ScreenScroll>
+      <ScreenHeader title="Availability" onBack={onBack} />
+      <div className="px-5 pb-4 space-y-3">
+        <Card className="p-3 flex items-center justify-between">
+          <div>
+            <p className="font-medium text-sm">Accepting bookings</p>
+            <p className="text-[11px] text-muted-foreground">Show your classes in browse</p>
+          </div>
+          <div className="h-6 w-10 rounded-full bg-primary relative">
+            <div className="absolute right-0.5 top-0.5 h-5 w-5 rounded-full bg-background shadow" />
+          </div>
+        </Card>
+
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
+            Weekly hours
+          </p>
+          <Card className="p-2 divide-y">
+            {days.map((d) => (
+              <div key={d.d} className="flex items-center justify-between px-2 py-2.5">
+                <span className="font-medium text-sm w-12">{d.d}</span>
+                <div className="flex-1 flex flex-wrap gap-1 justify-end">
+                  {d.slots.length === 0 ? (
+                    <span className="text-[11px] text-muted-foreground">Unavailable</span>
+                  ) : (
+                    d.slots.map((s) => (
+                      <Badge key={s} variant="secondary" className="text-[10px]">
+                        {s}
+                      </Badge>
+                    ))
+                  )}
+                </div>
+              </div>
+            ))}
+          </Card>
+        </div>
+
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
+            Time off
+          </p>
+          <Card className="p-3 text-sm">
+            <p className="font-medium">Jun 20 – Jun 27</p>
+            <p className="text-[11px] text-muted-foreground">Vacation · classes paused</p>
+          </Card>
+          <Button variant="outline" size="sm" className="w-full mt-2 h-8 text-xs">
+            <Plus className="h-3.5 w-3.5 mr-1" /> Add time off
+          </Button>
+        </div>
+      </div>
+    </ScreenScroll>
+  );
+}
+
+function HostReviewsScreen({ onBack }: { onBack: () => void }) {
+  const summary = [
+    { stars: 5, pct: 86 },
+    { stars: 4, pct: 10 },
+    { stars: 3, pct: 3 },
+    { stars: 2, pct: 1 },
+    { stars: 1, pct: 0 },
+  ];
+  const reviews = [
+    { name: "Priya S.", stars: 5, text: "Maya's flow is the highlight of my week. Calm, clear cues.", when: "2d" },
+    { name: "Devon W.", stars: 5, text: "Best sunrise class in the city. Worth the early alarm.", when: "5d" },
+    { name: "Mika C.", stars: 4, text: "Loved the playlist. Could use a bit more cool-down.", when: "1w" },
+    { name: "Sam R.", stars: 5, text: "Beginner-friendly without being boring.", when: "2w" },
+  ];
+  return (
+    <ScreenScroll>
+      <ScreenHeader title="Reviews" onBack={onBack} />
+      <div className="px-5 pb-4 space-y-3">
+        <Card className="p-4 flex items-center gap-4">
+          <div className="text-center">
+            <p className="font-display text-3xl font-semibold">4.9</p>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              184 reviews
+            </p>
+          </div>
+          <div className="flex-1 space-y-1">
+            {summary.map((s) => (
+              <div key={s.stars} className="flex items-center gap-2 text-[11px]">
+                <span className="w-3 text-muted-foreground">{s.stars}</span>
+                <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-primary"
+                    style={{ width: `${s.pct}%` }}
+                  />
+                </div>
+                <span className="w-7 text-right text-muted-foreground">{s.pct}%</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {reviews.map((r) => (
+          <Card key={r.name} className="p-3">
+            <div className="flex items-center justify-between">
+              <p className="font-medium text-sm">{r.name}</p>
+              <span className="text-[10px] text-muted-foreground">{r.when}</span>
+            </div>
+            <div className="flex gap-0.5 my-1">
+              {Array.from({ length: r.stars }).map((_, i) => (
+                <Sparkles key={i} className="h-3 w-3 text-primary" />
+              ))}
+            </div>
+            <p className="text-[12px] text-muted-foreground leading-snug">{r.text}</p>
+          </Card>
+        ))}
+      </div>
+    </ScreenScroll>
+  );
+}
+
+function HostSupportScreen({ onBack }: { onBack: () => void }) {
+  const faqs = [
+    "How do payouts work?",
+    "Can I cancel or reschedule a class?",
+    "What happens if a student no-shows?",
+    "How do I edit my host profile?",
+    "Tax documents and 1099s",
+  ];
+  return (
+    <ScreenScroll>
+      <ScreenHeader title="Help & support" onBack={onBack} />
+      <div className="px-5 pb-4 space-y-3">
+        <Card className="p-4 bg-gradient-hero text-primary-foreground">
+          <p className="font-display text-lg font-semibold">Need a hand?</p>
+          <p className="text-[12px] opacity-90 mt-0.5">
+            Our host team replies in under 2 hours, 7 days a week.
+          </p>
+          <Button size="sm" variant="secondary" className="mt-3 h-8 text-xs">
+            Message support
+          </Button>
+        </Card>
+
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
+            Popular questions
+          </p>
+          <Card className="p-1 divide-y">
+            {faqs.map((q) => (
+              <button
+                key={q}
+                className="w-full flex items-center justify-between px-3 py-3 text-left text-sm hover:bg-muted rounded-md"
+              >
+                <span className="pr-3">{q}</span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              </button>
+            ))}
+          </Card>
+        </div>
+
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
+            Contact
+          </p>
+          <Card className="p-3 space-y-2 text-sm">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Email</span>
+              <span className="font-medium">hosts@dryvon.app</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">Response time</span>
+              <span className="font-medium">~2 hours</span>
+            </div>
+          </Card>
+        </div>
       </div>
     </ScreenScroll>
   );
