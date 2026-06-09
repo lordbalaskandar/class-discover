@@ -605,8 +605,182 @@ function BrowseScreen({
         </div>
       </div>
     </ScreenScroll>
+
+      {/* Filters slide-up */}
+      <div
+        className={cn(
+          "absolute inset-0 z-30 transition-opacity",
+          filtersOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
+        )}
+      >
+        <div
+          className="absolute inset-0 bg-foreground/40"
+          onClick={() => setFiltersOpen(false)}
+        />
+        <div
+          className={cn(
+            "absolute inset-x-0 bottom-0 bg-background rounded-t-3xl border-t shadow-elegant max-h-[88%] flex flex-col transition-transform duration-300",
+            filtersOpen ? "translate-y-0" : "translate-y-full",
+          )}
+        >
+          <div className="pt-2 flex justify-center">
+            <div className="h-1 w-10 rounded-full bg-muted-foreground/30" />
+          </div>
+          <div className="px-5 py-3 flex items-center justify-between border-b">
+            <h3 className="font-display text-lg font-semibold">Filters</h3>
+            <button
+              onClick={() => setFiltersOpen(false)}
+              className="h-8 w-8 rounded-full bg-muted flex items-center justify-center"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <FilterGroup
+              label="Category"
+              value={filters.category}
+              onChange={(v) => setFilters((f) => ({ ...f, category: v as typeof f.category }))}
+              options={[
+                { v: "all", l: "All" },
+                { v: "class", l: "Classes" },
+                { v: "trainer", l: "Trainers" },
+              ]}
+            />
+            <FilterGroup
+              label="When"
+              value={filters.when}
+              onChange={(v) => setFilters((f) => ({ ...f, when: v as typeof f.when }))}
+              options={[
+                { v: "any", l: "Anytime" },
+                { v: "today", l: "Today" },
+                { v: "tomorrow", l: "Tomorrow" },
+                { v: "this_week", l: "This week" },
+                { v: "this_weekend", l: "This weekend" },
+              ]}
+            />
+            <FilterGroup
+              label="Duration"
+              value={filters.duration}
+              onChange={(v) => setFilters((f) => ({ ...f, duration: v as typeof f.duration }))}
+              options={[
+                { v: "any", l: "Any" },
+                { v: "short", l: "≤ 30 min" },
+                { v: "medium", l: "31–60 min" },
+                { v: "long", l: "60+ min" },
+              ]}
+            />
+            <FilterGroup
+              label="Group size"
+              value={filters.capacity}
+              onChange={(v) => setFilters((f) => ({ ...f, capacity: v as typeof f.capacity }))}
+              options={[
+                { v: "any", l: "Any" },
+                { v: "private", l: "1-on-1" },
+                { v: "small", l: "Small (2–6)" },
+                { v: "medium", l: "Medium (7–15)" },
+                { v: "large", l: "Large (16+)" },
+              ]}
+            />
+            <FilterGroup
+              label="Booking type"
+              value={filters.type}
+              onChange={(v) => setFilters((f) => ({ ...f, type: v as typeof f.type }))}
+              options={[
+                { v: "all", l: "All" },
+                { v: "scheduled", l: "Scheduled" },
+                { v: "on_request", l: "On request" },
+              ]}
+            />
+            <FilterGroup
+              label="Availability"
+              value={filters.spots}
+              onChange={(v) => setFilters((f) => ({ ...f, spots: v as typeof f.spots }))}
+              options={[
+                { v: "any", l: "Any" },
+                { v: "available", l: "Open / upcoming only" },
+              ]}
+            />
+            <FilterGroup
+              label="Sort by"
+              value={filters.sort}
+              onChange={(v) => setFilters((f) => ({ ...f, sort: v as typeof f.sort }))}
+              options={[
+                { v: "newest", l: "Newest" },
+                { v: "soonest", l: "Soonest" },
+                { v: "duration", l: "Shortest" },
+              ]}
+            />
+          </div>
+          <div className="border-t bg-card px-5 py-3 flex items-center gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() =>
+                setFilters({
+                  category: "all",
+                  when: "any",
+                  duration: "any",
+                  capacity: "any",
+                  type: "all",
+                  spots: "any",
+                  sort: "newest",
+                })
+              }
+            >
+              Clear all
+            </Button>
+            <Button
+              className="flex-[1.4] bg-gradient-hero shadow-elegant"
+              onClick={() => setFiltersOpen(false)}
+            >
+              Show results
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
+
+function FilterGroup({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: { v: string; l: string }[];
+}) {
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">
+        {label}
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((o) => {
+          const active = value === o.v;
+          return (
+            <button
+              key={o.v}
+              onClick={() => onChange(o.v)}
+              className={cn(
+                "px-3 py-1.5 rounded-full text-xs border transition-all",
+                active
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-card text-foreground border-border",
+              )}
+            >
+              {o.l}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 
 function ScreenHeader({ title, onBack }: { title: string; onBack: () => void }) {
   return (
