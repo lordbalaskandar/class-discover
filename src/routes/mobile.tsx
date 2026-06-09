@@ -10,7 +10,7 @@ import {
   ArrowLeft,
   Search,
   MapPin,
-  Calendar,
+  Calendar as CalendarIcon,
   Clock,
   Users,
   Star,
@@ -29,6 +29,9 @@ import {
   Wifi,
   BatteryFull,
 } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/mobile")({
