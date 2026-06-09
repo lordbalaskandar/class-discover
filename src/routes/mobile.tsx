@@ -240,6 +240,20 @@ function UserFlow() {
               cls={selected}
               onBack={() => setScreen("browse")}
               onSelectClass={() => setScreen("class")}
+              onGym={() => {
+                setSelectedId("2");
+                setScreen("gym");
+              }}
+            />
+          )}
+          {screen === "gym" && (
+            <GymScreen
+              cls={CLASSES.find((c) => c.id === "2") ?? CLASSES[1]}
+              onBack={() => setScreen("browse")}
+              onSelectClass={() => {
+                setSelectedId("2");
+                setScreen("class");
+              }}
             />
           )}
           {screen === "class" && (
