@@ -104,3 +104,12 @@
   .shadow-card { box-shadow: var(--shadow-card); }
   .shadow-elegant { box-shadow: var(--shadow-elegant); }
 }
+
+@keyframes netflix-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-netflix-scroll {
+  animation: netflix-scroll 40s linear infinite;
+}
