@@ -887,8 +887,55 @@ function GymScreen({
           ))}
         </div>
 
+        {/* Weekly schedule */}
+        <div className="mt-5">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-sm">This week's sessions</h3>
+            <span className="text-xs text-primary">Full schedule</span>
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto pb-1 mb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) => (
+              <span
+                key={d}
+                className={cn(
+                  "shrink-0 px-3 py-1 rounded-full text-[11px] border",
+                  i === 5
+                    ? "bg-foreground text-background border-foreground"
+                    : "bg-card text-foreground border-border",
+                )}
+              >
+                {d}
+              </span>
+            ))}
+          </div>
+          <div className="space-y-2">
+            {[
+              { title: "Fundamentals Gi", coach: "Coach Renata", time: "6:00 AM · 60 min", spots: "4 / 16", price: 25, gradient: "linear-gradient(135deg,#5b8def,#3d5a80)" },
+              { title: "Open Mat", coach: "All coaches", time: "11:00 AM · 90 min", spots: "8 / 20", price: 35, gradient: "linear-gradient(135deg,#2c2c2e,#5c5c5e)" },
+              { title: "No-Gi Advanced", coach: "Coach Marcus", time: "6:30 PM · 75 min", spots: "2 / 12", price: 30, gradient: "linear-gradient(135deg,#84a98c,#52796f)" },
+              { title: "Kids BJJ (7–12)", coach: "Coach Yuki", time: "4:00 PM · 45 min", spots: "6 / 14", price: 20, gradient: "linear-gradient(135deg,#f4b942,#e07a5f)" },
+            ].map((s) => (
+              <Card
+                key={s.title}
+                onClick={onSelectClass}
+                className="p-3 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
+              >
+                <div className="h-12 w-12 rounded-lg shrink-0" style={{ background: s.gradient }} />
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">{s.title}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">{s.coach} · {s.time}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                    <Users className="h-3 w-3" />{s.spots} spots
+                  </p>
+                </div>
+                <span className="text-sm font-semibold">${s.price}</span>
+              </Card>
+            ))}
+          </div>
+        </div>
         {/* Special events */}
         <div className="mt-5">
+
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
               <Sparkles className="h-4 w-4 text-primary" />
