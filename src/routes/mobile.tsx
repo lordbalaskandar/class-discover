@@ -77,6 +77,7 @@ type Screen =
   | "pNotifications"
   | "pBecomeHost"
   | "pHelp"
+  | "pMyGym"
   | "filters";
 
 type HostItem = {
@@ -489,6 +490,9 @@ function UserFlow() {
           {screen === "pHelp" && (
             <ProfileHelpScreen onBack={() => setScreen("profile")} />
           )}
+          {screen === "pMyGym" && (
+            <ProfileMyGymScreen onBack={() => setScreen("profile")} />
+          )}
         </div>
         <PhoneTabBar
           screen={screen}
@@ -506,25 +510,26 @@ function UserFlow() {
         </p>
         {(
           [
-            ["browse", "Sessions", false],
-            ["filters", "Session filters", true],
-            ["hosts", "Hosts", false],
-            ["map", "Map", false],
-            ["host", "Host profile", false],
-            ["gym", "Gym profile", false],
-            ["class", "Class detail", false],
-            ["booking", "Booking", false],
-            ["payment", "Payment", false],
-            ["confirmation", "Confirmation", false],
-            ["bookings", "My bookings", false],
-            ["profile", "Profile", false],
-            ["saved", "Saved classes", false],
-            ["pPayment", "Payment methods", true],
-            ["pNotifications", "Notifications", true],
-            ["pBecomeHost", "Become a host", true],
-            ["pHelp", "Help & support", true],
-          ] as [Screen, string, boolean][]
-        ).map(([s, label, sub]) => (
+            ["browse", "Sessions", 0],
+            ["filters", "Session filters", 1],
+            ["hosts", "Hosts", 0],
+            ["map", "Map", 0],
+            ["host", "Host profile", 0],
+            ["gym", "Gym profile", 0],
+            ["class", "Class detail", 0],
+            ["booking", "Booking", 0],
+            ["payment", "Payment", 0],
+            ["confirmation", "Confirmation", 0],
+            ["bookings", "My bookings", 0],
+            ["profile", "Profile", 0],
+            ["saved", "Saved classes", 1],
+            ["pPayment", "Payment methods", 1],
+            ["pNotifications", "Notifications", 1],
+            ["pMyGym", "My gym", 1],
+            ["pBecomeHost", "Become a host", 1],
+            ["pHelp", "Help & support", 1],
+          ] as [Screen, string, number][]
+        ).map(([s, label, level]) => (
           <button
             key={s}
             onClick={() => {
@@ -534,14 +539,15 @@ function UserFlow() {
             }}
             className={cn(
               "w-full text-left px-4 py-3 rounded-lg border transition-all",
-              sub && "ml-4 w-[calc(100%-1rem)] py-2",
+              level === 1 && "ml-4 w-[calc(100%-1rem)] py-2",
+              level === 2 && "ml-8 w-[calc(100%-2rem)] py-1.5",
               screen === s
                 ? "bg-primary text-primary-foreground border-primary shadow-elegant"
                 : "bg-card hover:bg-muted border-border",
             )}
           >
             <div className="flex items-center justify-between">
-              <span className={cn("font-medium", sub && "text-sm")}>{label}</span>
+              <span className={cn("font-medium", level === 1 && "text-sm", level === 2 && "text-xs")}>{label}</span>
               <ChevronRight className="h-4 w-4 opacity-60" />
             </div>
           </button>
@@ -2659,7 +2665,7 @@ function SavedScreen({
   );
 }
 
-type ProfileSection = "pPayment" | "pNotifications" | "pBecomeHost" | "pHelp";
+type ProfileSection = "pPayment" | "pNotifications" | "pBecomeHost" | "pHelp" | "pMyGym";
 
 function ProfileScreen({
   onBookings,
@@ -2681,6 +2687,7 @@ function ProfileScreen({
   ];
   const rows: { label: string; sub: string; onClick?: () => void }[] = [
     { label: "My bookings", sub: "View upcoming & past classes", onClick: onBookings },
+    { label: "My gym", sub: "Calder Strength Lab · Active", onClick: () => onOpenSection("pMyGym") },
     { label: "Payment methods", sub: "Visa •••• 4242", onClick: () => onOpenSection("pPayment") },
     {
       label: "Saved classes",
@@ -3050,6 +3057,7 @@ type HostScreenId =
   | "hpGym"
   | "hpGymCreate"
   | "hpGymMembers"
+  | "hpGymCoach"
   | "hpGymEdit";
 
 type HostClass = {
@@ -3289,6 +3297,14 @@ function HostFlow() {
               onBack={() => setScreen("hpGym")}
             />
           )}
+          {screen === "hpGymCoach" && (
+            <HostGymCoachScreen
+              gym={gym}
+              members={members}
+              onBack={() => setScreen("hpGym")}
+              onMembers={() => setScreen("hpGymMembers")}
+            />
+          )}
           {screen === "hpGymEdit" && (
             <HostGymEditScreen
               gym={gym}
@@ -3315,36 +3331,38 @@ function HostFlow() {
         </p>
         {(
           [
-            ["dashboard", "Dashboard", false],
-            ["create", "Publish a class", false],
-            ["manage", "Manage class", false],
-            ["earnings", "Earnings", false],
-            ["metrics", "Metrics", false],
-            ["hostProfile", "Host profile", false],
-            ["hpTemplates", "Class templates", true],
-            ["hpPayouts", "Payout settings", true],
-            ["hpAvailability", "Availability", true],
-            ["hpReviews", "Reviews", true],
-            ["hpSupport", "Help & support", true],
-            ["hpGym", "My gym", true],
-            ["hpGymCreate", "Create gym", true],
-            ["hpGymMembers", "Gym members", true],
-            ["hpGymEdit", "Edit gym", true],
-          ] as [HostScreenId, string, boolean][]
-        ).map(([s, label, sub]) => (
+            ["dashboard", "Dashboard", 0],
+            ["create", "Publish a class", 0],
+            ["manage", "Manage class", 0],
+            ["earnings", "Earnings", 0],
+            ["metrics", "Metrics", 0],
+            ["hostProfile", "Host profile", 0],
+            ["hpGym", "My gym", 1],
+            ["hpGymCreate", "Create gym", 2],
+            ["hpGymMembers", "Gym members", 2],
+            ["hpGymCoach", "Coach view", 2],
+            ["hpGymEdit", "Edit gym", 2],
+            ["hpTemplates", "Class templates", 1],
+            ["hpPayouts", "Payout settings", 1],
+            ["hpAvailability", "Availability", 1],
+            ["hpReviews", "Reviews", 1],
+            ["hpSupport", "Help & support", 1],
+          ] as [HostScreenId, string, number][]
+        ).map(([s, label, level]) => (
           <button
             key={s}
             onClick={() => setScreen(s)}
             className={cn(
               "w-full text-left px-4 py-3 rounded-lg border transition-all",
-              sub && "ml-4 w-[calc(100%-1rem)] py-2",
+              level === 1 && "ml-4 w-[calc(100%-1rem)] py-2",
+              level === 2 && "ml-8 w-[calc(100%-2rem)] py-1.5",
               screen === s
                 ? "bg-primary text-primary-foreground border-primary shadow-elegant"
                 : "bg-card hover:bg-muted border-border",
             )}
           >
             <div className="flex items-center justify-between">
-              <span className={cn("font-medium", sub && "text-sm")}>{label}</span>
+              <span className={cn("font-medium", level === 1 && "text-sm", level === 2 && "text-xs")}>{label}</span>
               <ChevronRight className="h-4 w-4 opacity-60" />
             </div>
           </button>
@@ -4385,6 +4403,92 @@ function HostMetricsScreen({ onBack }: { onBack: () => void }) {
               </div>
             ))}
           </div>
+
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {[
+              { label: "Return rate", value: "62%", delta: "+4%", up: true },
+              { label: "Avg sessions", value: "8.3", delta: "+0.6", up: true },
+              { label: "Churn / mo", value: "11%", delta: "−2%", up: true },
+            ].map((s) => (
+              <div key={s.label} className="rounded-lg border p-2">
+                <p className="text-[9px] uppercase tracking-widest text-muted-foreground">{s.label}</p>
+                <p className="font-display text-base font-semibold leading-tight">{s.value}</p>
+                <p className={cn("text-[10px] mt-0.5", s.up ? "text-primary" : "text-destructive")}>
+                  {s.delta} vs last mo
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-3 rounded-lg border p-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-medium">Returning vs new students</p>
+              <span className="text-[10px] text-muted-foreground">last 6 weeks</span>
+            </div>
+            <div className="flex items-end gap-1.5 h-16">
+              {[
+                { r: 18, n: 9 }, { r: 22, n: 11 }, { r: 24, n: 8 },
+                { r: 28, n: 12 }, { r: 31, n: 7 }, { r: 34, n: 10 },
+              ].map((b, i) => {
+                const total = b.r + b.n;
+                return (
+                  <div key={i} className="flex-1 flex flex-col justify-end h-full">
+                    <div
+                      className="bg-muted rounded-t-sm"
+                      style={{ height: `${(b.n / 45) * 100}%` }}
+                    />
+                    <div
+                      className="bg-primary"
+                      style={{ height: `${(b.r / 45) * 100}%` }}
+                    />
+                    <p className="text-[9px] text-center text-muted-foreground mt-1">W{i + 1}</p>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex items-center gap-3 mt-2 text-[10px] text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <span className="h-2 w-2 rounded-sm bg-primary" /> Returning
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="h-2 w-2 rounded-sm bg-muted" /> New
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-3 space-y-2">
+            {[
+              { label: "Lifetime value", value: "$184", sub: "avg per student", icon: DollarSign },
+              { label: "Loyal students", value: "47", sub: "5+ classes booked", icon: Star },
+              { label: "At-risk", value: "12", sub: "no booking in 21 days", icon: TrendingUp },
+            ].map((r) => (
+              <div key={r.label} className="flex items-center gap-3 rounded-lg border p-2.5">
+                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                  <r.icon className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium">{r.label}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{r.sub}</p>
+                </div>
+                <p className="font-display text-sm font-semibold">{r.value}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-3 rounded-lg bg-primary/10 border border-primary/30 p-3">
+            <div className="flex items-center gap-2 mb-1">
+              <Target className="h-3.5 w-3.5 text-primary" />
+              <span className="text-[10px] uppercase tracking-widest font-semibold text-primary">
+                Win-back idea
+              </span>
+            </div>
+            <p className="text-xs">
+              Send a free pass to the 12 at-risk students. Hosts who do see a 28% reactivation rate.
+            </p>
+            <Button size="sm" className="w-full mt-2 h-8 text-xs">
+              Create win-back campaign
+            </Button>
+          </div>
         </Card>
 
         {/* Peak hours */}
@@ -5042,6 +5146,242 @@ function HostGymMembersScreen({
                 </div>
               </Card>
             ))}
+          </div>
+        </div>
+      </ScreenScroll>
+    </div>
+  );
+}
+
+/* ---------------- Host: coach-of-a-gym view ---------------- */
+
+function HostGymCoachScreen({
+  gym,
+  members,
+  onBack,
+  onMembers,
+}: {
+  gym: GymInfo;
+  members: GymMember[];
+  onBack: () => void;
+  onMembers: () => void;
+}) {
+  const myStudents = members.filter((m) => m.role === "Member").slice(0, 4);
+  const upcoming = [
+    { day: "Today", time: "6:30 PM", title: "Strength Foundations", attendees: 9, cap: 12 },
+    { day: "Tomorrow", time: "7:00 AM", title: "Olympic Lifting", attendees: 6, cap: 8 },
+    { day: "Wed", time: "5:30 PM", title: "Conditioning", attendees: 11, cap: 12 },
+  ];
+  return (
+    <div className="h-full flex flex-col">
+      <ScreenHeader title="Coach view" onBack={onBack} />
+      <ScreenScroll>
+        <div className="px-5 pt-3">
+          <Card className="overflow-hidden">
+            <div
+              className="h-20 w-full"
+              style={{ background: "linear-gradient(135deg,#0ea5a3,#22c55e)" }}
+            />
+            <div className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Coaching at
+                  </p>
+                  <h3 className="font-display text-lg font-semibold leading-tight">{gym.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{gym.address}</p>
+                </div>
+                <Badge variant="secondary" className="text-[10px] shrink-0">
+                  <Sparkles className="h-3 w-3 mr-1" /> Coach
+                </Badge>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-3 mt-3 grid grid-cols-3 divide-x">
+            <div className="text-center px-2">
+              <p className="font-display text-lg font-semibold">{myStudents.length * 4}</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Students</p>
+            </div>
+            <div className="text-center px-2">
+              <p className="font-display text-lg font-semibold">14</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Sessions / wk</p>
+            </div>
+            <div className="text-center px-2">
+              <p className="font-display text-lg font-semibold">4.9</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Rating</p>
+            </div>
+          </Card>
+
+          <h3 className="font-semibold text-sm mt-4 mb-2">Your schedule</h3>
+          <div className="space-y-2">
+            {upcoming.map((u) => (
+              <Card key={u.title + u.day} className="p-3">
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                      {u.day} · {u.time}
+                    </p>
+                    <p className="font-medium text-sm truncate">{u.title}</p>
+                  </div>
+                  <Badge variant="secondary" className="text-[10px] shrink-0">
+                    <Users className="h-3 w-3 mr-1" />
+                    {u.attendees}/{u.cap}
+                  </Badge>
+                </div>
+                <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-primary"
+                    style={{ width: `${(u.attendees / u.cap) * 100}%` }}
+                  />
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between mt-4 mb-2">
+            <h3 className="font-semibold text-sm">My students</h3>
+            <button onClick={onMembers} className="text-xs text-primary">
+              See all
+            </button>
+          </div>
+          <div className="space-y-2 pb-4">
+            {myStudents.map((m) => (
+              <Card key={m.id} className="p-3 flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-gradient-hero text-primary-foreground flex items-center justify-center text-xs font-semibold">
+                  {m.initials}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{m.name}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    {m.plan} · joined {m.joined}
+                  </p>
+                </div>
+                <button className="text-[10px] px-2 py-1 rounded-full border border-border">
+                  Message
+                </button>
+              </Card>
+            ))}
+          </div>
+
+          <div className="rounded-lg bg-primary/10 border border-primary/30 p-3 mb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <span className="text-[10px] uppercase tracking-widest font-semibold text-primary">
+                Coach tip
+              </span>
+            </div>
+            <p className="text-xs">
+              3 of your students haven't booked in 2 weeks. Send a quick check-in to keep them on track.
+            </p>
+          </div>
+        </div>
+      </ScreenScroll>
+    </div>
+  );
+}
+
+/* ---------------- User: my gym ---------------- */
+
+function ProfileMyGymScreen({ onBack }: { onBack: () => void }) {
+  const gym = {
+    name: "Calder Strength Lab",
+    address: "248 Brannan St, San Francisco, CA",
+    plan: "Monthly · $129",
+    nextBill: "Jul 14, 2026",
+    visitsThisMonth: 9,
+    streak: 4,
+  };
+  const perks = [
+    { icon: Building2, label: "Open gym access", sub: "5:30 AM – 10 PM daily" },
+    { icon: CalendarDays, label: "Unlimited classes", sub: "Book up to 7 days ahead" },
+    { icon: Users, label: "Bring a friend", sub: "2 guest passes / month" },
+    { icon: Star, label: "Member-only events", sub: "Workshops & socials" },
+  ];
+  const upcoming = [
+    { day: "Tonight", time: "6:30 PM", title: "Strength Foundations", coach: "Devon W." },
+    { day: "Thu", time: "7:00 AM", title: "Olympic Lifting", coach: "Devon W." },
+  ];
+  return (
+    <div className="h-full flex flex-col">
+      <ScreenHeader title="My gym" onBack={onBack} />
+      <ScreenScroll>
+        <div className="px-5 pt-3">
+          <Card className="overflow-hidden">
+            <div
+              className="h-24 w-full"
+              style={{ background: "linear-gradient(135deg,#5f4bdb,#9d8df1)" }}
+            />
+            <div className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="font-display text-lg font-semibold leading-tight">{gym.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{gym.address}</p>
+                </div>
+                <Badge variant="secondary" className="text-[10px] shrink-0">
+                  <CheckCircle2 className="h-3 w-3 mr-1" /> Active
+                </Badge>
+              </div>
+              <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+                <span>{gym.plan}</span>
+                <span>Renews {gym.nextBill}</span>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-3 mt-3 grid grid-cols-3 divide-x">
+            <div className="text-center px-2">
+              <p className="font-display text-lg font-semibold">{gym.visitsThisMonth}</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Visits</p>
+            </div>
+            <div className="text-center px-2">
+              <p className="font-display text-lg font-semibold">{gym.streak}w</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Streak</p>
+            </div>
+            <div className="text-center px-2">
+              <p className="font-display text-lg font-semibold">2</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Guest pass</p>
+            </div>
+          </Card>
+
+          <h3 className="font-semibold text-sm mt-4 mb-2">Your perks</h3>
+          <div className="space-y-2">
+            {perks.map((p) => (
+              <Card key={p.label} className="p-3 flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
+                  <p.icon className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">{p.label}</p>
+                  <p className="text-[11px] text-muted-foreground">{p.sub}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <h3 className="font-semibold text-sm mt-4 mb-2">Upcoming at your gym</h3>
+          <div className="space-y-2">
+            {upcoming.map((u) => (
+              <Card key={u.title + u.day} className="p-3">
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                      {u.day} · {u.time}
+                    </p>
+                    <p className="font-medium text-sm truncate">{u.title}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">with {u.coach}</p>
+                  </div>
+                  <Button size="sm" className="h-8 text-xs">Book</Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <div className="mt-4 pb-4 space-y-2">
+            <Button variant="outline" className="w-full">Manage plan</Button>
+            <Button variant="ghost" className="w-full text-destructive hover:text-destructive">
+              Cancel membership
+            </Button>
           </div>
         </div>
       </ScreenScroll>
