@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,7 +66,8 @@ type Screen =
   | "payment"
   | "confirmation"
   | "bookings"
-  | "profile";
+  | "profile"
+  | "filters";
 
 type ClassItem = {
   id: string;
@@ -208,6 +209,7 @@ function FlowSection({
 function UserFlow() {
   const [screen, setScreen] = useState<Screen>("browse");
   const [selectedId, setSelectedId] = useState<string>("1");
+  const [browseFiltersOpen, setBrowseFiltersOpen] = useState(false);
   const selected = useMemo(
     () => CLASSES.find((c) => c.id === selectedId) ?? CLASSES[0],
     [selectedId],
@@ -216,6 +218,7 @@ function UserFlow() {
   const reset = () => {
     setScreen("browse");
     setSelectedId("1");
+    setBrowseFiltersOpen(false);
   };
 
   return (
@@ -225,15 +228,18 @@ function UserFlow() {
       <PhoneFrame>
         <PhoneStatusBar />
         <div className="flex-1 overflow-hidden relative bg-background">
-          {screen === "browse" && (
+          {(screen === "browse" || screen === "filters") && (
             <BrowseScreen
+              filtersOpenInitially={screen === "filters" || browseFiltersOpen}
               onSelect={(id) => {
                 setSelectedId(id);
                 setScreen("class");
+                setBrowseFiltersOpen(false);
               }}
               onHost={(id) => {
                 setSelectedId(id);
                 setScreen("host");
+                setBrowseFiltersOpen(false);
               }}
             />
           )}
@@ -318,6 +324,7 @@ function UserFlow() {
         {(
           [
             ["browse", "Browse"],
+            ["filters", "Filters"],
             ["host", "Host profile"],
             ["gym", "Gym profile"],
             ["class", "Class detail"],
@@ -330,7 +337,11 @@ function UserFlow() {
         ).map(([s, label]) => (
           <button
             key={s}
-            onClick={() => setScreen(s)}
+            onClick={() => {
+              setScreen(s);
+              if (s === "filters") setBrowseFiltersOpen(true);
+              else setBrowseFiltersOpen(false);
+            }}
             className={cn(
               "w-full text-left px-4 py-3 rounded-lg border transition-all",
               screen === s
@@ -479,13 +490,19 @@ function ScreenScroll({ children }: { children: React.ReactNode }) {
 function BrowseScreen({
   onSelect,
   onHost,
+  filtersOpenInitially = false,
 }: {
   onSelect: (id: string) => void;
   onHost: (id: string) => void;
+  filtersOpenInitially?: boolean;
 }) {
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(filtersOpenInitially);
+  useEffect(() => {
+    if (filtersOpenInitially) setFiltersOpen(true);
+  }, [filtersOpenInitially]);
   const [filters, setFilters] = useState({
     category: "all" as "all" | "class" | "trainer",
+    activity: "all" as "all" | "Yoga" | "BJJ" | "Running" | "HIIT" | "Climbing",
     when: "any" as "any" | "today" | "tomorrow" | "this_week" | "this_weekend",
     duration: "any" as "any" | "short" | "medium" | "long",
     capacity: "any" as "any" | "private" | "small" | "medium" | "large",
@@ -495,6 +512,7 @@ function BrowseScreen({
   });
   const activeCount =
     (filters.category !== "all" ? 1 : 0) +
+    (filters.activity !== "all" ? 1 : 0) +
     (filters.when !== "any" ? 1 : 0) +
     (filters.duration !== "any" ? 1 : 0) +
     (filters.capacity !== "any" ? 1 : 0) +
@@ -560,7 +578,7 @@ function BrowseScreen({
           <span className="text-xs text-primary">See all</span>
         </div>
         <div className="space-y-3">
-          {CLASSES.map((c) => (
+          {CLASSES.filter((c) => filters.activity === "all" || c.activity === filters.activity).map((c) => (
             <Card
               key={c.id}
               onClick={() => onSelect(c.id)}
@@ -647,6 +665,19 @@ function BrowseScreen({
               ]}
             />
             <FilterGroup
+              label="Activity"
+              value={filters.activity}
+              onChange={(v) => setFilters((f) => ({ ...f, activity: v as typeof f.activity }))}
+              options={[
+                { v: "all", l: "All" },
+                { v: "Yoga", l: "Yoga" },
+                { v: "BJJ", l: "BJJ" },
+                { v: "Running", l: "Running" },
+                { v: "HIIT", l: "HIIT" },
+                { v: "Climbing", l: "Climbing" },
+              ]}
+            />
+            <FilterGroup
               label="When"
               value={filters.when}
               onChange={(v) => setFilters((f) => ({ ...f, when: v as typeof f.when }))}
@@ -718,6 +749,7 @@ function BrowseScreen({
               onClick={() =>
                 setFilters({
                   category: "all",
+                  activity: "all",
                   when: "any",
                   duration: "any",
                   capacity: "any",
