@@ -79,7 +79,7 @@ function ClassDetailPage() {
 
   const handleBook = async () => {
     if (!userId) {
-      navigate({ to: "/auth" });
+      openAuthModal();
       return;
     }
     setSubmitting(true);

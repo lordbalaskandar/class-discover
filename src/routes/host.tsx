@@ -96,6 +96,21 @@ function HostPage() {
 
   if (userId === undefined) return <div className="min-h-screen"><SiteHeader /></div>;
 
+  if (userId === null) {
+    return (
+      <div className="min-h-screen">
+        <SiteHeader />
+        <div className="container mx-auto px-4 py-16 text-center max-w-md">
+          <h1 className="text-2xl font-bold">Sign in required</h1>
+          <p className="text-muted-foreground mt-2">Please sign in to access the host dashboard.</p>
+          <Button onClick={openAuthModal} className="mt-6 bg-gradient-hero hover:opacity-90 shadow-elegant">
+            Sign in
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!isHost) {
     return (
       <div className="min-h-screen">
