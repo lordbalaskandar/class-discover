@@ -349,6 +349,14 @@ function UserFlow() {
               }}
             />
           )}
+          {screen === "hosts" && (
+            <HostsScreen
+              onSelect={(h) => {
+                setSelectedId(h.classId);
+                setScreen(h.type === "gym" ? "gym" : "host");
+              }}
+            />
+          )}
           {screen === "host" && (
             <HostScreen
               cls={selected}
