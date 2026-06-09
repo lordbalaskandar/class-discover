@@ -1448,6 +1448,7 @@ function HostFlow() {
             ["create", "Publish a class"],
             ["manage", "Manage class"],
             ["earnings", "Earnings"],
+            ["metrics", "Metrics"],
             ["hostProfile", "Host profile"],
           ] as [HostScreenId, string][]
         ).map(([s, label]) => (
