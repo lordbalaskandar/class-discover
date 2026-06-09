@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ACTIVITIES } from "@/lib/activities";
-import { Calendar, MapPin, Clock, Search, Users, SlidersHorizontal, X } from "lucide-react";
+import { Calendar, MapPin, Clock, Search, Users, SlidersHorizontal, X, Image as ImageIcon } from "lucide-react";
 
 const browseSearchSchema = z.object({
   q: fallback(z.string(), "").default(""),
