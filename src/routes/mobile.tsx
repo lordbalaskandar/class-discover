@@ -209,6 +209,7 @@ function FlowSection({
 function UserFlow() {
   const [screen, setScreen] = useState<Screen>("browse");
   const [selectedId, setSelectedId] = useState<string>("1");
+  const [browseFiltersOpen, setBrowseFiltersOpen] = useState(false);
   const selected = useMemo(
     () => CLASSES.find((c) => c.id === selectedId) ?? CLASSES[0],
     [selectedId],
@@ -217,6 +218,7 @@ function UserFlow() {
   const reset = () => {
     setScreen("browse");
     setSelectedId("1");
+    setBrowseFiltersOpen(false);
   };
 
   return (
