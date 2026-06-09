@@ -5377,12 +5377,6 @@ function ProfileMyGymScreen({ onBack }: { onBack: () => void }) {
             ))}
           </div>
 
-          <div className="mt-4 pb-4 space-y-2">
-            <Button variant="outline" className="w-full">Manage plan</Button>
-            <Button variant="ghost" className="w-full text-destructive hover:text-destructive">
-              Cancel membership
-            </Button>
-          </div>
         </div>
       </ScreenScroll>
     </div>
