@@ -2664,22 +2664,50 @@ function HostMetricsScreen({ onBack }: { onBack: () => void }) {
               </span>
             </div>
           </div>
-          <div className="mt-4 flex items-end gap-2 h-28">
-            {visibility.map((d, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                <div className="w-full flex items-end gap-0.5 h-full">
-                  <div
-                    className="flex-1 rounded-t bg-foreground/70"
-                    style={{ height: `${(d.impressions / maxImp) * 100}%` }}
-                  />
-                  <div
-                    className="flex-1 rounded-t bg-primary"
-                    style={{ height: `${(d.views / maxImp) * 100}%` }}
-                  />
-                </div>
-                <span className="text-[10px] text-muted-foreground">{d.day}</span>
-              </div>
-            ))}
+          <div className="mt-4">
+            <svg viewBox="0 0 280 110" className="w-full h-28" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="gradImp" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(var(--foreground))" stopOpacity="0.45" />
+                  <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity="0.05" />
+                </linearGradient>
+                <linearGradient id="gradViews" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.7" />
+                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.05" />
+                </linearGradient>
+              </defs>
+              {(() => {
+                const w = 280, h = 100;
+                const pts = (key: "impressions" | "views") =>
+                  visibility.map((d, i) => {
+                    const x = (i / (visibility.length - 1)) * w;
+                    const y = h - (d[key] / maxImp) * h;
+                    return [x, y] as const;
+                  });
+                const toPath = (p: readonly (readonly [number, number])[]) =>
+                  p.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x},${y}`).join(" ");
+                const toArea = (p: readonly (readonly [number, number])[]) =>
+                  `${toPath(p)} L${w},${h} L0,${h} Z`;
+                const impPts = pts("impressions");
+                const viewPts = pts("views");
+                return (
+                  <>
+                    <path d={toArea(impPts)} fill="url(#gradImp)" />
+                    <path d={toPath(impPts)} fill="none" stroke="hsl(var(--foreground))" strokeOpacity="0.6" strokeWidth="1.5" />
+                    <path d={toArea(viewPts)} fill="url(#gradViews)" />
+                    <path d={toPath(viewPts)} fill="none" stroke="hsl(var(--primary))" strokeWidth="1.5" />
+                    {viewPts.map(([x, y], i) => (
+                      <circle key={i} cx={x} cy={y} r="2" fill="hsl(var(--primary))" />
+                    ))}
+                  </>
+                );
+              })()}
+            </svg>
+            <div className="flex justify-between mt-1 px-0.5">
+              {visibility.map((d, i) => (
+                <span key={i} className="text-[10px] text-muted-foreground">{d.day}</span>
+              ))}
+            </div>
           </div>
         </Card>
 
