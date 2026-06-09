@@ -651,8 +651,12 @@ function BookingScreen({
   onContinue: () => void;
 }) {
   const [spots, setSpots] = useState(1);
-  const [dateIdx, setDateIdx] = useState(1);
-  const dates = ["Fri 13", "Sat 14", "Sun 15", "Mon 16", "Tue 17"];
+  const [date, setDate] = useState<Date | undefined>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 2);
+    return d;
+  });
+  const [open, setOpen] = useState(false);
   const times = ["7:00 AM", "9:30 AM", "5:30 PM"];
   const [timeIdx, setTimeIdx] = useState(0);
 
@@ -671,24 +675,35 @@ function BookingScreen({
 
           <div>
             <Label className="text-xs uppercase tracking-widest text-muted-foreground">Select date</Label>
-            <div className="flex gap-2 mt-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {dates.map((d, i) => (
-                <button
-                  key={d}
-                  onClick={() => setDateIdx(i)}
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
                   className={cn(
-                    "shrink-0 w-14 py-2 rounded-xl border text-center transition-all",
-                    i === dateIdx
-                      ? "bg-primary text-primary-foreground border-primary shadow-card"
-                      : "bg-card border-border",
+                    "w-full mt-2 justify-start text-left font-normal h-12 rounded-xl",
+                    !date && "text-muted-foreground",
                   )}
                 >
-                  <p className="text-[10px] uppercase">{d.split(" ")[0]}</p>
-                  <p className="font-display text-lg font-semibold leading-none">{d.split(" ")[1]}</p>
-                </button>
-              ))}
-            </div>
+                  <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                  {date ? format(date, "EEEE, MMM d") : "Pick a date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(d) => {
+                    setDate(d);
+                    setOpen(false);
+                  }}
+                  disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
+
 
           <div>
             <Label className="text-xs uppercase tracking-widest text-muted-foreground">Time</Label>
