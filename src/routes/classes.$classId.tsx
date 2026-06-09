@@ -60,12 +60,27 @@ function ClassDetailPage() {
     },
   });
 
-  const bookedDates = useMemo(() => {
-    if (!availability) return [] as Date[];
-    return availability.bookings
-      .map((b) => (b.preferred_at ? new Date(b.preferred_at) : null))
-      .filter((d): d is Date => d !== null);
+  const { bookedDates, fullDates } = useMemo(() => {
+    if (!availability) return { bookedDates: [] as Date[], fullDates: [] as Date[] };
+    const counts = new Map<string, { date: Date; count: number }>();
+    for (const b of availability.bookings) {
+      if (!b.preferred_at) continue;
+      const d = new Date(b.preferred_at);
+      const key = d.toISOString().slice(0, 10);
+      const existing = counts.get(key);
+      if (existing) existing.count += 1;
+      else counts.set(key, { date: d, count: 1 });
+    }
+    const cap = availability.capacity ?? 1;
+    const booked: Date[] = [];
+    const full: Date[] = [];
+    for (const { date, count } of counts.values()) {
+      if (count >= cap) full.push(date);
+      else booked.push(date);
+    }
+    return { bookedDates: booked, fullDates: full };
   }, [availability]);
+
 
   if (isLoading) {
     return (
