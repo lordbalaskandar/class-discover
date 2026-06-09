@@ -12,10 +12,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuthModal } from "@/components/AuthModal";
 
 export function SiteHeader() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { open: openAuthModal } = useAuthModal();
   const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
@@ -77,8 +79,8 @@ export function SiteHeader() {
             </DropdownMenu>
           ) : (
             <>
-              <Button variant="ghost" onClick={() => navigate({ to: "/auth" })}>Sign in</Button>
-              <Button onClick={() => navigate({ to: "/auth" })} className="bg-gradient-hero hover:opacity-90 shadow-elegant">
+              <Button variant="ghost" onClick={openAuthModal}>Sign in</Button>
+              <Button onClick={openAuthModal} className="bg-gradient-hero hover:opacity-90 shadow-elegant">
                 Get started
               </Button>
             </>

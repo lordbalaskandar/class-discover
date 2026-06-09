@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Calendar, MapPin, Clock, Users, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { useAuthModal } from "@/components/AuthModal";
 
 export const Route = createFileRoute("/classes/$classId")({
   component: ClassDetailPage,
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/classes/$classId")({
 function ClassDetailPage() {
   const { classId } = Route.useParams();
   const navigate = useNavigate();
+  const { open: openAuthModal } = useAuthModal();
   const [userId, setUserId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [preferredAt, setPreferredAt] = useState("");
@@ -77,7 +79,7 @@ function ClassDetailPage() {
 
   const handleBook = async () => {
     if (!userId) {
-      navigate({ to: "/auth" });
+      openAuthModal();
       return;
     }
     setSubmitting(true);

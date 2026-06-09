@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Plus, Users, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import { useAuthModal } from "@/components/AuthModal";
 
 export const Route = createFileRoute("/host")({
   head: () => ({ meta: [{ title: "Host dashboard — Dryvon" }] }),
@@ -17,14 +18,14 @@ export const Route = createFileRoute("/host")({
 function HostPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { open: openAuthModal } = useAuthModal();
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) navigate({ to: "/auth", replace: true });
-      else setUserId(data.user.id);
+      setUserId(data.user?.id ?? null);
     });
-  }, [navigate]);
+  }, []);
 
   const { data: isHost } = useQuery({
     queryKey: ["isHost", userId],
@@ -94,6 +95,21 @@ function HostPage() {
   };
 
   if (userId === undefined) return <div className="min-h-screen"><SiteHeader /></div>;
+
+  if (userId === null) {
+    return (
+      <div className="min-h-screen">
+        <SiteHeader />
+        <div className="container mx-auto px-4 py-16 text-center max-w-md">
+          <h1 className="text-2xl font-bold">Sign in required</h1>
+          <p className="text-muted-foreground mt-2">Please sign in to access the host dashboard.</p>
+          <Button onClick={openAuthModal} className="mt-6 bg-gradient-hero hover:opacity-90 shadow-elegant">
+            Sign in
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (!isHost) {
     return (
