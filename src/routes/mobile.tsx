@@ -490,6 +490,9 @@ function UserFlow() {
           {screen === "pHelp" && (
             <ProfileHelpScreen onBack={() => setScreen("profile")} />
           )}
+          {screen === "pMyGym" && (
+            <ProfileMyGymScreen onBack={() => setScreen("profile")} />
+          )}
         </div>
         <PhoneTabBar
           screen={screen}
