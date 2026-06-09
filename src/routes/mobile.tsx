@@ -363,6 +363,8 @@ function UserFlow() {
           {(screen === "browse" || screen === "filters") && (
             <BrowseScreen
               filtersOpenInitially={screen === "filters" || browseFiltersOpen}
+              savedIds={savedIds}
+              onToggleSaved={toggleSaved}
               onSelect={(id) => {
                 setSelectedId(id);
                 setScreen("class");
