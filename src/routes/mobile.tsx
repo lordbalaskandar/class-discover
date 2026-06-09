@@ -537,18 +537,21 @@ function PhoneTabBar({
   screen,
   onHome,
   onHosts,
+  onMap,
   onBookings,
   onProfile,
 }: {
   screen: Screen;
   onHome: () => void;
   onHosts: () => void;
+  onMap: () => void;
   onBookings: () => void;
   onProfile: () => void;
 }) {
   const tabs = [
     { id: "browse" as Screen, icon: Home, label: "Sessions", onClick: onHome },
     { id: "hosts" as Screen, icon: Users, label: "Hosts", onClick: onHosts },
+    { id: "map" as Screen, icon: MapIcon, label: "Map", onClick: onMap },
     { id: "bookings" as Screen, icon: CalendarDays, label: "Bookings", onClick: onBookings },
     { id: "profile" as Screen, icon: UserIcon, label: "Profile", onClick: onProfile },
   ];
