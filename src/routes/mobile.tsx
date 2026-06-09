@@ -666,10 +666,14 @@ function BrowseScreen({
   onSelect,
   onHost,
   filtersOpenInitially = false,
+  savedIds,
+  onToggleSaved,
 }: {
   onSelect: (id: string) => void;
   onHost: (id: string) => void;
   filtersOpenInitially?: boolean;
+  savedIds: Set<string>;
+  onToggleSaved: (id: string) => void;
 }) {
   const [filtersOpen, setFiltersOpen] = useState(filtersOpenInitially);
   useEffect(() => {
