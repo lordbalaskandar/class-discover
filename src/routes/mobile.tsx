@@ -1351,6 +1351,7 @@ function HostFlow() {
     { id: "create", label: "Publish a class" },
     { id: "manage", label: "Manage attendees" },
     { id: "earnings", label: "Track earnings" },
+    { id: "metrics", label: "Review metrics" },
     { id: "hostProfile", label: "Your host profile" },
   ];
   const idx = steps.findIndex((s) => s.id === screen);
