@@ -510,25 +510,26 @@ function UserFlow() {
         </p>
         {(
           [
-            ["browse", "Sessions", false],
-            ["filters", "Session filters", true],
-            ["hosts", "Hosts", false],
-            ["map", "Map", false],
-            ["host", "Host profile", false],
-            ["gym", "Gym profile", false],
-            ["class", "Class detail", false],
-            ["booking", "Booking", false],
-            ["payment", "Payment", false],
-            ["confirmation", "Confirmation", false],
-            ["bookings", "My bookings", false],
-            ["profile", "Profile", false],
-            ["saved", "Saved classes", false],
-            ["pPayment", "Payment methods", true],
-            ["pNotifications", "Notifications", true],
-            ["pBecomeHost", "Become a host", true],
-            ["pHelp", "Help & support", true],
-          ] as [Screen, string, boolean][]
-        ).map(([s, label, sub]) => (
+            ["browse", "Sessions", 0],
+            ["filters", "Session filters", 1],
+            ["hosts", "Hosts", 0],
+            ["map", "Map", 0],
+            ["host", "Host profile", 0],
+            ["gym", "Gym profile", 0],
+            ["class", "Class detail", 0],
+            ["booking", "Booking", 0],
+            ["payment", "Payment", 0],
+            ["confirmation", "Confirmation", 0],
+            ["bookings", "My bookings", 0],
+            ["profile", "Profile", 0],
+            ["saved", "Saved classes", 1],
+            ["pPayment", "Payment methods", 1],
+            ["pNotifications", "Notifications", 1],
+            ["pMyGym", "My gym", 1],
+            ["pBecomeHost", "Become a host", 1],
+            ["pHelp", "Help & support", 1],
+          ] as [Screen, string, number][]
+        ).map(([s, label, level]) => (
           <button
             key={s}
             onClick={() => {
@@ -538,14 +539,15 @@ function UserFlow() {
             }}
             className={cn(
               "w-full text-left px-4 py-3 rounded-lg border transition-all",
-              sub && "ml-4 w-[calc(100%-1rem)] py-2",
+              level === 1 && "ml-4 w-[calc(100%-1rem)] py-2",
+              level === 2 && "ml-8 w-[calc(100%-2rem)] py-1.5",
               screen === s
                 ? "bg-primary text-primary-foreground border-primary shadow-elegant"
                 : "bg-card hover:bg-muted border-border",
             )}
           >
             <div className="flex items-center justify-between">
-              <span className={cn("font-medium", sub && "text-sm")}>{label}</span>
+              <span className={cn("font-medium", level === 1 && "text-sm", level === 2 && "text-xs")}>{label}</span>
               <ChevronRight className="h-4 w-4 opacity-60" />
             </div>
           </button>
