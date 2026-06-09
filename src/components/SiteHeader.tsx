@@ -42,9 +42,13 @@ export function SiteHeader() {
   const [uid, setUid] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setEmail(data.session?.user.email ?? null));
+    supabase.auth.getSession().then(({ data }) => {
+      setEmail(data.session?.user.email ?? null);
+      setUid(data.session?.user.id ?? null);
+    });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       setEmail(session?.user.email ?? null);
+      setUid(session?.user.id ?? null);
     });
     return () => sub.subscription.unsubscribe();
   }, []);
