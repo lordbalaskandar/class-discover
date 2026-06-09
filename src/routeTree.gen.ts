@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MobileRouteImport } from './routes/mobile'
 import { Route as HostRouteImport } from './routes/host'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as BookingsRouteImport } from './routes/bookings'
@@ -19,6 +20,11 @@ import { Route as HostNewRouteImport } from './routes/host.new'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as ClassesClassIdRouteImport } from './routes/classes.$classId'
 
+const MobileRoute = MobileRouteImport.update({
+  id: '/mobile',
+  path: '/mobile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HostRoute = HostRouteImport.update({
   id: '/host',
   path: '/host',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/bookings': typeof BookingsRoute
   '/browse': typeof BrowseRoute
   '/host': typeof HostRouteWithChildren
+  '/mobile': typeof MobileRoute
   '/classes/$classId': typeof ClassesClassIdRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/host/new': typeof HostNewRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/bookings': typeof BookingsRoute
   '/browse': typeof BrowseRoute
   '/host': typeof HostRouteWithChildren
+  '/mobile': typeof MobileRoute
   '/classes/$classId': typeof ClassesClassIdRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/host/new': typeof HostNewRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/bookings': typeof BookingsRoute
   '/browse': typeof BrowseRoute
   '/host': typeof HostRouteWithChildren
+  '/mobile': typeof MobileRoute
   '/classes/$classId': typeof ClassesClassIdRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/host/new': typeof HostNewRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/browse'
     | '/host'
+    | '/mobile'
     | '/classes/$classId'
     | '/events/$eventId'
     | '/host/new'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/browse'
     | '/host'
+    | '/mobile'
     | '/classes/$classId'
     | '/events/$eventId'
     | '/host/new'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/browse'
     | '/host'
+    | '/mobile'
     | '/classes/$classId'
     | '/events/$eventId'
     | '/host/new'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   BookingsRoute: typeof BookingsRoute
   BrowseRoute: typeof BrowseRoute
   HostRoute: typeof HostRouteWithChildren
+  MobileRoute: typeof MobileRoute
   ClassesClassIdRoute: typeof ClassesClassIdRoute
   EventsEventIdRoute: typeof EventsEventIdRoute
   ProfileUserIdRoute: typeof ProfileUserIdRoute
@@ -148,6 +161,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/mobile': {
+      id: '/mobile'
+      path: '/mobile'
+      fullPath: '/mobile'
+      preLoaderRoute: typeof MobileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/host': {
       id: '/host'
       path: '/host'
@@ -230,6 +250,7 @@ const rootRouteChildren: RootRouteChildren = {
   BookingsRoute: BookingsRoute,
   BrowseRoute: BrowseRoute,
   HostRoute: HostRouteWithChildren,
+  MobileRoute: MobileRoute,
   ClassesClassIdRoute: ClassesClassIdRoute,
   EventsEventIdRoute: EventsEventIdRoute,
   ProfileUserIdRoute: ProfileUserIdRoute,
@@ -237,13 +258,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
