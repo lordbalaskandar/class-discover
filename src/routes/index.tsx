@@ -65,7 +65,7 @@ type FeaturedRow = {
   listing_type: "class" | "trainer";
 };
 
-const baseSearch = { q: "", activity: "", location: "", category: "all" as const, type: "all" as const, sort: "newest" as const };
+const baseSearch: { q: string; activity: string; location: string; category: "all" | "class" | "trainer"; type: "all" | "scheduled" | "on_request"; sort: "newest" | "soonest" | "duration" } = { q: "", activity: "", location: "", category: "all", type: "all", sort: "newest" };
 
 function HomePage() {
   const navigate = useNavigate();
