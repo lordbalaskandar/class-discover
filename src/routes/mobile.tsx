@@ -760,7 +760,7 @@ function BrowseScreen({
             />
             <div>
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">
-                Specific date
+                Date range
               </p>
               <Popover>
                 <PopoverTrigger asChild>
@@ -768,18 +768,32 @@ function BrowseScreen({
                     variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal rounded-full",
-                      !filters.date && "text-muted-foreground"
+                      !filters.dateRange && "text-muted-foreground"
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {filters.date ? format(filters.date, "PPP") : "Pick a date"}
+                    {filters.dateRange?.from ? (
+                      filters.dateRange.to ? (
+                        <>
+                          {format(filters.dateRange.from, "LLL dd")} -{" "}
+                          {format(filters.dateRange.to, "LLL dd")}
+                        </>
+                      ) : (
+                        format(filters.dateRange.from, "LLL dd")
+                      )
+                    ) : (
+                      "Pick a date range"
+                    )}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
-                    mode="single"
-                    selected={filters.date}
-                    onSelect={(d) => setFilters((f) => ({ ...f, date: d }))}
+                    mode="range"
+                    selected={filters.dateRange}
+                    onSelect={(range) =>
+                      setFilters((f) => ({ ...f, dateRange: range }))
+                    }
+                    numberOfMonths={1}
                     initialFocus
                     className={cn("p-3 pointer-events-auto")}
                   />
