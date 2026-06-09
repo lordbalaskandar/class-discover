@@ -324,6 +324,7 @@ function UserFlow() {
         {(
           [
             ["browse", "Browse"],
+            ["filters", "Filters"],
             ["host", "Host profile"],
             ["gym", "Gym profile"],
             ["class", "Class detail"],
@@ -336,7 +337,11 @@ function UserFlow() {
         ).map(([s, label]) => (
           <button
             key={s}
-            onClick={() => setScreen(s)}
+            onClick={() => {
+              setScreen(s);
+              if (s === "filters") setBrowseFiltersOpen(true);
+              else setBrowseFiltersOpen(false);
+            }}
             className={cn(
               "w-full text-left px-4 py-3 rounded-lg border transition-all",
               screen === s
