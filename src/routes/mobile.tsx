@@ -3263,6 +3263,42 @@ function HostFlow() {
           {screen === "hpSupport" && (
             <HostSupportScreen onBack={() => setScreen("hostProfile")} />
           )}
+          {screen === "hpGym" && (
+            <HostGymScreen
+              gym={gym}
+              memberCount={members.length}
+              onBack={() => setScreen("hostProfile")}
+              onCreate={() => setScreen("hpGymCreate")}
+              onMembers={() => setScreen("hpGymMembers")}
+              onEdit={() => setScreen("hpGymEdit")}
+            />
+          )}
+          {screen === "hpGymCreate" && (
+            <HostGymCreateScreen
+              onBack={() => setScreen("hpGym")}
+              onCreate={(g) => {
+                setGym({ ...g, created: true });
+                setScreen("hpGym");
+              }}
+            />
+          )}
+          {screen === "hpGymMembers" && (
+            <HostGymMembersScreen
+              members={members}
+              onChange={setMembers}
+              onBack={() => setScreen("hpGym")}
+            />
+          )}
+          {screen === "hpGymEdit" && (
+            <HostGymEditScreen
+              gym={gym}
+              onSave={(g) => {
+                setGym({ ...g, created: true });
+                setScreen("hpGym");
+              }}
+              onBack={() => setScreen("hpGym")}
+            />
+          )}
         </div>
         <HostTabBar
           screen={screen}
