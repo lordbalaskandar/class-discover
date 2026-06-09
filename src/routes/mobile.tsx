@@ -2545,10 +2545,15 @@ function BookingsScreen({
 function ProfileScreen({
   onBookings,
   onBrowse,
+  onSaved,
+  savedCount,
 }: {
   onBookings: () => void;
   onBrowse: () => void;
+  onSaved: () => void;
+  savedCount: number;
 }) {
+  void onBrowse;
   const stats = [
     { label: "Booked", value: "12" },
     { label: "Hosts", value: "7" },
@@ -2557,7 +2562,11 @@ function ProfileScreen({
   const rows: { label: string; sub: string; onClick?: () => void }[] = [
     { label: "My bookings", sub: "View upcoming & past classes", onClick: onBookings },
     { label: "Payment methods", sub: "Visa •••• 4242" },
-    { label: "Saved classes", sub: "5 favourites" },
+    {
+      label: "Saved classes",
+      sub: savedCount === 0 ? "No saved classes yet" : `${savedCount} saved`,
+      onClick: onSaved,
+    },
     { label: "Notifications", sub: "Push & email" },
     { label: "Become a host", sub: "Share your craft on Dryvon" },
     { label: "Help & support", sub: "FAQ, contact us" },
