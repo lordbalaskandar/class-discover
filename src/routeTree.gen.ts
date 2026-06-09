@@ -16,6 +16,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProfileUserIdRouteImport } from './routes/profile.$userId'
 import { Route as HostNewRouteImport } from './routes/host.new'
+import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as ClassesClassIdRouteImport } from './routes/classes.$classId'
 
 const HostRoute = HostRouteImport.update({
@@ -53,6 +54,11 @@ const HostNewRoute = HostNewRouteImport.update({
   path: '/new',
   getParentRoute: () => HostRoute,
 } as any)
+const EventsEventIdRoute = EventsEventIdRouteImport.update({
+  id: '/events/$eventId',
+  path: '/events/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClassesClassIdRoute = ClassesClassIdRouteImport.update({
   id: '/classes/$classId',
   path: '/classes/$classId',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/browse': typeof BrowseRoute
   '/host': typeof HostRouteWithChildren
   '/classes/$classId': typeof ClassesClassIdRoute
+  '/events/$eventId': typeof EventsEventIdRoute
   '/host/new': typeof HostNewRoute
   '/profile/$userId': typeof ProfileUserIdRoute
 }
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/browse': typeof BrowseRoute
   '/host': typeof HostRouteWithChildren
   '/classes/$classId': typeof ClassesClassIdRoute
+  '/events/$eventId': typeof EventsEventIdRoute
   '/host/new': typeof HostNewRoute
   '/profile/$userId': typeof ProfileUserIdRoute
 }
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/browse': typeof BrowseRoute
   '/host': typeof HostRouteWithChildren
   '/classes/$classId': typeof ClassesClassIdRoute
+  '/events/$eventId': typeof EventsEventIdRoute
   '/host/new': typeof HostNewRoute
   '/profile/$userId': typeof ProfileUserIdRoute
 }
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/browse'
     | '/host'
     | '/classes/$classId'
+    | '/events/$eventId'
     | '/host/new'
     | '/profile/$userId'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/browse'
     | '/host'
     | '/classes/$classId'
+    | '/events/$eventId'
     | '/host/new'
     | '/profile/$userId'
   id:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/browse'
     | '/host'
     | '/classes/$classId'
+    | '/events/$eventId'
     | '/host/new'
     | '/profile/$userId'
   fileRoutesById: FileRoutesById
@@ -130,6 +142,7 @@ export interface RootRouteChildren {
   BrowseRoute: typeof BrowseRoute
   HostRoute: typeof HostRouteWithChildren
   ClassesClassIdRoute: typeof ClassesClassIdRoute
+  EventsEventIdRoute: typeof EventsEventIdRoute
   ProfileUserIdRoute: typeof ProfileUserIdRoute
 }
 
@@ -184,6 +197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HostNewRouteImport
       parentRoute: typeof HostRoute
     }
+    '/events/$eventId': {
+      id: '/events/$eventId'
+      path: '/events/$eventId'
+      fullPath: '/events/$eventId'
+      preLoaderRoute: typeof EventsEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/classes/$classId': {
       id: '/classes/$classId'
       path: '/classes/$classId'
@@ -211,8 +231,19 @@ const rootRouteChildren: RootRouteChildren = {
   BrowseRoute: BrowseRoute,
   HostRoute: HostRouteWithChildren,
   ClassesClassIdRoute: ClassesClassIdRoute,
+  EventsEventIdRoute: EventsEventIdRoute,
   ProfileUserIdRoute: ProfileUserIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
