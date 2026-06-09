@@ -84,6 +84,8 @@ type HostItem = {
   classId: string; // links to a CLASS for the existing host/gym detail screens
   image: string;
   bio: string;
+  lat: number;
+  lng: number;
 };
 
 const HOSTS: HostItem[] = [
