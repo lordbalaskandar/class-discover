@@ -578,8 +578,8 @@ function BrowseScreen({
 
       <div className="px-5">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="font-semibold text-sm">Near you this weekend</h3>
-          <span className="text-xs text-primary">See all</span>
+          <h3 className="font-semibold text-sm">Results</h3>
+          <span className="text-xs text-muted-foreground">{CLASSES.filter((c) => filters.activity === "all" || c.activity === filters.activity).length} found</span>
         </div>
         <div className="space-y-3">
           {CLASSES.filter((c) => filters.activity === "all" || c.activity === filters.activity).map((c) => (
