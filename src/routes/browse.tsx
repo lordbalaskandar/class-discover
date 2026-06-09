@@ -49,6 +49,7 @@ type ClassRow = {
   image_url: string | null;
   duration_min: number;
   booking_type: "scheduled" | "on_request";
+  listing_type: "class" | "trainer";
   start_at: string | null;
   capacity: number | null;
 };
@@ -73,7 +74,7 @@ function BrowsePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("classes")
-        .select("id, host_id, title, description, activity, location, image_url, duration_min, booking_type, start_at, capacity")
+        .select("id, host_id, title, description, activity, location, image_url, duration_min, booking_type, listing_type, start_at, capacity")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -83,6 +84,7 @@ function BrowsePage() {
 
   const filtered = useMemo(() => {
     let result = classes.filter((c) => {
+      if (search.category !== "all" && c.listing_type !== search.category) return false;
       if (search.activity && c.activity !== search.activity) return false;
       if (search.type !== "all" && c.booking_type !== search.type) return false;
       if (search.location) {
