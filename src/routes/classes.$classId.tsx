@@ -22,6 +22,7 @@ export const Route = createFileRoute("/classes/$classId")({
 function ClassDetailPage() {
   const { classId } = Route.useParams();
   const navigate = useNavigate();
+  const { open: openAuthModal } = useAuthModal();
   const [userId, setUserId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [preferredAt, setPreferredAt] = useState("");

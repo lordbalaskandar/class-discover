@@ -18,14 +18,14 @@ export const Route = createFileRoute("/bookings")({
 function BookingsPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { open: openAuthModal } = useAuthModal();
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) navigate({ to: "/auth", replace: true });
-      else setUserId(data.user.id);
+      setUserId(data.user?.id ?? null);
     });
-  }, [navigate]);
+  }, []);
 
   const { data: bookings = [] } = useQuery({
     queryKey: ["bookings", userId],
