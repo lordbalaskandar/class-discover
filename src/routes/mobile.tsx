@@ -3326,6 +3326,10 @@ function HostFlow() {
             ["hpAvailability", "Availability", true],
             ["hpReviews", "Reviews", true],
             ["hpSupport", "Help & support", true],
+            ["hpGym", "My gym", true],
+            ["hpGymCreate", "Create gym", true],
+            ["hpGymMembers", "Gym members", true],
+            ["hpGymEdit", "Edit gym", true],
           ] as [HostScreenId, string, boolean][]
         ).map(([s, label, sub]) => (
           <button
