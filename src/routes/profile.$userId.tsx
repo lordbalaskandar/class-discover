@@ -217,20 +217,6 @@ function ProfilePage() {
             </div>
           ) : (
             <div className="flex flex-col md:flex-row gap-6 items-start">
-              <Avatar className="h-24 w-24 shadow-elegant">
-                {profile.avatar_url ? <AvatarImage src={profile.avatar_url} alt={profile.display_name ?? "Profile"} /> : null}
-                <AvatarFallback className="text-2xl bg-primary text-primary-foreground">{initials}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <h1 className="font-display text-3xl md:text-4xl tracking-tight">
-                  {profile.display_name ?? "Unnamed member"}
-                </h1>
-                {profile.city && (
-                  <p className="mt-1 text-muted-foreground flex items-center gap-1.5">
-                    <MapPin className="h-4 w-4" /> {profile.city}
-                  </p>
-                )}
-            <div className="flex flex-col md:flex-row gap-6 items-start">
               {profile.account_type === "gym" ? (
                 <div className="h-24 w-24 rounded-2xl shadow-elegant bg-gradient-hero flex items-center justify-center overflow-hidden">
                   {profile.avatar_url ? (
