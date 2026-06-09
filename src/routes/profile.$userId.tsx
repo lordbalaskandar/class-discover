@@ -14,7 +14,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { ACTIVITIES } from "@/lib/activities";
-import { Calendar, Clock, MapPin, Pencil, Save, Sparkles, Users, X } from "lucide-react";
+import { Building2, Calendar, CalendarHeart, Clock, MapPin, Pencil, Save, Sparkles, User as UserIcon, Users, X } from "lucide-react";
 import { toast } from "sonner";
 
 const profileSearchSchema = z.object({
@@ -44,6 +44,16 @@ type ProfileRow = {
   avatar_url: string | null;
   city: string | null;
   special_notes: string | null;
+  account_type: "person" | "gym";
+};
+
+type EventRow = {
+  id: string;
+  title: string;
+  event_date: string;
+  location: string;
+  capacity: number | null;
+  image_url: string | null;
 };
 
 type ClassRow = {
@@ -80,7 +90,7 @@ function ProfilePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, display_name, bio, avatar_url, city, special_notes")
+        .select("id, display_name, bio, avatar_url, city, special_notes, account_type")
         .eq("id", userId)
         .maybeSingle();
       if (error) throw error;
@@ -98,6 +108,20 @@ function ProfilePage() {
         .order("start_at", { ascending: true, nullsFirst: false });
       if (error) throw error;
       return (data ?? []) as ClassRow[];
+    },
+  });
+
+  const { data: events = [] } = useQuery({
+    queryKey: ["profile-events", userId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("special_events")
+        .select("id, title, event_date, location, capacity, image_url")
+        .eq("host_id", userId)
+        .eq("is_published", true)
+        .order("event_date", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as EventRow[];
     },
   });
 
@@ -193,14 +217,31 @@ function ProfilePage() {
             </div>
           ) : (
             <div className="flex flex-col md:flex-row gap-6 items-start">
-              <Avatar className="h-24 w-24 shadow-elegant">
-                {profile.avatar_url ? <AvatarImage src={profile.avatar_url} alt={profile.display_name ?? "Profile"} /> : null}
-                <AvatarFallback className="text-2xl bg-primary text-primary-foreground">{initials}</AvatarFallback>
-              </Avatar>
+              {profile.account_type === "gym" ? (
+                <div className="h-24 w-24 rounded-2xl shadow-elegant bg-gradient-hero flex items-center justify-center overflow-hidden">
+                  {profile.avatar_url ? (
+                    <img src={profile.avatar_url} alt={profile.display_name ?? "Gym"} className="h-full w-full object-cover" />
+                  ) : (
+                    <Building2 className="h-10 w-10 text-primary-foreground" />
+                  )}
+                </div>
+              ) : (
+                <Avatar className="h-24 w-24 shadow-elegant">
+                  {profile.avatar_url ? <AvatarImage src={profile.avatar_url} alt={profile.display_name ?? "Profile"} /> : null}
+                  <AvatarFallback className="text-2xl bg-primary text-primary-foreground">{initials}</AvatarFallback>
+                </Avatar>
+              )}
               <div className="flex-1 min-w-0">
-                <h1 className="font-display text-3xl md:text-4xl tracking-tight">
-                  {profile.display_name ?? "Unnamed member"}
-                </h1>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="font-display text-3xl md:text-4xl tracking-tight">
+                    {profile.display_name ?? "Unnamed member"}
+                  </h1>
+                  {profile.account_type === "gym" ? (
+                    <Badge className="bg-primary text-primary-foreground border-0 gap-1"><Building2 className="h-3 w-3" /> Gym</Badge>
+                  ) : (
+                    <Badge variant="secondary" className="gap-1"><UserIcon className="h-3 w-3" /> Member</Badge>
+                  )}
+                </div>
                 {profile.city && (
                   <p className="mt-1 text-muted-foreground flex items-center gap-1.5">
                     <MapPin className="h-4 w-4" /> {profile.city}
@@ -212,6 +253,48 @@ function ProfilePage() {
           )}
         </div>
       </section>
+
+      {profile && profile.account_type === "gym" && events.length > 0 && (
+        <section className="border-b bg-gradient-soft/40">
+          <div className="container mx-auto px-4 py-8">
+            <div className="flex items-center gap-2 mb-4">
+              <CalendarHeart className="h-5 w-5 text-primary" />
+              <h2 className="font-display text-2xl">Special events</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {events.map((ev) => {
+                const when = new Date(ev.event_date);
+                return (
+                  <Link key={ev.id} to="/events/$eventId" params={{ eventId: ev.id }} className="group block">
+                    <Card className="overflow-hidden shadow-card hover:shadow-elegant transition-all hover:-translate-y-0.5 py-0 gap-0 h-full">
+                      <div className="aspect-[16/9] relative overflow-hidden bg-muted">
+                        {ev.image_url ? (
+                          <img src={ev.image_url} alt={ev.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                        ) : (
+                          <div className="h-full w-full bg-gradient-hero flex items-center justify-center">
+                            <CalendarHeart className="h-10 w-10 text-primary-foreground/80" />
+                          </div>
+                        )}
+                        <Badge className="absolute top-3 left-3 bg-accent text-accent-foreground border-0">Event</Badge>
+                      </div>
+                      <CardContent className="p-4">
+                        <h3 className="font-semibold leading-tight line-clamp-2">{ev.title}</h3>
+                        <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" />
+                            {when.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })} · {when.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+                          </div>
+                          <div className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" />{ev.location}</div>
+                        </div>
+                        <Button size="sm" className="w-full mt-3">View & sign up</Button>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {profile && (
         <section className="border-b">
