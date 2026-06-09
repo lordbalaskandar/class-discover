@@ -60,6 +60,13 @@ function ClassDetailPage() {
     },
   });
 
+  const bookedDates = useMemo(() => {
+    if (!availability) return [] as Date[];
+    return availability.bookings
+      .map((b) => (b.preferred_at ? new Date(b.preferred_at) : null))
+      .filter((d): d is Date => d !== null);
+  }, [availability]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen">
@@ -85,13 +92,6 @@ function ClassDetailPage() {
   const { cls, profile } = data;
   const when = cls.start_at ? new Date(cls.start_at) : null;
   const isOwner = userId === cls.host_id;
-
-  const bookedDates = useMemo(() => {
-    if (!availability) return [] as Date[];
-    return availability.bookings
-      .map((b) => (b.preferred_at ? new Date(b.preferred_at) : null))
-      .filter((d): d is Date => d !== null);
-  }, [availability]);
 
   const scheduledBookedCount = availability?.bookingType === "scheduled" ? availability.bookings.length : 0;
   const spotsLeft = cls.capacity ? Math.max(0, cls.capacity - scheduledBookedCount) : null;
