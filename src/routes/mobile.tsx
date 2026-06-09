@@ -465,6 +465,7 @@ function UserFlow() {
             ["browse", "Sessions"],
             ["filters", "Session filters"],
             ["hosts", "Hosts"],
+            ["map", "Map"],
             ["host", "Host profile"],
             ["gym", "Gym profile"],
             ["class", "Class detail"],
