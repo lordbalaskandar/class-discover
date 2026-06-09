@@ -39,6 +39,8 @@ import {
   Repeat,
   Target,
   Activity,
+  SlidersHorizontal,
+  X,
 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
