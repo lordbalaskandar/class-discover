@@ -73,6 +73,10 @@ type Screen =
   | "bookings"
   | "profile"
   | "saved"
+  | "pPayment"
+  | "pNotifications"
+  | "pBecomeHost"
+  | "pHelp"
   | "filters";
 
 type HostItem = {
@@ -458,6 +462,7 @@ function UserFlow() {
               onBookings={() => setScreen("bookings")}
               onBrowse={() => setScreen("browse")}
               onSaved={() => setScreen("saved")}
+              onOpenSection={(s) => setScreen(s)}
             />
           )}
           {screen === "saved" && (
@@ -471,6 +476,18 @@ function UserFlow() {
                 setScreen("class");
               }}
             />
+          )}
+          {screen === "pPayment" && (
+            <ProfilePaymentScreen onBack={() => setScreen("profile")} />
+          )}
+          {screen === "pNotifications" && (
+            <ProfileNotificationsScreen onBack={() => setScreen("profile")} />
+          )}
+          {screen === "pBecomeHost" && (
+            <ProfileBecomeHostScreen onBack={() => setScreen("profile")} />
+          )}
+          {screen === "pHelp" && (
+            <ProfileHelpScreen onBack={() => setScreen("profile")} />
           )}
         </div>
         <PhoneTabBar
@@ -502,6 +519,10 @@ function UserFlow() {
             ["bookings", "My bookings"],
             ["profile", "Profile"],
             ["saved", "Saved classes"],
+            ["pPayment", "Payment methods"],
+            ["pNotifications", "Notifications"],
+            ["pBecomeHost", "Become a host"],
+            ["pHelp", "Help & support"],
           ] as [Screen, string][]
         ).map(([s, label]) => (
           <button
@@ -2637,19 +2658,21 @@ function SavedScreen({
   );
 }
 
-function ProfileScreen({
+type ProfileSection = "pPayment" | "pNotifications" | "pBecomeHost" | "pHelp";
 
+function ProfileScreen({
   onBookings,
   onBrowse,
   onSaved,
+  onOpenSection,
   savedCount,
 }: {
   onBookings: () => void;
   onBrowse: () => void;
   onSaved: () => void;
+  onOpenSection: (s: ProfileSection) => void;
   savedCount: number;
 }) {
-  void onBrowse;
   const stats = [
     { label: "Booked", value: "12" },
     { label: "Hosts", value: "7" },
@@ -2657,15 +2680,15 @@ function ProfileScreen({
   ];
   const rows: { label: string; sub: string; onClick?: () => void }[] = [
     { label: "My bookings", sub: "View upcoming & past classes", onClick: onBookings },
-    { label: "Payment methods", sub: "Visa •••• 4242" },
+    { label: "Payment methods", sub: "Visa •••• 4242", onClick: () => onOpenSection("pPayment") },
     {
       label: "Saved classes",
       sub: savedCount === 0 ? "No saved classes yet" : `${savedCount} saved`,
       onClick: onSaved,
     },
-    { label: "Notifications", sub: "Push & email" },
-    { label: "Become a host", sub: "Share your craft on Dryvon" },
-    { label: "Help & support", sub: "FAQ, contact us" },
+    { label: "Notifications", sub: "Push & email", onClick: () => onOpenSection("pNotifications") },
+    { label: "Become a host", sub: "Share your craft on Dryvon", onClick: () => onOpenSection("pBecomeHost") },
+    { label: "Help & support", sub: "FAQ, contact us", onClick: () => onOpenSection("pHelp") },
   ];
 
   return (
@@ -2720,6 +2743,292 @@ function ProfileScreen({
     </ScreenScroll>
   );
 }
+
+function ProfilePaymentScreen({ onBack }: { onBack: () => void }) {
+  const [methods, setMethods] = useState([
+    { id: "1", brand: "Visa", last4: "4242", exp: "08/27", default: true },
+    { id: "2", brand: "Mastercard", last4: "1117", exp: "03/26", default: false },
+  ]);
+  const makeDefault = (id: string) =>
+    setMethods((m) => m.map((x) => ({ ...x, default: x.id === id })));
+  const remove = (id: string) => setMethods((m) => m.filter((x) => x.id !== id));
+  return (
+    <div className="h-full flex flex-col">
+      <ScreenHeader title="Payment methods" onBack={onBack} />
+      <ScreenScroll>
+        <div className="px-5 pt-3 space-y-2">
+          {methods.map((m) => (
+            <Card key={m.id} className="p-3">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-12 rounded-md bg-gradient-hero text-primary-foreground flex items-center justify-center">
+                  <CreditCard className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">
+                    {m.brand} •••• {m.last4}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">Exp {m.exp}</p>
+                </div>
+                {m.default ? (
+                  <Badge variant="secondary" className="text-[10px]">Default</Badge>
+                ) : (
+                  <button
+                    onClick={() => makeDefault(m.id)}
+                    className="text-[11px] text-primary font-medium"
+                  >
+                    Set default
+                  </button>
+                )}
+              </div>
+              {!m.default && (
+                <button
+                  onClick={() => remove(m.id)}
+                  className="mt-2 text-[11px] text-muted-foreground hover:text-destructive"
+                >
+                  Remove
+                </button>
+              )}
+            </Card>
+          ))}
+          <Button variant="outline" className="w-full mt-2">
+            <Plus className="h-4 w-4 mr-1" /> Add payment method
+          </Button>
+          <p className="text-[10px] text-muted-foreground text-center mt-3 px-4">
+            <Lock className="inline h-3 w-3 mr-1" />
+            Payments are processed securely.
+          </p>
+        </div>
+      </ScreenScroll>
+    </div>
+  );
+}
+
+function ProfileNotificationsScreen({ onBack }: { onBack: () => void }) {
+  const [prefs, setPrefs] = useState({
+    pushBookings: true,
+    pushReminders: true,
+    pushPromos: false,
+    pushMessages: true,
+    emailBookings: true,
+    emailDigest: false,
+    emailPromos: false,
+  });
+  type Key = keyof typeof prefs;
+  const toggle = (k: Key) => setPrefs((p) => ({ ...p, [k]: !p[k] }));
+  const Row = ({ k, label, sub }: { k: Key; label: string; sub: string }) => (
+    <div className="py-2.5 flex items-center justify-between gap-3">
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium">{label}</p>
+        <p className="text-[11px] text-muted-foreground">{sub}</p>
+      </div>
+      <button
+        onClick={() => toggle(k)}
+        role="switch"
+        aria-checked={prefs[k]}
+        className={cn(
+          "relative h-6 w-10 rounded-full transition-colors shrink-0",
+          prefs[k] ? "bg-primary" : "bg-muted",
+        )}
+      >
+        <span
+          className={cn(
+            "absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-all",
+            prefs[k] ? "left-[18px]" : "left-0.5",
+          )}
+        />
+      </button>
+    </div>
+  );
+  return (
+    <div className="h-full flex flex-col">
+      <ScreenHeader title="Notifications" onBack={onBack} />
+      <ScreenScroll>
+        <div className="px-5 pt-3">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-1">
+            Push
+          </p>
+          <Card className="px-3 divide-y">
+            <Row k="pushBookings" label="Booking updates" sub="Confirmations & changes" />
+            <Row k="pushReminders" label="Class reminders" sub="1 hour before start" />
+            <Row k="pushMessages" label="Messages from hosts" sub="Replies & questions" />
+            <Row k="pushPromos" label="Offers & promos" sub="Occasional deals" />
+          </Card>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-1 mt-4">
+            Email
+          </p>
+          <Card className="px-3 divide-y">
+            <Row k="emailBookings" label="Booking receipts" sub="Always recommended" />
+            <Row k="emailDigest" label="Weekly digest" sub="New classes near you" />
+            <Row k="emailPromos" label="Promotional emails" sub="Featured hosts & events" />
+          </Card>
+        </div>
+      </ScreenScroll>
+    </div>
+  );
+}
+
+function ProfileBecomeHostScreen({ onBack }: { onBack: () => void }) {
+  const benefits = [
+    { icon: DollarSign, label: "Set your own price", sub: "Keep 90% of every booking" },
+    { icon: CalendarDays, label: "Flexible schedule", sub: "List sessions when you're free" },
+    { icon: Users, label: "Reach new clients", sub: "Get discovered by people nearby" },
+    { icon: TrendingUp, label: "Grow your brand", sub: "Reviews, followers, and metrics" },
+  ];
+  const steps = [
+    "Tell us about you and your craft",
+    "Add your first class or service",
+    "Verify your ID and payouts",
+    "Go live and start hosting",
+  ];
+  return (
+    <div className="h-full flex flex-col">
+      <ScreenHeader title="Become a host" onBack={onBack} />
+      <ScreenScroll>
+        <div
+          className="mx-5 mt-3 rounded-2xl p-5 text-primary-foreground shadow-elegant"
+          style={{ background: "linear-gradient(135deg,#f4b942,#e07a5f)" }}
+        >
+          <Badge className="bg-background/20 text-primary-foreground hover:bg-background/20 border-0 mb-2">
+            Earn on Dryvon
+          </Badge>
+          <h3 className="font-display text-xl font-semibold leading-tight">
+            Turn your craft into income
+          </h3>
+          <p className="text-xs opacity-90 mt-1">
+            Host yoga, BJJ, running clubs, PT sessions and more.
+          </p>
+        </div>
+
+        <div className="px-5 mt-4 space-y-2">
+          {benefits.map((b) => (
+            <Card key={b.label} className="p-3 flex items-center gap-3">
+              <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
+                <b.icon className="h-4 w-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm">{b.label}</p>
+                <p className="text-[11px] text-muted-foreground">{b.sub}</p>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        <div className="px-5 mt-5">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">
+            How it works
+          </p>
+          <Card className="p-3 space-y-2">
+            {steps.map((s, i) => (
+              <div key={s} className="flex items-center gap-3">
+                <div className="h-6 w-6 rounded-full bg-foreground text-background text-[11px] font-semibold flex items-center justify-center">
+                  {i + 1}
+                </div>
+                <p className="text-sm">{s}</p>
+              </div>
+            ))}
+          </Card>
+        </div>
+
+        <div className="px-5 mt-5 pb-2">
+          <Button className="w-full bg-gradient-hero shadow-elegant">
+            Start hosting
+          </Button>
+          <p className="text-[10px] text-muted-foreground text-center mt-2">
+            Takes about 5 minutes
+          </p>
+        </div>
+      </ScreenScroll>
+    </div>
+  );
+}
+
+function ProfileHelpScreen({ onBack }: { onBack: () => void }) {
+  const [open, setOpen] = useState<string | null>(null);
+  const faqs = [
+    {
+      q: "How do refunds work?",
+      a: "Cancel up to 24 hours before the class for a full refund. Inside 24 hours we offer credit toward another class.",
+    },
+    {
+      q: "What if my host cancels?",
+      a: "You'll be refunded in full automatically and notified by push and email.",
+    },
+    {
+      q: "Can I message a host before booking?",
+      a: "Yes — tap a host's profile and use the Message button to ask a question.",
+    },
+    {
+      q: "Is my payment information secure?",
+      a: "Payments are processed by our PCI-compliant provider. We never store full card numbers.",
+    },
+  ];
+  const links: { icon: typeof MessageSquare; label: string; sub: string }[] = [
+    { icon: MessageSquare, label: "Chat with support", sub: "Replies in ~5 min" },
+    { icon: Bell, label: "Report an issue", sub: "Booking, payment or host" },
+    { icon: Sparkles, label: "Suggest a feature", sub: "Help shape Dryvon" },
+  ];
+  return (
+    <div className="h-full flex flex-col">
+      <ScreenHeader title="Help & support" onBack={onBack} />
+      <ScreenScroll>
+        <div className="px-5 pt-3 space-y-2">
+          {links.map((l) => (
+            <Card
+              key={l.label}
+              className="p-3 flex items-center gap-3 cursor-pointer active:scale-[0.99] transition-transform"
+            >
+              <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
+                <l.icon className="h-4 w-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm">{l.label}</p>
+                <p className="text-[11px] text-muted-foreground">{l.sub}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </Card>
+          ))}
+        </div>
+
+        <div className="px-5 mt-5">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">
+            FAQ
+          </p>
+          <Card className="divide-y">
+            {faqs.map((f) => {
+              const isOpen = open === f.q;
+              return (
+                <button
+                  key={f.q}
+                  onClick={() => setOpen(isOpen ? null : f.q)}
+                  className="w-full text-left p-3"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-medium text-sm">{f.q}</p>
+                    <ChevronRight
+                      className={cn(
+                        "h-4 w-4 text-muted-foreground transition-transform",
+                        isOpen && "rotate-90",
+                      )}
+                    />
+                  </div>
+                  {isOpen && (
+                    <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
+                      {f.a}
+                    </p>
+                  )}
+                </button>
+              );
+            })}
+          </Card>
+          <p className="text-[10px] text-muted-foreground text-center mt-4">
+            Dryvon · v1.0.0
+          </p>
+        </div>
+      </ScreenScroll>
+    </div>
+  );
+}
+
 
 /* ============================================================
    HOST FLOW
