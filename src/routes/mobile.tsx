@@ -501,6 +501,7 @@ function UserFlow() {
             ["confirmation", "Confirmation"],
             ["bookings", "My bookings"],
             ["profile", "Profile"],
+            ["saved", "Saved classes"],
           ] as [Screen, string][]
         ).map(([s, label]) => (
           <button
