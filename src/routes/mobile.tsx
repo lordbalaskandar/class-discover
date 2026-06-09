@@ -3046,7 +3046,11 @@ type HostScreenId =
   | "hpPayouts"
   | "hpAvailability"
   | "hpReviews"
-  | "hpSupport";
+  | "hpSupport"
+  | "hpGym"
+  | "hpGymCreate"
+  | "hpGymMembers"
+  | "hpGymEdit";
 
 type HostClass = {
   id: string;
