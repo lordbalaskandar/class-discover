@@ -66,7 +66,8 @@ type Screen =
   | "payment"
   | "confirmation"
   | "bookings"
-  | "profile";
+  | "profile"
+  | "filters";
 
 type ClassItem = {
   id: string;
