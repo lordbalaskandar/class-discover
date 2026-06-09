@@ -41,7 +41,10 @@ import {
   Activity,
   SlidersHorizontal,
   X,
+  Map as MapIcon,
+  Users,
 } from "lucide-react";
+import { HostsMap } from "@/components/mobile/HostsMap";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
