@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Sparkles, LogOut, User as UserIcon, Calendar } from "lucide-react";
+import { Sparkles, LogOut, User as UserIcon, Calendar, Sun, Moon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,10 +14,30 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthModal } from "@/components/AuthModal";
 
+function useThemeToggle() {
+  const [isDark, setIsDark] = useState(false);
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains("dark"));
+  }, []);
+  const toggle = () => {
+    const next = !isDark;
+    setIsDark(next);
+    if (next) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  };
+  return { isDark, toggle };
+}
+
 export function SiteHeader() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { open: openAuthModal } = useAuthModal();
+  const { isDark, toggle } = useThemeToggle();
   const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
@@ -53,6 +73,9 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme" className="rounded-full">
+            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Button>
           {email ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
