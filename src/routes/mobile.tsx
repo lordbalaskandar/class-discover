@@ -228,15 +228,18 @@ function UserFlow() {
       <PhoneFrame>
         <PhoneStatusBar />
         <div className="flex-1 overflow-hidden relative bg-background">
-          {screen === "browse" && (
+          {(screen === "browse" || screen === "filters") && (
             <BrowseScreen
+              filtersOpenInitially={screen === "filters" || browseFiltersOpen}
               onSelect={(id) => {
                 setSelectedId(id);
                 setScreen("class");
+                setBrowseFiltersOpen(false);
               }}
               onHost={(id) => {
                 setSelectedId(id);
                 setScreen("host");
+                setBrowseFiltersOpen(false);
               }}
             />
           )}
