@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuthModal } from "@/components/AuthModal";
 
 export function SiteHeader() {
   const navigate = useNavigate();
