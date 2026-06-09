@@ -760,6 +760,8 @@ function BrowseScreen({
                   type: "all",
                   spots: "any",
                   sort: "newest",
+                  distance: "any",
+                  date: undefined,
                 })
               }
             >
