@@ -509,6 +509,8 @@ function BrowseScreen({
     type: "all" as "all" | "scheduled" | "on_request",
     spots: "any" as "any" | "available",
     sort: "newest" as "newest" | "soonest" | "duration",
+    distance: "any" as "any" | "1" | "5" | "10" | "25" | "50",
+    date: undefined as Date | undefined,
   });
   const activeCount =
     (filters.category !== "all" ? 1 : 0) +
@@ -517,7 +519,9 @@ function BrowseScreen({
     (filters.duration !== "any" ? 1 : 0) +
     (filters.capacity !== "any" ? 1 : 0) +
     (filters.type !== "all" ? 1 : 0) +
-    (filters.spots !== "any" ? 1 : 0);
+    (filters.spots !== "any" ? 1 : 0) +
+    (filters.distance !== "any" ? 1 : 0) +
+    (filters.date ? 1 : 0);
 
   return (
     <div className="h-full relative">
@@ -574,8 +578,8 @@ function BrowseScreen({
 
       <div className="px-5">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="font-semibold text-sm">Near you this weekend</h3>
-          <span className="text-xs text-primary">See all</span>
+          <h3 className="font-semibold text-sm">Results</h3>
+          <span className="text-xs text-muted-foreground">{CLASSES.filter((c) => filters.activity === "all" || c.activity === filters.activity).length} found</span>
         </div>
         <div className="space-y-3">
           {CLASSES.filter((c) => filters.activity === "all" || c.activity === filters.activity).map((c) => (
@@ -741,6 +745,47 @@ function BrowseScreen({
                 { v: "duration", l: "Shortest" },
               ]}
             />
+            <FilterGroup
+              label="Distance"
+              value={filters.distance}
+              onChange={(v) => setFilters((f) => ({ ...f, distance: v as typeof f.distance }))}
+              options={[
+                { v: "any", l: "Any" },
+                { v: "1", l: "< 1 mi" },
+                { v: "5", l: "< 5 mi" },
+                { v: "10", l: "< 10 mi" },
+                { v: "25", l: "< 25 mi" },
+                { v: "50", l: "< 50 mi" },
+              ]}
+            />
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">
+                Specific date
+              </p>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal rounded-full",
+                      !filters.date && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {filters.date ? format(filters.date, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={filters.date}
+                    onSelect={(d) => setFilters((f) => ({ ...f, date: d }))}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
           <div className="border-t bg-card px-5 py-3 flex items-center gap-3">
             <Button
@@ -756,6 +801,8 @@ function BrowseScreen({
                   type: "all",
                   spots: "any",
                   sort: "newest",
+                  distance: "any",
+                  date: undefined,
                 })
               }
             >
