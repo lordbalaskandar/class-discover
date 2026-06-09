@@ -1521,10 +1521,12 @@ function HostDashboardScreen({
   onCreate,
   onOpenClass,
   onEarnings,
+  onMetrics,
 }: {
   onCreate: () => void;
   onOpenClass: (id: string) => void;
   onEarnings: () => void;
+  onMetrics: () => void;
 }) {
   const totalBooked = HOST_CLASSES.reduce((a, c) => a + c.booked, 0);
   const today = HOST_CLASSES.filter((c) => c.date === "Today");
