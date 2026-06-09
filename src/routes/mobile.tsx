@@ -127,6 +127,71 @@ const CLASSES: ClassItem[] = [
 ];
 
 function MobileShowcase() {
+  return (
+    <div className="min-h-screen">
+      <SiteHeader />
+      <div className="container mx-auto px-4 py-10 max-w-5xl">
+        <div className="text-center mb-10">
+          <Badge variant="secondary" className="mb-3">Mobile preview</Badge>
+          <h1 className="font-display text-4xl md:text-5xl font-semibold tracking-tight">
+            The Dryvon app, end to end
+          </h1>
+          <p className="mt-3 text-muted-foreground max-w-2xl mx-auto">
+            Two interactive prototypes — the user flow for booking a class, and
+            the host flow for running them.
+          </p>
+        </div>
+
+        <FlowSection
+          eyebrow="User flow"
+          title="Book a class"
+          description="Browse, check the host, review the class, pick a date, pay, and confirm."
+        >
+          <UserFlow />
+        </FlowSection>
+
+        <div className="my-16 border-t" />
+
+        <FlowSection
+          eyebrow="Host flow"
+          title="Run your classes"
+          description="See today's schedule, publish a class, manage attendees, and track earnings."
+        >
+          <HostFlow />
+        </FlowSection>
+      </div>
+    </div>
+  );
+}
+
+function FlowSection({
+  eyebrow,
+  title,
+  description,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section>
+      <div className="text-center mb-8">
+        <Badge variant="outline" className="mb-3">{eyebrow}</Badge>
+        <h2 className="font-display text-3xl md:text-4xl font-semibold tracking-tight">
+          {title}
+        </h2>
+        <p className="mt-2 text-muted-foreground max-w-xl mx-auto text-sm">
+          {description}
+        </p>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function UserFlow() {
   const [screen, setScreen] = useState<Screen>("browse");
   const [selectedId, setSelectedId] = useState<string>("1");
   const selected = useMemo(
@@ -140,138 +205,119 @@ function MobileShowcase() {
   };
 
   return (
-    <div className="min-h-screen">
-      <SiteHeader />
-      <div className="container mx-auto px-4 py-10 max-w-5xl">
-        <div className="text-center mb-10">
-          <Badge variant="secondary" className="mb-3">Mobile preview</Badge>
-          <h1 className="font-display text-4xl md:text-5xl font-semibold tracking-tight">
-            The Dryvon app, end to end
-          </h1>
-          <p className="mt-3 text-muted-foreground max-w-2xl mx-auto">
-            Tap through a live prototype of the full booking flow — browse, host
-            profile, class detail, booking, payment, confirmation.
-          </p>
-        </div>
+    <div className="grid md:grid-cols-[1fr_auto_1fr] items-center gap-8">
+      <FlowGuide current={screen} />
 
-        <div className="grid md:grid-cols-[1fr_auto_1fr] items-center gap-8">
-          {/* Left flow guide */}
-          <FlowGuide current={screen} />
-
-          {/* Phone */}
-          <PhoneFrame>
-            <PhoneStatusBar />
-            <div className="flex-1 overflow-hidden relative bg-background">
-              {screen === "browse" && (
-                <BrowseScreen
-                  onSelect={(id) => {
-                    setSelectedId(id);
-                    setScreen("class");
-                  }}
-                  onHost={(id) => {
-                    setSelectedId(id);
-                    setScreen("host");
-                  }}
-                />
-              )}
-              {screen === "host" && (
-                <HostScreen
-                  cls={selected}
-                  onBack={() => setScreen("browse")}
-                  onSelectClass={() => setScreen("class")}
-                />
-              )}
-              {screen === "class" && (
-                <ClassScreen
-                  cls={selected}
-                  onBack={() => setScreen("browse")}
-                  onHost={() => setScreen("host")}
-                  onBook={() => setScreen("booking")}
-                />
-              )}
-              {screen === "booking" && (
-                <BookingScreen
-                  cls={selected}
-                  onBack={() => setScreen("class")}
-                  onContinue={() => setScreen("payment")}
-                />
-              )}
-              {screen === "payment" && (
-                <PaymentScreen
-                  cls={selected}
-                  onBack={() => setScreen("booking")}
-                  onPay={() => setScreen("confirmation")}
-                />
-              )}
-              {screen === "confirmation" && (
-                <ConfirmationScreen
-                  cls={selected}
-                  onDone={reset}
-                  onViewBookings={() => setScreen("bookings")}
-                />
-              )}
-              {screen === "bookings" && (
-                <BookingsScreen
-                  onOpen={(id) => {
-                    setSelectedId(id);
-                    setScreen("class");
-                  }}
-                  onProfile={() => setScreen("profile")}
-                />
-              )}
-              {screen === "profile" && (
-                <ProfileScreen
-                  onBookings={() => setScreen("bookings")}
-                  onBrowse={() => setScreen("browse")}
-                />
-              )}
-            </div>
-            <PhoneTabBar
-              screen={screen}
-              onHome={() => setScreen("browse")}
-              onBookings={() => setScreen("bookings")}
+      <PhoneFrame>
+        <PhoneStatusBar />
+        <div className="flex-1 overflow-hidden relative bg-background">
+          {screen === "browse" && (
+            <BrowseScreen
+              onSelect={(id) => {
+                setSelectedId(id);
+                setScreen("class");
+              }}
+              onHost={(id) => {
+                setSelectedId(id);
+                setScreen("host");
+              }}
+            />
+          )}
+          {screen === "host" && (
+            <HostScreen
+              cls={selected}
+              onBack={() => setScreen("browse")}
+              onSelectClass={() => setScreen("class")}
+            />
+          )}
+          {screen === "class" && (
+            <ClassScreen
+              cls={selected}
+              onBack={() => setScreen("browse")}
+              onHost={() => setScreen("host")}
+              onBook={() => setScreen("booking")}
+            />
+          )}
+          {screen === "booking" && (
+            <BookingScreen
+              cls={selected}
+              onBack={() => setScreen("class")}
+              onContinue={() => setScreen("payment")}
+            />
+          )}
+          {screen === "payment" && (
+            <PaymentScreen
+              cls={selected}
+              onBack={() => setScreen("booking")}
+              onPay={() => setScreen("confirmation")}
+            />
+          )}
+          {screen === "confirmation" && (
+            <ConfirmationScreen
+              cls={selected}
+              onDone={reset}
+              onViewBookings={() => setScreen("bookings")}
+            />
+          )}
+          {screen === "bookings" && (
+            <BookingsScreen
+              onOpen={(id) => {
+                setSelectedId(id);
+                setScreen("class");
+              }}
               onProfile={() => setScreen("profile")}
             />
-          </PhoneFrame>
-
-          {/* Right controls */}
-          <div className="space-y-3">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">
-              Jump to screen
-            </p>
-            {(
-              [
-                ["browse", "Browse"],
-                ["host", "Host profile"],
-                ["class", "Class detail"],
-                ["booking", "Booking"],
-                ["payment", "Payment"],
-                ["confirmation", "Confirmation"],
-                ["bookings", "My bookings"],
-                ["profile", "Profile"],
-              ] as [Screen, string][]
-            ).map(([s, label]) => (
-              <button
-                key={s}
-                onClick={() => setScreen(s)}
-                className={cn(
-                  "w-full text-left px-4 py-3 rounded-lg border transition-all",
-                  screen === s
-                    ? "bg-primary text-primary-foreground border-primary shadow-elegant"
-                    : "bg-card hover:bg-muted border-border",
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">{label}</span>
-                  <ChevronRight className="h-4 w-4 opacity-60" />
-                </div>
-              </button>
-            ))}
-            <Button onClick={reset} variant="outline" className="w-full mt-2">
-              Restart flow
-            </Button>
-          </div>
+          )}
+          {screen === "profile" && (
+            <ProfileScreen
+              onBookings={() => setScreen("bookings")}
+              onBrowse={() => setScreen("browse")}
+            />
+          )}
         </div>
+        <PhoneTabBar
+          screen={screen}
+          onHome={() => setScreen("browse")}
+          onBookings={() => setScreen("bookings")}
+          onProfile={() => setScreen("profile")}
+        />
+      </PhoneFrame>
+
+      <div className="space-y-3">
+        <p className="text-xs uppercase tracking-widest text-muted-foreground">
+          Jump to screen
+        </p>
+        {(
+          [
+            ["browse", "Browse"],
+            ["host", "Host profile"],
+            ["class", "Class detail"],
+            ["booking", "Booking"],
+            ["payment", "Payment"],
+            ["confirmation", "Confirmation"],
+            ["bookings", "My bookings"],
+            ["profile", "Profile"],
+          ] as [Screen, string][]
+        ).map(([s, label]) => (
+          <button
+            key={s}
+            onClick={() => setScreen(s)}
+            className={cn(
+              "w-full text-left px-4 py-3 rounded-lg border transition-all",
+              screen === s
+                ? "bg-primary text-primary-foreground border-primary shadow-elegant"
+                : "bg-card hover:bg-muted border-border",
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-medium">{label}</span>
+              <ChevronRight className="h-4 w-4 opacity-60" />
+            </div>
+          </button>
+        ))}
+        <Button onClick={reset} variant="outline" className="w-full mt-2">
+          Restart flow
+        </Button>
       </div>
     </div>
   );
