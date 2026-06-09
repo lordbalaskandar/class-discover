@@ -498,7 +498,7 @@ function BrowseScreen({
 }) {
   const [filtersOpen, setFiltersOpen] = useState(filtersOpenInitially);
   useEffect(() => {
-    if (filtersOpenInitially) setFiltersOpen(true);
+    setFiltersOpen(filtersOpenInitially);
   }, [filtersOpenInitially]);
   const [filters, setFilters] = useState({
     category: "all" as "all" | "class" | "trainer",
