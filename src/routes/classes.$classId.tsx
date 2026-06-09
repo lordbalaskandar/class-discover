@@ -60,12 +60,27 @@ function ClassDetailPage() {
     },
   });
 
-  const bookedDates = useMemo(() => {
-    if (!availability) return [] as Date[];
-    return availability.bookings
-      .map((b) => (b.preferred_at ? new Date(b.preferred_at) : null))
-      .filter((d): d is Date => d !== null);
+  const { bookedDates, fullDates } = useMemo(() => {
+    if (!availability) return { bookedDates: [] as Date[], fullDates: [] as Date[] };
+    const counts = new Map<string, { date: Date; count: number }>();
+    for (const b of availability.bookings) {
+      if (!b.preferred_at) continue;
+      const d = new Date(b.preferred_at);
+      const key = d.toISOString().slice(0, 10);
+      const existing = counts.get(key);
+      if (existing) existing.count += 1;
+      else counts.set(key, { date: d, count: 1 });
+    }
+    const cap = availability.capacity ?? 1;
+    const booked: Date[] = [];
+    const full: Date[] = [];
+    for (const { date, count } of counts.values()) {
+      if (count >= cap) full.push(date);
+      else booked.push(date);
+    }
+    return { bookedDates: booked, fullDates: full };
   }, [availability]);
+
 
   if (isLoading) {
     return (
@@ -175,27 +190,38 @@ function ClassDetailPage() {
               <h2 className="font-semibold text-lg mb-3">
                 {cls.booking_type === "scheduled" ? "Session date" : "Availability"}
               </h2>
-              <Card>
-                <CardContent className="p-4 flex flex-col md:flex-row gap-6 items-start">
+              <Card className="overflow-hidden border-border/60 bg-gradient-to-br from-background to-muted/30">
+                <CardContent className="p-6 flex flex-col md:flex-row gap-6 items-start">
                   <CalendarComponent
-                    mode={cls.booking_type === "scheduled" ? "single" : "single"}
+                    mode="single"
                     selected={cls.booking_type === "scheduled" ? (when ?? undefined) : preferredDate}
                     onSelect={cls.booking_type === "on_request" ? setPreferredDate : undefined}
-                    disabled={cls.booking_type === "scheduled" ? { before: new Date(2099, 0, 1) } : { before: new Date() }}
+                    disabled={
+                      cls.booking_type === "scheduled"
+                        ? { before: new Date(2099, 0, 1) }
+                        : (date) =>
+                            date < new Date(new Date().setHours(0, 0, 0, 0)) ||
+                            fullDates.some((f) => f.toDateString() === date.toDateString())
+                    }
                     modifiers={{
                       scheduled: when ? [when] : [],
                       booked: bookedDates,
+                      full: fullDates,
                     }}
                     modifiersClassNames={{
-                      scheduled: "bg-primary text-primary-foreground rounded-md font-semibold",
-                      booked: "bg-destructive/15 text-destructive rounded-md",
+                      scheduled: "!bg-primary !text-primary-foreground font-semibold",
+                      booked: "!bg-amber-500/20 !text-amber-700 dark:!text-amber-300",
+                      full: "!bg-destructive/15 !text-destructive line-through opacity-70",
                     }}
-                    className={cn("p-2 pointer-events-auto")}
+                    classNames={{
+                      day: "group/day relative aspect-square h-9 w-9 select-none p-0 text-center",
+                    }}
+                    className={cn("p-2 pointer-events-auto [&_button]:rounded-full [&_[data-selected-single=true]]:rounded-full")}
                   />
-                  <div className="text-sm space-y-2 flex-1">
+                  <div className="text-sm space-y-3 flex-1">
                     {cls.booking_type === "scheduled" ? (
                       <>
-                        <div className="flex items-center gap-2"><span className="inline-block h-3 w-3 rounded bg-primary" /> Session date</div>
+                        <div className="flex items-center gap-2"><span className="inline-block h-3 w-3 rounded-full bg-primary" /> Session date</div>
                         {cls.capacity && (
                           <p className="text-muted-foreground">
                             <span className="font-medium text-foreground">{spotsLeft ?? cls.capacity}</span> of {cls.capacity} spots left
@@ -206,15 +232,17 @@ function ClassDetailPage() {
                       </>
                     ) : (
                       <>
-                        <div className="flex items-center gap-2"><span className="inline-block h-3 w-3 rounded bg-destructive/40" /> Already requested</div>
-                        <div className="flex items-center gap-2"><span className="inline-block h-3 w-3 rounded bg-primary" /> Your selection</div>
-                        <p className="text-muted-foreground">Pick a date that suits you — the trainer will confirm.</p>
+                        <div className="flex items-center gap-2"><span className="inline-block h-3 w-3 rounded-full bg-primary" /> Your selection</div>
+                        <div className="flex items-center gap-2"><span className="inline-block h-3 w-3 rounded-full bg-amber-500/40" /> Partially booked</div>
+                        <div className="flex items-center gap-2"><span className="inline-block h-3 w-3 rounded-full bg-destructive/40" /> Fully booked</div>
+                        <p className="text-muted-foreground pt-1">Pick an available date — the trainer will confirm.</p>
                       </>
                     )}
                   </div>
                 </CardContent>
               </Card>
             </div>
+
 
             {profile && (
               <div>
