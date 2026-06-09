@@ -511,16 +511,19 @@ function PhoneStatusBar() {
 function PhoneTabBar({
   screen,
   onHome,
+  onHosts,
   onBookings,
   onProfile,
 }: {
   screen: Screen;
   onHome: () => void;
+  onHosts: () => void;
   onBookings: () => void;
   onProfile: () => void;
 }) {
   const tabs = [
-    { id: "browse" as Screen, icon: Home, label: "Browse", onClick: onHome },
+    { id: "browse" as Screen, icon: Home, label: "Sessions", onClick: onHome },
+    { id: "hosts" as Screen, icon: Users, label: "Hosts", onClick: onHosts },
     { id: "bookings" as Screen, icon: CalendarDays, label: "Bookings", onClick: onBookings },
     { id: "profile" as Screen, icon: UserIcon, label: "Profile", onClick: onProfile },
   ];
