@@ -109,8 +109,38 @@ export type Database = {
         }
         Relationships: []
       }
+      event_signups: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_signups_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "special_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
+          account_type: Database["public"]["Enums"]["account_type"]
           avatar_url: string | null
           bio: string | null
           city: string | null
@@ -121,6 +151,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_type?: Database["public"]["Enums"]["account_type"]
           avatar_url?: string | null
           bio?: string | null
           city?: string | null
@@ -131,6 +162,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_type?: Database["public"]["Enums"]["account_type"]
           avatar_url?: string | null
           bio?: string | null
           city?: string | null
@@ -138,6 +170,48 @@ export type Database = {
           display_name?: string | null
           id?: string
           special_notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      special_events: {
+        Row: {
+          capacity: number | null
+          created_at: string
+          description: string
+          event_date: string
+          host_id: string
+          id: string
+          image_url: string | null
+          is_published: boolean
+          location: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          capacity?: number | null
+          created_at?: string
+          description?: string
+          event_date: string
+          host_id: string
+          id?: string
+          image_url?: string | null
+          is_published?: boolean
+          location: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number | null
+          created_at?: string
+          description?: string
+          event_date?: string
+          host_id?: string
+          id?: string
+          image_url?: string | null
+          is_published?: boolean
+          location?: string
+          title?: string
           updated_at?: string
         }
         Relationships: []
@@ -177,6 +251,7 @@ export type Database = {
       }
     }
     Enums: {
+      account_type: "person" | "gym"
       app_role: "host" | "admin"
       booking_status: "confirmed" | "requested" | "cancelled" | "declined"
       booking_type: "scheduled" | "on_request"
@@ -308,6 +383,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_type: ["person", "gym"],
       app_role: ["host", "admin"],
       booking_status: ["confirmed", "requested", "cancelled", "declined"],
       booking_type: ["scheduled", "on_request"],
