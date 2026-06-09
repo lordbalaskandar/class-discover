@@ -115,11 +115,11 @@ function HomePage() {
         </div>
 
         <div className="container relative mx-auto px-4 py-16 md:py-24 lg:py-28">
-          <div className="max-w-3xl text-primary-foreground">
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-            Unlock your <span className="text-accent">potential</span>.
-          </h1>
-            <p className="mt-3 text-lg text-primary-foreground/90 max-w-xl">
+          <div className="max-w-3xl text-foreground">
+            <h1 className="text-4xl md:text-6xl font-bold leading-tight">
+              Unlock your <span className="text-primary">potential</span>.
+            </h1>
+            <p className="mt-3 text-lg text-foreground/90 max-w-xl">
               Book scheduled sessions or hire personal trainers around your availability — all in one place.
             </p>
           </div>
