@@ -60,6 +60,7 @@ export const Route = createFileRoute("/mobile")({
 
 type Screen =
   | "browse"
+  | "hosts"
   | "host"
   | "gym"
   | "class"
@@ -69,6 +70,110 @@ type Screen =
   | "bookings"
   | "profile"
   | "filters";
+
+type HostItem = {
+  id: string;
+  name: string;
+  type: "person" | "gym";
+  activities: string[];
+  location: string;
+  distance: number; // miles
+  rating: number;
+  reviews: number;
+  pricePerHour: number;
+  classId: string; // links to a CLASS for the existing host/gym detail screens
+  image: string;
+  bio: string;
+};
+
+const HOSTS: HostItem[] = [
+  {
+    id: "h1",
+    name: "Maya Calder",
+    type: "person",
+    activities: ["Yoga", "Mobility"],
+    location: "Mission, SF",
+    distance: 1.2,
+    rating: 4.9,
+    reviews: 184,
+    pricePerHour: 60,
+    classId: "1",
+    image: "linear-gradient(135deg,#f4b942,#e07a5f)",
+    bio: "RYT-500 yoga teacher. Sunrise flows in the park.",
+  },
+  {
+    id: "h2",
+    name: "Iron Forge Gym",
+    type: "gym",
+    activities: ["BJJ", "Strength", "HIIT"],
+    location: "SoMa, SF",
+    distance: 2.8,
+    rating: 4.8,
+    reviews: 96,
+    pricePerHour: 45,
+    classId: "2",
+    image: "linear-gradient(135deg,#2c2c2e,#5c5c5e)",
+    bio: "Combat sports & strength gym. Open mats nightly.",
+  },
+  {
+    id: "h3",
+    name: "Devon Walsh",
+    type: "person",
+    activities: ["Running", "HIIT"],
+    location: "Marin, SF",
+    distance: 6.4,
+    rating: 5.0,
+    reviews: 42,
+    pricePerHour: 50,
+    classId: "3",
+    image: "linear-gradient(135deg,#84a98c,#52796f)",
+    bio: "Endurance coach. Trail runs & threshold work.",
+  },
+  {
+    id: "h4",
+    name: "Priya Anand",
+    type: "person",
+    activities: ["Climbing", "Mobility"],
+    location: "Dogpatch, SF",
+    distance: 3.1,
+    rating: 4.7,
+    reviews: 58,
+    pricePerHour: 70,
+    classId: "1",
+    image: "linear-gradient(135deg,#7c83fd,#96baff)",
+    bio: "Climbing coach — bouldering technique & projecting.",
+  },
+  {
+    id: "h5",
+    name: "Mission Athletic Club",
+    type: "gym",
+    activities: ["Strength", "Yoga", "HIIT"],
+    location: "Mission, SF",
+    distance: 1.6,
+    rating: 4.6,
+    reviews: 212,
+    pricePerHour: 35,
+    classId: "2",
+    image: "linear-gradient(135deg,#3a506b,#5bc0be)",
+    bio: "Boutique club with daily group classes.",
+  },
+  {
+    id: "h6",
+    name: "Sam Okafor",
+    type: "person",
+    activities: ["Boxing", "HIIT", "Strength"],
+    location: "SoMa, SF",
+    distance: 4.2,
+    rating: 4.9,
+    reviews: 73,
+    pricePerHour: 80,
+    classId: "3",
+    image: "linear-gradient(135deg,#e63946,#f1a208)",
+    bio: "Former amateur boxer. 1-on-1 pad work & conditioning.",
+  },
+];
+
+const HOST_ACTIVITIES = ["Yoga", "BJJ", "Running", "HIIT", "Climbing", "Strength", "Boxing", "Mobility"] as const;
 
 type ClassItem = {
   id: string;
@@ -244,6 +349,14 @@ function UserFlow() {
               }}
             />
           )}
+          {screen === "hosts" && (
+            <HostsScreen
+              onSelect={(h) => {
+                setSelectedId(h.classId);
+                setScreen(h.type === "gym" ? "gym" : "host");
+              }}
+            />
+          )}
           {screen === "host" && (
             <HostScreen
               cls={selected}
@@ -313,6 +426,7 @@ function UserFlow() {
         <PhoneTabBar
           screen={screen}
           onHome={() => setScreen("browse")}
+          onHosts={() => setScreen("hosts")}
           onBookings={() => setScreen("bookings")}
           onProfile={() => setScreen("profile")}
         />
@@ -324,8 +438,9 @@ function UserFlow() {
         </p>
         {(
           [
-            ["browse", "Browse"],
-            ["filters", "Filters"],
+            ["browse", "Sessions"],
+            ["filters", "Session filters"],
+            ["hosts", "Hosts"],
             ["host", "Host profile"],
             ["gym", "Gym profile"],
             ["class", "Class detail"],
@@ -396,16 +511,19 @@ function PhoneStatusBar() {
 function PhoneTabBar({
   screen,
   onHome,
+  onHosts,
   onBookings,
   onProfile,
 }: {
   screen: Screen;
   onHome: () => void;
+  onHosts: () => void;
   onBookings: () => void;
   onProfile: () => void;
 }) {
   const tabs = [
-    { id: "browse" as Screen, icon: Home, label: "Browse", onClick: onHome },
+    { id: "browse" as Screen, icon: Home, label: "Sessions", onClick: onHome },
+    { id: "hosts" as Screen, icon: Users, label: "Hosts", onClick: onHosts },
     { id: "bookings" as Screen, icon: CalendarDays, label: "Bookings", onClick: onBookings },
     { id: "profile" as Screen, icon: UserIcon, label: "Profile", onClick: onProfile },
   ];
@@ -876,7 +994,334 @@ function FilterGroup({
 }
 
 
+function HostsScreen({ onSelect }: { onSelect: (h: HostItem) => void }) {
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [activeChip, setActiveChip] = useState<string>("All");
+  const [filters, setFilters] = useState({
+    type: "all" as "all" | "person" | "gym",
+    activity: "all" as "all" | (typeof HOST_ACTIVITIES)[number],
+    distance: "any" as "any" | "1" | "5" | "10" | "25",
+    minRating: "any" as "any" | "4.5" | "4.8",
+    price: "any" as "any" | "low" | "mid" | "high",
+    sort: "recommended" as "recommended" | "rating" | "distance" | "price",
+  });
+  const activeCount =
+    (filters.type !== "all" ? 1 : 0) +
+    (filters.activity !== "all" ? 1 : 0) +
+    (filters.distance !== "any" ? 1 : 0) +
+    (filters.minRating !== "any" ? 1 : 0) +
+    (filters.price !== "any" ? 1 : 0);
+
+  const filtered = useMemo(() => {
+    let list = HOSTS.slice();
+    if (query.trim()) {
+      const q = query.toLowerCase();
+      list = list.filter(
+        (h) =>
+          h.name.toLowerCase().includes(q) ||
+          h.activities.some((a) => a.toLowerCase().includes(q)) ||
+          h.location.toLowerCase().includes(q),
+      );
+    }
+    if (activeChip !== "All") {
+      list = list.filter((h) => h.activities.includes(activeChip));
+    }
+    if (filters.type !== "all") list = list.filter((h) => h.type === filters.type);
+    if (filters.activity !== "all")
+      list = list.filter((h) => h.activities.includes(filters.activity));
+    if (filters.distance !== "any")
+      list = list.filter((h) => h.distance <= Number(filters.distance));
+    if (filters.minRating !== "any")
+      list = list.filter((h) => h.rating >= Number(filters.minRating));
+    if (filters.price !== "any") {
+      list = list.filter((h) =>
+        filters.price === "low"
+          ? h.pricePerHour < 50
+          : filters.price === "mid"
+            ? h.pricePerHour >= 50 && h.pricePerHour < 75
+            : h.pricePerHour >= 75,
+      );
+    }
+    if (filters.sort === "rating") list.sort((a, b) => b.rating - a.rating);
+    else if (filters.sort === "distance") list.sort((a, b) => a.distance - b.distance);
+    else if (filters.sort === "price") list.sort((a, b) => a.pricePerHour - b.pricePerHour);
+    return list;
+  }, [query, activeChip, filters]);
+
+  return (
+    <div className="h-full relative">
+      <ScreenScroll>
+        <div className="px-5 pt-3 pb-4">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-xs text-muted-foreground">Discover</p>
+              <h2 className="font-display text-2xl font-semibold">Find a host</h2>
+            </div>
+            <div className="h-10 w-10 rounded-full bg-gradient-hero flex items-center justify-center text-primary-foreground font-semibold">
+              J
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search trainers and gyms"
+                className="pl-9 rounded-full bg-muted/60 border-0"
+              />
+            </div>
+            <button
+              onClick={() => setFiltersOpen(true)}
+              className={cn(
+                "relative h-10 w-10 shrink-0 rounded-full flex items-center justify-center border",
+                activeCount > 0
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-card border-border",
+              )}
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              {activeCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-semibold flex items-center justify-center">
+                  {activeCount}
+                </span>
+              )}
+            </button>
+          </div>
+          <div className="flex gap-2 overflow-x-auto mt-3 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {(["All", ...HOST_ACTIVITIES] as string[]).map((c) => {
+              const active = c === activeChip;
+              return (
+                <button
+                  key={c}
+                  onClick={() => setActiveChip(c)}
+                  className={cn(
+                    "shrink-0 px-3 py-1 rounded-full text-xs border transition-all",
+                    active
+                      ? "bg-foreground text-background border-foreground"
+                      : "bg-card text-foreground border-border",
+                  )}
+                >
+                  {c}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="px-5">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-sm">Hosts</h3>
+            <span className="text-xs text-muted-foreground">{filtered.length} found</span>
+          </div>
+          <div className="space-y-3">
+            {filtered.map((h) => (
+              <Card
+                key={h.id}
+                onClick={() => onSelect(h)}
+                className="overflow-hidden cursor-pointer active:scale-[0.98] transition-transform border-border/60"
+              >
+                <div className="p-3 flex gap-3">
+                  <div
+                    className="h-16 w-16 shrink-0 rounded-xl flex items-center justify-center text-background font-semibold"
+                    style={{ background: h.image }}
+                  >
+                    {h.type === "gym" ? (
+                      <Building2 className="h-6 w-6" />
+                    ) : (
+                      h.name
+                        .split(" ")
+                        .map((p) => p[0])
+                        .join("")
+                        .slice(0, 2)
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h4 className="font-semibold text-sm leading-tight truncate">
+                          {h.name}
+                        </h4>
+                        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            {h.type === "gym" ? (
+                              <>
+                                <Building2 className="h-3 w-3" /> Gym
+                              </>
+                            ) : (
+                              <>
+                                <UserIcon className="h-3 w-3" /> Trainer
+                              </>
+                            )}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Star className="h-3 w-3 fill-primary text-primary" />
+                            {h.rating} ({h.reviews})
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-sm font-semibold whitespace-nowrap">
+                        ${h.pricePerHour}
+                        <span className="text-[10px] font-normal text-muted-foreground">/hr</span>
+                      </span>
+                    </div>
+                    <div className="mt-1.5 flex items-center gap-2 text-[11px] text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {h.location}
+                      </span>
+                      <span>· {h.distance} mi</span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {h.activities.map((a) => (
+                        <span
+                          key={a}
+                          className="px-2 py-0.5 rounded-full text-[10px] bg-muted text-foreground border border-border"
+                        >
+                          {a}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+            {filtered.length === 0 && (
+              <p className="text-center text-xs text-muted-foreground py-8">
+                No hosts match your filters.
+              </p>
+            )}
+          </div>
+        </div>
+      </ScreenScroll>
+
+      {/* Filters slide-up */}
+      <div
+        className={cn(
+          "absolute inset-0 z-30 transition-opacity",
+          filtersOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
+        )}
+      >
+        <div
+          className="absolute inset-0 bg-foreground/40"
+          onClick={() => setFiltersOpen(false)}
+        />
+        <div
+          className={cn(
+            "absolute inset-x-0 bottom-0 bg-background rounded-t-3xl border-t shadow-elegant max-h-[88%] flex flex-col transition-transform duration-300",
+            filtersOpen ? "translate-y-0" : "translate-y-full",
+          )}
+        >
+          <div className="pt-2 flex justify-center">
+            <div className="h-1 w-10 rounded-full bg-muted-foreground/30" />
+          </div>
+          <div className="px-5 py-3 flex items-center justify-between border-b">
+            <h3 className="font-display text-lg font-semibold">Filter hosts</h3>
+            <button
+              onClick={() => setFiltersOpen(false)}
+              className="h-8 w-8 rounded-full bg-muted flex items-center justify-center"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <FilterGroup
+              label="Host type"
+              value={filters.type}
+              onChange={(v) => setFilters((f) => ({ ...f, type: v as typeof f.type }))}
+              options={[
+                { v: "all", l: "All" },
+                { v: "person", l: "Trainers" },
+                { v: "gym", l: "Gyms" },
+              ]}
+            />
+            <FilterGroup
+              label="Activity"
+              value={filters.activity}
+              onChange={(v) => setFilters((f) => ({ ...f, activity: v as typeof f.activity }))}
+              options={[
+                { v: "all", l: "All" },
+                ...HOST_ACTIVITIES.map((a) => ({ v: a, l: a })),
+              ]}
+            />
+            <FilterGroup
+              label="Distance"
+              value={filters.distance}
+              onChange={(v) => setFilters((f) => ({ ...f, distance: v as typeof f.distance }))}
+              options={[
+                { v: "any", l: "Any" },
+                { v: "1", l: "< 1 mi" },
+                { v: "5", l: "< 5 mi" },
+                { v: "10", l: "< 10 mi" },
+                { v: "25", l: "< 25 mi" },
+              ]}
+            />
+            <FilterGroup
+              label="Min rating"
+              value={filters.minRating}
+              onChange={(v) => setFilters((f) => ({ ...f, minRating: v as typeof f.minRating }))}
+              options={[
+                { v: "any", l: "Any" },
+                { v: "4.5", l: "4.5+" },
+                { v: "4.8", l: "4.8+" },
+              ]}
+            />
+            <FilterGroup
+              label="Price / hour"
+              value={filters.price}
+              onChange={(v) => setFilters((f) => ({ ...f, price: v as typeof f.price }))}
+              options={[
+                { v: "any", l: "Any" },
+                { v: "low", l: "< $50" },
+                { v: "mid", l: "$50–75" },
+                { v: "high", l: "$75+" },
+              ]}
+            />
+            <FilterGroup
+              label="Sort by"
+              value={filters.sort}
+              onChange={(v) => setFilters((f) => ({ ...f, sort: v as typeof f.sort }))}
+              options={[
+                { v: "recommended", l: "Recommended" },
+                { v: "rating", l: "Top rated" },
+                { v: "distance", l: "Nearest" },
+                { v: "price", l: "Lowest price" },
+              ]}
+            />
+          </div>
+          <div className="border-t bg-card px-5 py-3 flex items-center gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() =>
+                setFilters({
+                  type: "all",
+                  activity: "all",
+                  distance: "any",
+                  minRating: "any",
+                  price: "any",
+                  sort: "recommended",
+                })
+              }
+            >
+              Clear all
+            </Button>
+            <Button
+              className="flex-[1.4] bg-gradient-hero shadow-elegant"
+              onClick={() => setFiltersOpen(false)}
+            >
+              Show results
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ScreenHeader({ title, onBack }: { title: string; onBack: () => void }) {
+
   return (
     <div className="px-5 py-3 flex items-center gap-3 border-b bg-background sticky top-0 z-10">
       <button onClick={onBack} className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
