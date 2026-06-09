@@ -317,6 +317,7 @@ function UserFlow() {
           [
             ["browse", "Browse"],
             ["host", "Host profile"],
+            ["gym", "Gym profile"],
             ["class", "Class detail"],
             ["booking", "Booking"],
             ["payment", "Payment"],
