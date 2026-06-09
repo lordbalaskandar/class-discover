@@ -86,9 +86,24 @@ function ClassDetailPage() {
   const when = cls.start_at ? new Date(cls.start_at) : null;
   const isOwner = userId === cls.host_id;
 
+  const bookedDates = useMemo(() => {
+    if (!availability) return [] as Date[];
+    return availability.bookings
+      .map((b) => (b.preferred_at ? new Date(b.preferred_at) : null))
+      .filter((d): d is Date => d !== null);
+  }, [availability]);
+
+  const scheduledBookedCount = availability?.bookingType === "scheduled" ? availability.bookings.length : 0;
+  const spotsLeft = cls.capacity ? Math.max(0, cls.capacity - scheduledBookedCount) : null;
+  const isFull = spotsLeft === 0;
+
   const handleBook = async () => {
     if (!userId) {
       openAuthModal();
+      return;
+    }
+    if (cls.booking_type === "on_request" && !preferredDate) {
+      toast.error("Please pick a preferred date");
       return;
     }
     setSubmitting(true);
@@ -98,7 +113,7 @@ function ClassDetailPage() {
       customer_id: userId,
       status,
       message: message || null,
-      preferred_at: cls.booking_type === "on_request" && preferredAt ? new Date(preferredAt).toISOString() : null,
+      preferred_at: cls.booking_type === "on_request" && preferredDate ? preferredDate.toISOString() : null,
     });
     setSubmitting(false);
     if (error) return toast.error(error.message);
@@ -129,8 +144,8 @@ function ClassDetailPage() {
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge variant="secondary">{cls.activity}</Badge>
-                <Badge variant={cls.booking_type === "scheduled" ? "default" : "outline"}>
-                  {cls.booking_type === "scheduled" ? "Scheduled" : "On request"}
+                <Badge variant={cls.listing_type === "trainer" ? "outline" : "default"}>
+                  {cls.listing_type === "trainer" ? "Trainer" : "Class"}
                 </Badge>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold mt-3">{cls.title}</h1>
@@ -142,20 +157,68 @@ function ClassDetailPage() {
                   </span>
                 )}
                 <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" />{cls.duration_min} min</span>
-                {cls.capacity && <span className="flex items-center gap-1.5"><Users className="h-4 w-4" />{cls.capacity} spots</span>}
+                {cls.capacity && cls.listing_type === "class" && (
+                  <span className="flex items-center gap-1.5"><Users className="h-4 w-4" />{cls.capacity} spots</span>
+                )}
               </div>
             </div>
 
             {cls.description && (
               <div>
-                <h2 className="font-semibold text-lg mb-2">About this class</h2>
+                <h2 className="font-semibold text-lg mb-2">About</h2>
                 <p className="text-muted-foreground whitespace-pre-wrap">{cls.description}</p>
               </div>
             )}
 
+            {/* Availability section */}
+            <div>
+              <h2 className="font-semibold text-lg mb-3">
+                {cls.booking_type === "scheduled" ? "Session date" : "Availability"}
+              </h2>
+              <Card>
+                <CardContent className="p-4 flex flex-col md:flex-row gap-6 items-start">
+                  <CalendarComponent
+                    mode={cls.booking_type === "scheduled" ? "single" : "single"}
+                    selected={cls.booking_type === "scheduled" ? (when ?? undefined) : preferredDate}
+                    onSelect={cls.booking_type === "on_request" ? setPreferredDate : undefined}
+                    disabled={cls.booking_type === "scheduled" ? { before: new Date(2099, 0, 1) } : { before: new Date() }}
+                    modifiers={{
+                      scheduled: when ? [when] : [],
+                      booked: bookedDates,
+                    }}
+                    modifiersClassNames={{
+                      scheduled: "bg-primary text-primary-foreground rounded-md font-semibold",
+                      booked: "bg-destructive/15 text-destructive rounded-md",
+                    }}
+                    className={cn("p-2 pointer-events-auto")}
+                  />
+                  <div className="text-sm space-y-2 flex-1">
+                    {cls.booking_type === "scheduled" ? (
+                      <>
+                        <div className="flex items-center gap-2"><span className="inline-block h-3 w-3 rounded bg-primary" /> Session date</div>
+                        {cls.capacity && (
+                          <p className="text-muted-foreground">
+                            <span className="font-medium text-foreground">{spotsLeft ?? cls.capacity}</span> of {cls.capacity} spots left
+                            {scheduledBookedCount > 0 && ` · ${scheduledBookedCount} booked`}
+                          </p>
+                        )}
+                        {isFull && <p className="text-destructive font-medium">This session is fully booked.</p>}
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2"><span className="inline-block h-3 w-3 rounded bg-destructive/40" /> Already requested</div>
+                        <div className="flex items-center gap-2"><span className="inline-block h-3 w-3 rounded bg-primary" /> Your selection</div>
+                        <p className="text-muted-foreground">Pick a date that suits you — the trainer will confirm.</p>
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             {profile && (
               <div>
-                <h2 className="font-semibold text-lg mb-2">Your host</h2>
+                <h2 className="font-semibold text-lg mb-2">{cls.listing_type === "trainer" ? "Your trainer" : "Your host"}</h2>
                 <Card>
                   <CardContent className="p-4">
                     <p className="font-medium">{profile.display_name ?? "Host"}</p>
@@ -178,22 +241,21 @@ function ClassDetailPage() {
                 </div>
 
                 {isOwner ? (
-                  <p className="text-sm text-muted-foreground">This is your class. Manage it in your host dashboard.</p>
+                  <p className="text-sm text-muted-foreground">This is your listing. Manage it in your host dashboard.</p>
                 ) : (
                   <>
                     {cls.booking_type === "on_request" && (
                       <div className="space-y-1.5">
-                        <Label htmlFor="pref">Preferred time (optional)</Label>
-                        <Input
-                          id="pref"
-                          type="datetime-local"
-                          value={preferredAt}
-                          onChange={(e) => setPreferredAt(e.target.value)}
-                        />
+                        <Label>Preferred date</Label>
+                        <p className="text-sm text-muted-foreground">
+                          {preferredDate
+                            ? preferredDate.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })
+                            : "Pick a date from the calendar"}
+                        </p>
                       </div>
                     )}
                     <div className="space-y-1.5">
-                      <Label htmlFor="msg">Message to host (optional)</Label>
+                      <Label htmlFor="msg">Message (optional)</Label>
                       <Textarea
                         id="msg"
                         rows={3}
@@ -202,14 +264,20 @@ function ClassDetailPage() {
                         placeholder="Anything the host should know?"
                       />
                     </div>
-                    <Button onClick={handleBook} disabled={submitting} className="w-full bg-gradient-hero hover:opacity-90">
+                    <Button
+                      onClick={handleBook}
+                      disabled={submitting || isFull}
+                      className="w-full bg-gradient-hero hover:opacity-90"
+                    >
                       {submitting
                         ? "Please wait…"
                         : !userId
                           ? "Sign in to book"
-                          : cls.booking_type === "scheduled"
-                            ? "Reserve spot"
-                            : "Send request"}
+                          : isFull
+                            ? "Fully booked"
+                            : cls.booking_type === "scheduled"
+                              ? "Reserve spot"
+                              : "Send request"}
                     </Button>
                   </>
                 )}
