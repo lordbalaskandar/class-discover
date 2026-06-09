@@ -3791,6 +3791,7 @@ function HostProfileScreen({
     { label: "Rating", value: "4.9" },
   ];
   const rows: { id: HostScreenId; label: string; sub: string }[] = [
+    { id: "hpGym", label: "My gym", sub: "Manage gym & members" },
     { id: "hpTemplates", label: "Class templates", sub: "5 saved" },
     { id: "hpPayouts", label: "Payout settings", sub: "Bank •••• 6201" },
     { id: "hpAvailability", label: "Availability", sub: "Mon–Sat mornings" },
