@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as HostRouteImport } from './routes/host'
+import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as BookingsRouteImport } from './routes/bookings'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
@@ -19,6 +20,11 @@ import { Route as ClassesClassIdRouteImport } from './routes/classes.$classId'
 const HostRoute = HostRouteImport.update({
   id: '/host',
   path: '/host',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BrowseRoute = BrowseRouteImport.update({
+  id: '/browse',
+  path: '/browse',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BookingsRoute = BookingsRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/bookings': typeof BookingsRoute
+  '/browse': typeof BrowseRoute
   '/host': typeof HostRouteWithChildren
   '/classes/$classId': typeof ClassesClassIdRoute
   '/host/new': typeof HostNewRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/bookings': typeof BookingsRoute
+  '/browse': typeof BrowseRoute
   '/host': typeof HostRouteWithChildren
   '/classes/$classId': typeof ClassesClassIdRoute
   '/host/new': typeof HostNewRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/bookings': typeof BookingsRoute
+  '/browse': typeof BrowseRoute
   '/host': typeof HostRouteWithChildren
   '/classes/$classId': typeof ClassesClassIdRoute
   '/host/new': typeof HostNewRoute
@@ -78,16 +87,25 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/bookings'
+    | '/browse'
     | '/host'
     | '/classes/$classId'
     | '/host/new'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/bookings' | '/host' | '/classes/$classId' | '/host/new'
+  to:
+    | '/'
+    | '/auth'
+    | '/bookings'
+    | '/browse'
+    | '/host'
+    | '/classes/$classId'
+    | '/host/new'
   id:
     | '__root__'
     | '/'
     | '/auth'
     | '/bookings'
+    | '/browse'
     | '/host'
     | '/classes/$classId'
     | '/host/new'
@@ -97,6 +115,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   BookingsRoute: typeof BookingsRoute
+  BrowseRoute: typeof BrowseRoute
   HostRoute: typeof HostRouteWithChildren
   ClassesClassIdRoute: typeof ClassesClassIdRoute
 }
@@ -108,6 +127,13 @@ declare module '@tanstack/react-router' {
       path: '/host'
       fullPath: '/host'
       preLoaderRoute: typeof HostRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/browse': {
+      id: '/browse'
+      path: '/browse'
+      fullPath: '/browse'
+      preLoaderRoute: typeof BrowseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/bookings': {
@@ -162,19 +188,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   BookingsRoute: BookingsRoute,
+  BrowseRoute: BrowseRoute,
   HostRoute: HostRouteWithChildren,
   ClassesClassIdRoute: ClassesClassIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

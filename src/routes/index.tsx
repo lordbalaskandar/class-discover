@@ -1,12 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -15,134 +12,63 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ACTIVITIES } from "@/lib/activities";
-import { Calendar, MapPin, Clock, Search, Users } from "lucide-react";
+import { MapPin, Search, Calendar, Sparkles, Users, Compass } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Dryvon — Book pilates, boxing, pickleball and more" },
-      { name: "description", content: "Browse local fitness classes and book in seconds." },
+      { name: "description", content: "Discover and book local fitness classes — pilates, boxing, pickleball, yoga and more, all in seconds." },
     ],
   }),
-  component: BrowsePage,
+  component: HomePage,
 });
 
-type ClassRow = {
-  id: string;
-  host_id: string;
-  title: string;
-  description: string;
-  activity: string;
-  location: string;
-  image_url: string | null;
-  duration_min: number;
-  booking_type: "scheduled" | "on_request";
-  start_at: string | null;
-  capacity: number | null;
-};
-
 const HERO_SLIDES = [
-  {
-    src: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1920&q=70",
-    label: "Pilates",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1920&q=70",
-    label: "Boxing",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=1920&q=70",
-    label: "Pickleball",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1599058917212-d750089bc07e?auto=format&fit=crop&w=1920&q=70",
-    label: "HIIT",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=1920&q=70",
-    label: "Yoga",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1522163182402-834f871fd851?auto=format&fit=crop&w=1920&q=70",
-    label: "Rock Climbing",
-  },
+  { src: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1920&q=70", label: "Pilates" },
+  { src: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1920&q=70", label: "Boxing" },
+  { src: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=1920&q=70", label: "Pickleball" },
+  { src: "https://images.unsplash.com/photo-1599058917212-d750089bc07e?auto=format&fit=crop&w=1920&q=70", label: "HIIT" },
+  { src: "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=1920&q=70", label: "Yoga" },
+  { src: "https://images.unsplash.com/photo-1522163182402-834f871fd851?auto=format&fit=crop&w=1920&q=70", label: "Rock Climbing" },
 ];
 
-function BrowsePage() {
+function HomePage() {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
-  const [activity, setActivity] = useState<string | null>(null);
-
-  // Hero form state
   const [heroActivity, setHeroActivity] = useState<string>("any");
   const [heroLocation, setHeroLocation] = useState("");
 
-  const { data: classes = [], isLoading } = useQuery({
-    queryKey: ["classes", "active"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("classes")
-        .select("id, host_id, title, description, activity, location, image_url, duration_min, booking_type, start_at, capacity")
-        .eq("is_active", true)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as ClassRow[];
-    },
-  });
-
-  const filtered = useMemo(() => {
-    return classes.filter((c) => {
-      if (activity && c.activity !== activity) return false;
-      if (search) {
-        const q = search.toLowerCase();
-        return (
-          c.title.toLowerCase().includes(q) ||
-          c.location.toLowerCase().includes(q) ||
-          c.activity.toLowerCase().includes(q)
-        );
-      }
-      return true;
-    });
-  }, [classes, search, activity]);
-
   function onHeroSearch(e: React.FormEvent) {
     e.preventDefault();
-    if (heroActivity && heroActivity !== "any") setActivity(heroActivity);
-    else setActivity(null);
-    setSearch(heroLocation);
-    // scroll to results
-    const el = document.getElementById("results");
-    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    navigate({
+      to: "/browse",
+      search: {
+        q: "",
+        activity: heroActivity === "any" ? "" : heroActivity,
+        location: heroLocation,
+        type: "all",
+        sort: "newest",
+      },
+    });
   }
 
-  // Duplicate slides for seamless infinite scroll
   const scrollSlides = [...HERO_SLIDES, ...HERO_SLIDES];
 
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
 
-      {/* Hero — Netflix-style auto-scrolling carousel backdrop */}
+      {/* Hero */}
       <section className="relative overflow-hidden border-b">
-        {/* Continuous horizontal carousel background */}
         <div className="absolute inset-0 overflow-hidden">
-          <div
-            className="flex h-full w-max animate-netflix-scroll"
-            style={{ willChange: "transform" }}
-          >
+          <div className="flex h-full w-max animate-netflix-scroll" style={{ willChange: "transform" }}>
             {scrollSlides.map((s, i) => (
               <div key={`${s.src}-${i}`} className="relative h-full w-[40vw] min-w-[320px] flex-shrink-0 overflow-hidden">
-                <img
-                  src={s.src}
-                  alt={`${s.label} class`}
-                  className="h-full w-full object-cover"
-                  loading={i < HERO_SLIDES.length ? "eager" : "lazy"}
-                />
+                <img src={s.src} alt={`${s.label} class`} className="h-full w-full object-cover" loading={i < HERO_SLIDES.length ? "eager" : "lazy"} />
                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-foreground/20" />
               </div>
             ))}
           </div>
-          {/* Global dark overlay for text readability */}
           <div className="absolute inset-0 bg-gradient-to-br from-foreground/75 via-foreground/55 to-primary/40" />
         </div>
 
@@ -159,11 +85,7 @@ function BrowsePage() {
             </p>
           </div>
 
-          {/* Search card */}
-          <form
-            onSubmit={onHeroSearch}
-            className="relative mt-8 max-w-4xl rounded-2xl bg-background shadow-elegant border p-4 md:p-5"
-          >
+          <form onSubmit={onHeroSearch} className="relative mt-8 max-w-4xl rounded-2xl bg-background shadow-elegant border p-4 md:p-5">
             <div className="grid grid-cols-1 md:grid-cols-[1.1fr_1.3fr_auto] gap-3">
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-muted-foreground px-1">Activity</label>
@@ -174,9 +96,7 @@ function BrowsePage() {
                   <SelectContent>
                     <SelectItem value="any">Any activity</SelectItem>
                     {ACTIVITIES.map((a) => (
-                      <SelectItem key={a} value={a}>
-                        {a}
-                      </SelectItem>
+                      <SelectItem key={a} value={a}>{a}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -196,11 +116,7 @@ function BrowsePage() {
               </div>
 
               <div className="flex md:items-end">
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="h-12 w-full md:w-auto md:px-8 bg-gradient-hero hover:opacity-90 shadow-elegant"
-                >
+                <Button type="submit" size="lg" className="h-12 w-full md:w-auto md:px-8 bg-gradient-hero hover:opacity-90 shadow-elegant">
                   <Search className="h-4 w-4" />
                   Search classes
                 </Button>
@@ -210,116 +126,90 @@ function BrowsePage() {
             <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               <span className="font-medium text-foreground">Popular:</span>
               {["Pilates", "Boxing", "Pickleball", "Yoga", "HIIT"].map((p) => (
-                <button
+                <Link
                   key={p}
-                  type="button"
-                  onClick={() => {
-                    setHeroActivity(p);
-                    setActivity(p);
-                    document.getElementById("results")?.scrollIntoView({ behavior: "smooth" });
-                  }}
+                  to="/browse"
+                  search={{ q: "", activity: p, location: "", type: "all", sort: "newest" }}
                   className="rounded-full border px-3 py-1 hover:bg-accent hover:text-accent-foreground transition-colors"
                 >
                   {p}
-                </button>
+                </Link>
               ))}
             </div>
           </form>
         </div>
       </section>
 
-      {/* Activity chips */}
-      <section id="results" className="container mx-auto px-4 py-6">
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          <Button
-            variant={activity === null ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActivity(null)}
-            className="rounded-full"
-          >
-            All
-          </Button>
-          {ACTIVITIES.map((a) => (
-            <Button
-              key={a}
-              variant={activity === a ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActivity(a)}
-              className="rounded-full whitespace-nowrap"
+      {/* Browse by activity */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="flex items-end justify-between mb-6">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Browse by activity</h2>
+            <p className="text-muted-foreground mt-1">Pick what you love. Or try something new.</p>
+          </div>
+          <Link to="/browse" search={{ q: "", activity: "", location: "", type: "all", sort: "newest" }} className="text-sm font-medium text-primary hover:underline hidden sm:inline">
+            See all →
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {HERO_SLIDES.map((s) => (
+            <Link
+              key={s.label}
+              to="/browse"
+              search={{ q: "", activity: s.label, location: "", type: "all", sort: "newest" }}
+              className="group relative aspect-square overflow-hidden rounded-xl shadow-card hover:shadow-elegant transition-all"
             >
-              {a}
-            </Button>
+              <img src={s.src} alt={s.label} className="absolute inset-0 h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
+              <span className="absolute bottom-3 left-3 right-3 text-primary-foreground font-semibold">{s.label}</span>
+            </Link>
           ))}
         </div>
       </section>
 
-      {/* Grid */}
-      <section className="container mx-auto px-4 pb-16 flex-1">
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-72 rounded-xl bg-muted animate-pulse" />
+      {/* How it works */}
+      <section className="bg-muted/30 border-y">
+        <div className="container mx-auto px-4 py-16">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-center">How Dryvon works</h2>
+          <p className="text-center text-muted-foreground mt-2">Three simple steps to your next session.</p>
+          <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { icon: Compass, title: "Discover", body: "Browse local classes filtered by activity, time and location." },
+              { icon: Calendar, title: "Book", body: "Reserve a scheduled spot or send an on-request booking." },
+              { icon: Users, title: "Show up", body: "Meet your host, move together, repeat. It's free to book." },
+            ].map(({ icon: Icon, title, body }) => (
+              <div key={title} className="rounded-xl border bg-background p-6 shadow-card">
+                <div className="h-10 w-10 rounded-lg bg-gradient-hero text-primary-foreground flex items-center justify-center shadow-elegant">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <h3 className="mt-4 font-semibold text-lg">{title}</h3>
+                <p className="text-muted-foreground text-sm mt-1">{body}</p>
+              </div>
             ))}
           </div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-lg font-medium">No classes match your search</p>
-            <p className="text-muted-foreground mt-1">Try a different activity or location.</p>
-            <Button asChild className="mt-4 bg-gradient-hero" onClick={() => { setActivity(null); setSearch(""); }}>
-              <Link to="/">Clear filters</Link>
+        </div>
+      </section>
+
+      {/* Hosts CTA */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="rounded-2xl bg-gradient-hero text-primary-foreground p-10 md:p-14 shadow-elegant relative overflow-hidden">
+          <Sparkles className="absolute top-6 right-6 h-12 w-12 opacity-20" />
+          <div className="max-w-2xl">
+            <Badge className="bg-background/20 text-primary-foreground border-background/30 mb-3">For hosts</Badge>
+            <h2 className="text-2xl md:text-4xl font-bold">Teach what you love.</h2>
+            <p className="mt-3 text-primary-foreground/90">
+              List your classes on Dryvon and fill seats faster. Free to get started.
+            </p>
+            <Button asChild size="lg" variant="secondary" className="mt-6">
+              <Link to="/host">Become a host</Link>
             </Button>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((c) => (
-              <ClassCard key={c.id} cls={c} />
-            ))}
-          </div>
-        )}
+        </div>
       </section>
 
       <footer className="border-t py-8 text-center text-sm text-muted-foreground">
         © {new Date().getFullYear()} Dryvon · Move together
       </footer>
     </div>
-  );
-}
-
-function ClassCard({ cls }: { cls: ClassRow }) {
-  const when = cls.start_at ? new Date(cls.start_at) : null;
-  return (
-    <Link
-      to="/classes/$classId"
-      params={{ classId: cls.id }}
-      className="group block"
-    >
-      <Card className="overflow-hidden shadow-card hover:shadow-elegant transition-all hover:-translate-y-0.5 py-0 gap-0">
-        <div className="aspect-[4/3] relative overflow-hidden bg-muted">
-          {cls.image_url ? (
-            <img src={cls.image_url} alt={cls.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-          ) : (
-            <div className="h-full w-full bg-gradient-hero flex items-center justify-center text-primary-foreground text-3xl font-bold">
-              {cls.activity}
-            </div>
-          )}
-          <Badge className="absolute top-3 left-3 bg-background/95 text-foreground border-0">{cls.activity}</Badge>
-          {cls.booking_type === "on_request" && (
-            <Badge className="absolute top-3 right-3 bg-accent text-accent-foreground border-0">On request</Badge>
-          )}
-        </div>
-        <CardContent className="p-5">
-          <h3 className="font-semibold text-lg leading-tight line-clamp-1">{cls.title}</h3>
-          <div className="mt-2 space-y-1.5 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" />{cls.location}</div>
-            {when && (
-              <div className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" />
-                {when.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })} · {when.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
-              </div>
-            )}
-            <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" />{cls.duration_min} min{cls.capacity ? <><span className="mx-1">·</span><Users className="h-3.5 w-3.5" />{cls.capacity} spots</> : null}</div>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
   );
 }

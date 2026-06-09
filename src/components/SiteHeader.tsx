@@ -48,7 +48,7 @@ export function SiteHeader() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-6 text-sm">
-          <Link to="/" className="text-foreground/80 hover:text-foreground transition-colors">Browse</Link>
+          <Link to="/browse" search={{ q: "", activity: "", location: "", type: "all", sort: "newest" }} className="text-foreground/80 hover:text-foreground transition-colors">Browse</Link>
           <Link to="/host" className="text-foreground/80 hover:text-foreground transition-colors">For hosts</Link>
         </nav>
 
