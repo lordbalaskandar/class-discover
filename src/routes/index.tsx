@@ -14,7 +14,7 @@ import heroImg from "@/assets/hero.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Movely — Book pilates, boxing, pickleball and more" },
+      { title: "Dryvon — Book pilates, boxing, pickleball and more" },
       { name: "description", content: "Browse local fitness classes and book in seconds." },
     ],
   }),
@@ -160,7 +160,7 @@ function BrowsePage() {
       </section>
 
       <footer className="border-t py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} Movely · Move together
+        © {new Date().getFullYear()} Dryvon · Move together
       </footer>
     </div>
   );

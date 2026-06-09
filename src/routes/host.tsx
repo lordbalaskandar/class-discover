@@ -10,7 +10,7 @@ import { Sparkles, Plus, Users, Calendar } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/host")({
-  head: () => ({ meta: [{ title: "Host dashboard — Movely" }] }),
+  head: () => ({ meta: [{ title: "Host dashboard — Dryvon" }] }),
   component: HostPage,
 });
 

@@ -10,7 +10,7 @@ import { Calendar, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/bookings")({
-  head: () => ({ meta: [{ title: "My bookings — Movely" }] }),
+  head: () => ({ meta: [{ title: "My bookings — Dryvon" }] }),
   component: BookingsPage,
 });
 

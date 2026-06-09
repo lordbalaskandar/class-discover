@@ -64,9 +64,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Movely — Book pilates, boxing, pickleball and more" },
-      { name: "description", content: "Discover and book the best local fitness classes. From pilates to pickleball, find your next session on Movely." },
-      { property: "og:title", content: "Movely — Book your next class" },
+      { title: "Dryvon — Book pilates, boxing, pickleball and more" },
+      { name: "description", content: "Discover and book the best local fitness classes. From pilates to pickleball, find your next session on Dryvon." },
+      { property: "og:title", content: "Dryvon — Book your next class" },
       { property: "og:description", content: "Discover and book the best local fitness classes near you." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

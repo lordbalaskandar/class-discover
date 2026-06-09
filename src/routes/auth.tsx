@@ -11,7 +11,7 @@ import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Sign in — Movely" }] }),
+  head: () => ({ meta: [{ title: "Sign in — Dryvon" }] }),
   component: AuthPage,
 });
 
@@ -69,7 +69,7 @@ function AuthPage() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-hero text-primary-foreground shadow-elegant mb-2">
             <Sparkles className="h-5 w-5" />
           </div>
-          <CardTitle className="text-2xl">Welcome to Movely</CardTitle>
+          <CardTitle className="text-2xl">Welcome to Dryvon</CardTitle>
           <p className="text-sm text-muted-foreground">Book classes, host sessions, all in one place.</p>
         </CardHeader>
         <CardContent>

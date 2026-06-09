@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 export const Route = createFileRoute("/host/new")({
-  head: () => ({ meta: [{ title: "Create a class — Movely" }] }),
+  head: () => ({ meta: [{ title: "Create a class — Dryvon" }] }),
   component: NewClassPage,
 });
 
