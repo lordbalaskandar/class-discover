@@ -37,6 +37,7 @@ export function SiteHeader() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { open: openAuthModal } = useAuthModal();
+  const { isDark, toggle } = useThemeToggle();
   const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
