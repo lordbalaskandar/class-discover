@@ -50,7 +50,9 @@ type Screen =
   | "class"
   | "booking"
   | "payment"
-  | "confirmation";
+  | "confirmation"
+  | "bookings"
+  | "profile";
 
 type ClassItem = {
   id: string;
