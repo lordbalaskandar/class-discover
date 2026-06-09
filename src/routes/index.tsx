@@ -1,5 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,13 +14,32 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ACTIVITIES } from "@/lib/activities";
-import { MapPin, Search, Calendar, Sparkles, Users, Compass } from "lucide-react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  MapPin,
+  Search,
+  Calendar,
+  Sparkles,
+  Users,
+  Compass,
+  Clock,
+  CalendarDays,
+  UserCheck,
+  ArrowRight,
+} from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Dryvon — Book pilates, boxing, pickleball and more" },
-      { name: "description", content: "Discover and book local fitness classes — pilates, boxing, pickleball, yoga and more, all in seconds." },
+      { title: "Dryvon — Book classes and trainers near you" },
+      { name: "description", content: "Discover fixed-day classes and book personal trainers for your own schedule — pilates, boxing, pickleball, yoga and more." },
     ],
   }),
   component: HomePage,
@@ -33,22 +54,43 @@ const HERO_SLIDES = [
   { src: "https://images.unsplash.com/photo-1522163182402-834f871fd851?auto=format&fit=crop&w=1920&q=70", label: "Rock Climbing" },
 ];
 
+type FeaturedRow = {
+  id: string;
+  title: string;
+  activity: string;
+  location: string;
+  image_url: string | null;
+  duration_min: number;
+  start_at: string | null;
+  listing_type: "class" | "trainer";
+};
+
+const baseSearch = { q: "", activity: "", location: "", category: "all" as const, type: "all" as const, sort: "newest" as const };
+
 function HomePage() {
   const navigate = useNavigate();
   const [heroActivity, setHeroActivity] = useState<string>("any");
   const [heroLocation, setHeroLocation] = useState("");
 
+  const { data: featured = [] } = useQuery({
+    queryKey: ["featured", "home"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("classes")
+        .select("id, title, activity, location, image_url, duration_min, start_at, listing_type")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return (data ?? []) as FeaturedRow[];
+    },
+  });
+
   function onHeroSearch(e: React.FormEvent) {
     e.preventDefault();
     navigate({
       to: "/browse",
-      search: {
-        q: "",
-        activity: heroActivity === "any" ? "" : heroActivity,
-        location: heroLocation,
-        type: "all",
-        sort: "newest",
-      },
+      search: { ...baseSearch, activity: heroActivity === "any" ? "" : heroActivity, location: heroLocation },
     });
   }
 
@@ -75,13 +117,13 @@ function HomePage() {
         <div className="container relative mx-auto px-4 py-16 md:py-24 lg:py-28">
           <div className="max-w-3xl text-primary-foreground">
             <Badge className="bg-background/15 text-primary-foreground border-background/30 backdrop-blur mb-4">
-              Pilates · Boxing · Pickleball · and more
+              Classes · Trainers · Pilates · Boxing · Pickleball
             </Badge>
             <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-              Find your next <span className="text-accent">class</span>.
+              Find your next <span className="text-accent">class</span> or <span className="text-accent">trainer</span>.
             </h1>
             <p className="mt-3 text-lg text-primary-foreground/90 max-w-xl">
-              Search thousands of pilates, boxing, pickleball and wellness sessions near you — book in seconds.
+              Book scheduled sessions or hire personal trainers around your availability — all in one place.
             </p>
           </div>
 
@@ -118,7 +160,7 @@ function HomePage() {
               <div className="flex md:items-end">
                 <Button type="submit" size="lg" className="h-12 w-full md:w-auto md:px-8 bg-gradient-hero hover:opacity-90 shadow-elegant">
                   <Search className="h-4 w-4" />
-                  Search classes
+                  Search
                 </Button>
               </div>
             </div>
@@ -129,7 +171,7 @@ function HomePage() {
                 <Link
                   key={p}
                   to="/browse"
-                  search={{ q: "", activity: p, location: "", type: "all", sort: "newest" }}
+                  search={{ ...baseSearch, activity: p }}
                   className="rounded-full border px-3 py-1 hover:bg-accent hover:text-accent-foreground transition-colors"
                 >
                   {p}
@@ -140,14 +182,68 @@ function HomePage() {
         </div>
       </section>
 
+      {/* Featured carousel */}
+      {featured.length > 0 && (
+        <section className="container mx-auto px-4 py-16">
+          <div className="flex items-end justify-between mb-6">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Featured this week</h2>
+              <p className="text-muted-foreground mt-1">Hand-picked classes and trainers near you.</p>
+            </div>
+            <Link to="/browse" search={baseSearch} className="text-sm font-medium text-primary hover:underline hidden sm:inline">
+              See all →
+            </Link>
+          </div>
+          <Carousel opts={{ align: "start", loop: false }} className="w-full">
+            <CarouselContent className="-ml-4">
+              {featured.map((f) => (
+                <CarouselItem key={f.id} className="pl-4 basis-[80%] sm:basis-1/2 lg:basis-1/3 xl:basis-1/4">
+                  <FeaturedCard item={f} />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex -left-4" />
+            <CarouselNext className="hidden md:flex -right-4" />
+          </Carousel>
+        </section>
+      )}
+
+      {/* Browse by category */}
+      <section className="container mx-auto px-4 pb-16">
+        <div className="mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Browse by category</h2>
+          <p className="text-muted-foreground mt-1">Two ways to move — pick what fits your week.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <CategoryCard
+            to="/browse"
+            search={{ ...baseSearch, category: "class" }}
+            title="Classes"
+            tagline="Group sessions on a fixed day & time"
+            description="Drop into reformer pilates, boxing fundamentals, pickleball open play and more."
+            image="https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1600&q=70"
+            icon={<CalendarDays className="h-5 w-5" />}
+          />
+          <CategoryCard
+            to="/browse"
+            search={{ ...baseSearch, category: "trainer" }}
+            title="Trainers"
+            tagline="Book a coach around your availability"
+            description="1-on-1 personal trainers and instructors. Pick a time that works for you."
+            image="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1600&q=70"
+            icon={<UserCheck className="h-5 w-5" />}
+          />
+        </div>
+      </section>
+
       {/* Browse by activity */}
-      <section className="container mx-auto px-4 py-16">
+      <section className="container mx-auto px-4 pb-16">
         <div className="flex items-end justify-between mb-6">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Browse by activity</h2>
             <p className="text-muted-foreground mt-1">Pick what you love. Or try something new.</p>
           </div>
-          <Link to="/browse" search={{ q: "", activity: "", location: "", type: "all", sort: "newest" }} className="text-sm font-medium text-primary hover:underline hidden sm:inline">
+          <Link to="/browse" search={baseSearch} className="text-sm font-medium text-primary hover:underline hidden sm:inline">
             See all →
           </Link>
         </div>
@@ -156,7 +252,7 @@ function HomePage() {
             <Link
               key={s.label}
               to="/browse"
-              search={{ q: "", activity: s.label, location: "", type: "all", sort: "newest" }}
+              search={{ ...baseSearch, activity: s.label }}
               className="group relative aspect-square overflow-hidden rounded-xl shadow-card hover:shadow-elegant transition-all"
             >
               <img src={s.src} alt={s.label} className="absolute inset-0 h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
@@ -174,8 +270,8 @@ function HomePage() {
           <p className="text-center text-muted-foreground mt-2">Three simple steps to your next session.</p>
           <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { icon: Compass, title: "Discover", body: "Browse local classes filtered by activity, time and location." },
-              { icon: Calendar, title: "Book", body: "Reserve a scheduled spot or send an on-request booking." },
+              { icon: Compass, title: "Discover", body: "Browse local classes and trainers filtered by activity, time and location." },
+              { icon: Calendar, title: "Book", body: "Reserve a scheduled class or request a time with a trainer." },
               { icon: Users, title: "Show up", body: "Meet your host, move together, repeat. It's free to book." },
             ].map(({ icon: Icon, title, body }) => (
               <div key={title} className="rounded-xl border bg-background p-6 shadow-card">
@@ -198,7 +294,7 @@ function HomePage() {
             <Badge className="bg-background/20 text-primary-foreground border-background/30 mb-3">For hosts</Badge>
             <h2 className="text-2xl md:text-4xl font-bold">Teach what you love.</h2>
             <p className="mt-3 text-primary-foreground/90">
-              List your classes on Dryvon and fill seats faster. Free to get started.
+              List your classes or trainer profile on Dryvon and fill seats faster. Free to get started.
             </p>
             <Button asChild size="lg" variant="secondary" className="mt-6">
               <Link to="/host">Become a host</Link>
@@ -211,5 +307,80 @@ function HomePage() {
         © {new Date().getFullYear()} Dryvon · Move together
       </footer>
     </div>
+  );
+}
+
+function FeaturedCard({ item }: { item: FeaturedRow }) {
+  const when = item.start_at ? new Date(item.start_at) : null;
+  return (
+    <Link to="/classes/$classId" params={{ classId: item.id }} className="group block h-full">
+      <Card className="overflow-hidden shadow-card hover:shadow-elegant transition-all hover:-translate-y-0.5 py-0 gap-0 h-full">
+        <div className="aspect-[4/3] relative overflow-hidden bg-muted">
+          {item.image_url ? (
+            <img src={item.image_url} alt={item.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+          ) : (
+            <div className="h-full w-full bg-gradient-hero flex items-center justify-center text-primary-foreground text-2xl font-bold">
+              {item.activity}
+            </div>
+          )}
+          <Badge className="absolute top-3 left-3 bg-background/95 text-foreground border-0">{item.activity}</Badge>
+          <Badge className={`absolute top-3 right-3 border-0 ${item.listing_type === "trainer" ? "bg-accent text-accent-foreground" : "bg-primary text-primary-foreground"}`}>
+            {item.listing_type === "trainer" ? "Trainer" : "Class"}
+          </Badge>
+        </div>
+        <CardContent className="p-4">
+          <h3 className="font-semibold leading-tight line-clamp-1">{item.title}</h3>
+          <div className="mt-1.5 space-y-1 text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5"><MapPin className="h-3 w-3" />{item.location}</div>
+            <div className="flex items-center gap-1.5">
+              <Clock className="h-3 w-3" />
+              {when
+                ? when.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })
+                : `${item.duration_min} min · by appointment`}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
+function CategoryCard({
+  to,
+  search,
+  title,
+  tagline,
+  description,
+  image,
+  icon,
+}: {
+  to: string;
+  search: typeof baseSearch;
+  title: string;
+  tagline: string;
+  description: string;
+  image: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <Link
+      to={to}
+      search={search}
+      className="group relative overflow-hidden rounded-2xl shadow-card hover:shadow-elegant transition-all h-72 block"
+    >
+      <img src={image} alt={title} className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+      <div className="absolute inset-0 bg-gradient-to-tr from-foreground/85 via-foreground/55 to-foreground/20" />
+      <div className="relative h-full p-6 md:p-8 flex flex-col justify-end text-primary-foreground">
+        <div className="absolute top-6 right-6 h-10 w-10 rounded-lg bg-background/15 backdrop-blur flex items-center justify-center">
+          {icon}
+        </div>
+        <h3 className="text-2xl md:text-3xl font-bold">{title}</h3>
+        <p className="text-primary-foreground/90 mt-1 font-medium">{tagline}</p>
+        <p className="text-primary-foreground/75 text-sm mt-2 max-w-md">{description}</p>
+        <span className="inline-flex items-center gap-1.5 mt-4 text-sm font-medium">
+          Explore {title.toLowerCase()} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+        </span>
+      </div>
+    </Link>
   );
 }
