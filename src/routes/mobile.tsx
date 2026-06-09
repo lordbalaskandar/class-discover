@@ -1935,3 +1935,294 @@ function HostProfileScreen({ onDashboard }: { onDashboard: () => void }) {
     </ScreenScroll>
   );
 }
+
+function HostMetricsScreen({ onBack }: { onBack: () => void }) {
+  const range = ["7d", "30d", "90d"];
+  const [active, setActive] = useState(1);
+
+  const kpis = [
+    { icon: Eye, label: "Profile views", value: "3,482", delta: "+24%", up: true },
+    { icon: Target, label: "View → book", value: "9.4%", delta: "+1.8pt", up: true },
+    { icon: Repeat, label: "Returning", value: "62%", delta: "+5pt", up: true },
+    { icon: Users, label: "Fill rate", value: "84%", delta: "−3pt", up: false },
+  ];
+
+  const visibility = [
+    { day: "M", impressions: 38, views: 14 },
+    { day: "T", impressions: 52, views: 22 },
+    { day: "W", impressions: 44, views: 18 },
+    { day: "T", impressions: 71, views: 31 },
+    { day: "F", impressions: 60, views: 24 },
+    { day: "S", impressions: 88, views: 41 },
+    { day: "S", impressions: 76, views: 33 },
+  ];
+  const maxImp = Math.max(...visibility.map((v) => v.impressions));
+
+  const funnel = [
+    { label: "Impressions", value: 3482, pct: 100 },
+    { label: "Profile views", value: 1240, pct: 36 },
+    { label: "Class views", value: 612, pct: 18 },
+    { label: "Started booking", value: 198, pct: 6 },
+    { label: "Completed", value: 142, pct: 4 },
+  ];
+
+  const cohorts = [
+    { label: "Wk 1", values: [100, 72, 58, 49, 44] },
+    { label: "Wk 2", values: [100, 81, 64, 55] },
+    { label: "Wk 3", values: [100, 78, 66] },
+    { label: "Wk 4", values: [100, 84] },
+  ];
+
+  const peakHours = [
+    { h: "6a", v: 30 }, { h: "8a", v: 70 }, { h: "10a", v: 45 },
+    { h: "12p", v: 50 }, { h: "2p", v: 25 }, { h: "4p", v: 40 },
+    { h: "6p", v: 88 }, { h: "8p", v: 55 },
+  ];
+
+  const topClasses = [
+    { title: "Sunrise Vinyasa Flow", fill: 92, rating: 4.9, repeat: 71 },
+    { title: "Evening Power Flow", fill: 79, rating: 4.8, repeat: 64 },
+    { title: "Lunchtime Mobility", fill: 50, rating: 4.7, repeat: 38 },
+  ];
+
+  return (
+    <ScreenScroll>
+      <ScreenHeader title="Advanced metrics" onBack={onBack} />
+      <div className="px-5 py-4 space-y-5">
+        {/* Range selector */}
+        <div className="flex items-center gap-2">
+          {range.map((r, i) => (
+            <button
+              key={r}
+              onClick={() => setActive(i)}
+              className={cn(
+                "px-3 py-1.5 rounded-full text-xs font-semibold border",
+                i === active
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-card border-border text-muted-foreground",
+              )}
+            >
+              {r}
+            </button>
+          ))}
+          <span className="ml-auto text-[10px] text-muted-foreground inline-flex items-center gap-1">
+            <Activity className="h-3 w-3" /> Live
+          </span>
+        </div>
+
+        {/* KPI grid */}
+        <div className="grid grid-cols-2 gap-2">
+          {kpis.map((k) => (
+            <div key={k.label} className="p-3 rounded-xl border bg-card">
+              <div className="flex items-center justify-between">
+                <k.icon className="h-4 w-4 text-primary" />
+                <span
+                  className={cn(
+                    "text-[10px] font-semibold inline-flex items-center gap-0.5",
+                    k.up ? "text-primary" : "text-destructive",
+                  )}
+                >
+                  <TrendingUp className={cn("h-3 w-3", !k.up && "rotate-180")} />
+                  {k.delta}
+                </span>
+              </div>
+              <p className="font-display text-xl font-semibold mt-1.5">{k.value}</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                {k.label}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Visibility chart */}
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Visibility</p>
+              <p className="font-display text-lg font-semibold">Impressions vs views</p>
+            </div>
+            <div className="flex items-center gap-3 text-[10px]">
+              <span className="inline-flex items-center gap-1">
+                <span className="h-2 w-2 rounded-sm bg-foreground/70" /> Impr.
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <span className="h-2 w-2 rounded-sm bg-primary" /> Views
+              </span>
+            </div>
+          </div>
+          <div className="mt-4 flex items-end gap-2 h-28">
+            {visibility.map((d, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                <div className="w-full flex items-end gap-0.5 h-full">
+                  <div
+                    className="flex-1 rounded-t bg-foreground/70"
+                    style={{ height: `${(d.impressions / maxImp) * 100}%` }}
+                  />
+                  <div
+                    className="flex-1 rounded-t bg-primary"
+                    style={{ height: `${(d.views / maxImp) * 100}%` }}
+                  />
+                </div>
+                <span className="text-[10px] text-muted-foreground">{d.day}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Conversion funnel */}
+        <Card className="p-4">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Conversion funnel</p>
+          <p className="font-display text-lg font-semibold">Discover → book</p>
+          <div className="mt-3 space-y-2">
+            {funnel.map((f, i) => (
+              <div key={f.label}>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">{f.label}</span>
+                  <span className="font-medium">
+                    {f.value.toLocaleString()}{" "}
+                    <span className="text-muted-foreground">· {f.pct}%</span>
+                  </span>
+                </div>
+                <div className="h-2 mt-1 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className={cn(
+                      "h-full rounded-full",
+                      i === funnel.length - 1 ? "bg-primary" : "bg-foreground/70",
+                    )}
+                    style={{ width: `${f.pct}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Retention cohorts */}
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Retention</p>
+              <p className="font-display text-lg font-semibold">Student cohorts</p>
+            </div>
+            <Badge variant="secondary" className="text-[10px]">
+              <Repeat className="h-3 w-3 mr-1" /> 62% return
+            </Badge>
+          </div>
+          <div className="mt-3 space-y-1.5">
+            <div className="grid grid-cols-6 gap-1 text-[10px] text-muted-foreground">
+              <span>Cohort</span>
+              {["W0", "W1", "W2", "W3", "W4"].map((w) => (
+                <span key={w} className="text-center">{w}</span>
+              ))}
+            </div>
+            {cohorts.map((c) => (
+              <div key={c.label} className="grid grid-cols-6 gap-1 items-center">
+                <span className="text-[10px] text-muted-foreground">{c.label}</span>
+                {Array.from({ length: 5 }).map((_, i) => {
+                  const v = c.values[i];
+                  return (
+                    <div
+                      key={i}
+                      className={cn(
+                        "h-7 rounded flex items-center justify-center text-[10px] font-medium",
+                        v === undefined ? "bg-muted/40 text-transparent" : "text-background",
+                      )}
+                      style={
+                        v !== undefined
+                          ? {
+                              backgroundColor: `color-mix(in oklab, var(--primary) ${Math.max(
+                                15,
+                                v,
+                              )}%, transparent)`,
+                              color: v > 50 ? "white" : "hsl(var(--foreground))",
+                            }
+                          : undefined
+                      }
+                    >
+                      {v !== undefined ? `${v}%` : ""}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* Peak hours */}
+        <Card className="p-4">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Peak booking hours</p>
+          <p className="font-display text-lg font-semibold">When students book</p>
+          <div className="mt-3 flex items-end gap-1.5 h-20">
+            {peakHours.map((p) => (
+              <div key={p.h} className="flex-1 flex flex-col items-center gap-1">
+                <div
+                  className={cn(
+                    "w-full rounded-t",
+                    p.v > 70 ? "bg-primary" : "bg-foreground/60",
+                  )}
+                  style={{ height: `${p.v}%` }}
+                />
+                <span className="text-[9px] text-muted-foreground">{p.h}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-2">
+            Most bookings happen Thursday evenings — consider adding a 6:30 PM slot.
+          </p>
+        </Card>
+
+        {/* Top classes */}
+        <div>
+          <h3 className="font-semibold text-sm mb-2">Top performing</h3>
+          <div className="space-y-2">
+            {topClasses.map((t) => (
+              <Card key={t.title} className="p-3">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-sm">{t.title}</p>
+                  <span className="text-xs font-semibold">{t.fill}% full</span>
+                </div>
+                <div className="mt-1.5 h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div className="h-full bg-primary" style={{ width: `${t.fill}%` }} />
+                </div>
+                <div className="mt-2 flex items-center gap-3 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Star className="h-3 w-3 fill-primary text-primary" /> {t.rating}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Repeat className="h-3 w-3" /> {t.repeat}% return
+                  </span>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Insights */}
+        <Card className="p-4 bg-gradient-to-br from-primary/10 to-transparent border-primary/30">
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="text-[10px] uppercase tracking-widest text-primary font-semibold">
+              Insights
+            </span>
+          </div>
+          <ul className="space-y-2 text-sm">
+            <li className="flex gap-2">
+              <span className="text-primary">•</span>
+              Your booking conversion is 2.1× the platform average — keep the cover photo on Vinyasa.
+            </li>
+            <li className="flex gap-2">
+              <span className="text-primary">•</span>
+              Lunchtime Mobility fill rate dropped 12% — try a $15 intro price.
+            </li>
+            <li className="flex gap-2">
+              <span className="text-primary">•</span>
+              38% of new students don't return — send a follow-up message within 24h.
+            </li>
+          </ul>
+        </Card>
+
+        <div className="pb-4" />
+      </div>
+    </ScreenScroll>
+  );
+}
