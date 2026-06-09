@@ -1736,9 +1736,11 @@ function HostCreateScreen({
 function HostManageScreen({
   cls,
   onBack,
+  onMetrics,
 }: {
   cls: HostClass;
   onBack: () => void;
+  onMetrics: () => void;
 }) {
   const attendees = HOST_ATTENDEES.slice(0, cls.booked);
   return (
@@ -1749,11 +1751,12 @@ function HostManageScreen({
         <div className="px-5 py-4">
           <div className="flex items-center justify-between gap-2">
             <h2 className="font-display text-xl font-semibold leading-tight">{cls.title}</h2>
-            <button className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
-              <Pencil className="h-4 w-4" />
+            <button onClick={onMetrics} className="h-9 w-9 rounded-full bg-muted flex items-center justify-center" aria-label="View metrics">
+              <Activity className="h-4 w-4" />
             </button>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5">{cls.date} · {cls.time} · {cls.duration}</p>
+
 
           <div className="grid grid-cols-3 gap-2 mt-4">
             <div className="p-3 rounded-lg bg-muted/60">
