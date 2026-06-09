@@ -76,14 +76,6 @@ function BrowsePage() {
   // Hero form state
   const [heroActivity, setHeroActivity] = useState<string>("any");
   const [heroLocation, setHeroLocation] = useState("");
-  const [slide, setSlide] = useState(0);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setSlide((s) => (s + 1) % HERO_SLIDES.length);
-    }, 5000);
-    return () => clearInterval(id);
-  }, []);
 
   const { data: classes = [], isLoading } = useQuery({
     queryKey: ["classes", "active"],
@@ -123,32 +115,46 @@ function BrowsePage() {
     el?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  // Duplicate slides for seamless infinite scroll
+  const scrollSlides = [...HERO_SLIDES, ...HERO_SLIDES];
+
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
 
-      {/* Hero — AutoTrader-style search card on top of a carousel backdrop */}
+      {/* Hero — Netflix-style auto-scrolling carousel backdrop */}
       <section className="relative overflow-hidden border-b">
-        {/* Carousel background */}
-        <div className="absolute inset-0">
-          {HERO_SLIDES.map((s, i) => (
-            <img
-              key={s.src}
-              src={s.src}
-              alt={`${s.label} class`}
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ease-in-out ${
-                i === slide ? "opacity-100" : "opacity-0"
-              }`}
-              loading={i === 0 ? "eager" : "lazy"}
-            />
-          ))}
+        {/* Continuous horizontal carousel background */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div
+            className="flex h-full w-max animate-netflix-scroll"
+            style={{ willChange: "transform" }}
+          >
+            {scrollSlides.map((s, i) => (
+              <div key={`${s.src}-${i}`} className="relative h-full w-[40vw] min-w-[320px] flex-shrink-0 overflow-hidden">
+                <img
+                  src={s.src}
+                  alt={`${s.label} class`}
+                  className="h-full w-full object-cover"
+                  loading={i < HERO_SLIDES.length ? "eager" : "lazy"}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-foreground/20" />
+                <div className="absolute bottom-4 left-4">
+                  <span className="rounded-md bg-background/80 px-2.5 py-1 text-xs font-semibold text-foreground backdrop-blur-sm">
+                    {s.label}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Global dark overlay for text readability */}
           <div className="absolute inset-0 bg-gradient-to-br from-foreground/75 via-foreground/55 to-primary/40" />
         </div>
 
         <div className="container relative mx-auto px-4 py-16 md:py-24 lg:py-28">
           <div className="max-w-3xl text-primary-foreground">
             <Badge className="bg-background/15 text-primary-foreground border-background/30 backdrop-blur mb-4">
-              {HERO_SLIDES[slide].label} · and so much more
+              Pilates · Boxing · Pickleball · and more
             </Badge>
             <h1 className="text-4xl md:text-6xl font-bold leading-tight">
               Find your next <span className="text-accent">class</span>.
@@ -224,21 +230,6 @@ function BrowsePage() {
               ))}
             </div>
           </form>
-
-          {/* Slide dots */}
-          <div className="relative mt-6 flex gap-1.5">
-            {HERO_SLIDES.map((s, i) => (
-              <button
-                key={s.src}
-                type="button"
-                aria-label={`Show ${s.label}`}
-                onClick={() => setSlide(i)}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === slide ? "w-8 bg-primary-foreground" : "w-3 bg-primary-foreground/50 hover:bg-primary-foreground/80"
-                }`}
-              />
-            ))}
-          </div>
         </div>
       </section>
 
