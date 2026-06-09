@@ -77,6 +77,7 @@ type Screen =
   | "pNotifications"
   | "pBecomeHost"
   | "pHelp"
+  | "pMyGym"
   | "filters";
 
 type HostItem = {
