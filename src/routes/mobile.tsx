@@ -519,7 +519,9 @@ function BrowseScreen({
     (filters.duration !== "any" ? 1 : 0) +
     (filters.capacity !== "any" ? 1 : 0) +
     (filters.type !== "all" ? 1 : 0) +
-    (filters.spots !== "any" ? 1 : 0);
+    (filters.spots !== "any" ? 1 : 0) +
+    (filters.distance !== "any" ? 1 : 0) +
+    (filters.date ? 1 : 0);
 
   return (
     <div className="h-full relative">
