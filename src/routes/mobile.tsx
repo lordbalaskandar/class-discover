@@ -2456,19 +2456,39 @@ function HostEarningsScreen({ onBack }: { onBack: () => void }) {
               <BarChart3 className="h-3 w-3 mr-1" /> +18%
             </Badge>
           </div>
-          <div className="mt-4 flex items-end gap-1.5 h-24">
-            {bars.map((h, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                <div
-                  className={cn(
-                    "w-full rounded-t",
-                    i === bars.length - 1 ? "bg-primary" : "bg-foreground/70",
-                  )}
-                  style={{ height: `${h}%` }}
-                />
-                <span className="text-[10px] text-muted-foreground">{days[i]}</span>
-              </div>
-            ))}
+          <div className="mt-4">
+            <svg viewBox="0 0 280 80" className="w-full h-20" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="gradEarnings" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.05" />
+                </linearGradient>
+              </defs>
+              {(() => {
+                const w = 280, h = 76;
+                const pts = bars.map((v, i) => {
+                  const x = (i / (bars.length - 1)) * w;
+                  const y = h - (v / 100) * h + 2;
+                  return [x, y] as const;
+                });
+                const line = pts.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x},${y}`).join(" ");
+                const area = `${line} L${w},${h + 2} L0,${h + 2} Z`;
+                return (
+                  <>
+                    <path d={area} fill="url(#gradEarnings)" />
+                    <path d={line} fill="none" stroke="hsl(var(--primary))" strokeWidth="1.5" />
+                    {pts.map(([x, y], i) => (
+                      <circle key={i} cx={x} cy={y} r={bars[i] > 70 ? 3 : 2} fill="hsl(var(--primary))" />
+                    ))}
+                  </>
+                );
+              })()}
+            </svg>
+            <div className="flex justify-between mt-1 px-0.5">
+              {days.map((d, i) => (
+                <span key={i} className="text-[10px] text-muted-foreground">{d}</span>
+              ))}
+            </div>
           </div>
         </Card>
 
