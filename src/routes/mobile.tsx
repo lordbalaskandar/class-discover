@@ -102,6 +102,8 @@ const HOSTS: HostItem[] = [
     classId: "1",
     image: "linear-gradient(135deg,#f4b942,#e07a5f)",
     bio: "RYT-500 yoga teacher. Sunrise flows in the park.",
+    lat: 37.7599,
+    lng: -122.4148,
   },
   {
     id: "h2",
