@@ -61,11 +61,20 @@ function HostPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bookings")
-        .select("id, status, message, preferred_at, created_at, classes!inner(id, title, host_id), profiles:customer_id(display_name)")
+        .select("id, status, message, preferred_at, created_at, customer_id, classes!inner(id, title, host_id)")
         .eq("classes.host_id", userId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      const customerIds = Array.from(new Set((data ?? []).map((b: any) => b.customer_id)));
+      const names: Record<string, string> = {};
+      if (customerIds.length) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id, display_name")
+          .in("id", customerIds);
+        (profs ?? []).forEach((p) => { names[p.id] = p.display_name ?? "Customer"; });
+      }
+      return (data ?? []).map((b: any) => ({ ...b, customer_name: names[b.customer_id] ?? "Customer" }));
     },
   });
 
