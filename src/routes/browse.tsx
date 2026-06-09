@@ -23,6 +23,7 @@ const browseSearchSchema = z.object({
   q: fallback(z.string(), "").default(""),
   activity: fallback(z.string(), "").default(""),
   location: fallback(z.string(), "").default(""),
+  category: fallback(z.enum(["all", "class", "trainer"]), "all").default("all"),
   type: fallback(z.enum(["all", "scheduled", "on_request"]), "all").default("all"),
   sort: fallback(z.enum(["newest", "soonest", "duration"]), "newest").default("newest"),
 });
