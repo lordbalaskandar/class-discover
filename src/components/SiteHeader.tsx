@@ -42,7 +42,7 @@ export function SiteHeader() {
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-hero text-primary-foreground shadow-elegant">
             <Sparkles className="h-4 w-4" />
           </span>
-          <span className="tracking-tight">Movely</span>
+          <span className="tracking-tight">Dryvon</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-6 text-sm">
