@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
@@ -8,10 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Calendar, MapPin, Clock, Users, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthModal } from "@/components/AuthModal";
+import { getClassAvailability } from "@/lib/availability.functions";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/classes/$classId")({
   component: ClassDetailPage,
