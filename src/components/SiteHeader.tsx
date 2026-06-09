@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Sparkles, LogOut, User as UserIcon, Calendar, Sun, Moon } from "lucide-react";
+import { Sparkles, LogOut, User as UserIcon, Calendar, Sun, Moon, IdCard } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,11 +39,16 @@ export function SiteHeader() {
   const { open: openAuthModal } = useAuthModal();
   const { isDark, toggle } = useThemeToggle();
   const [email, setEmail] = useState<string | null>(null);
+  const [uid, setUid] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setEmail(data.session?.user.email ?? null));
+    supabase.auth.getSession().then(({ data }) => {
+      setEmail(data.session?.user.email ?? null);
+      setUid(data.session?.user.id ?? null);
+    });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       setEmail(session?.user.email ?? null);
+      setUid(session?.user.id ?? null);
     });
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -68,7 +73,7 @@ export function SiteHeader() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-6 text-sm">
-          <Link to="/browse" search={{ q: "", activity: "", location: "", category: "all", type: "all", sort: "newest" }} className="text-foreground/80 hover:text-foreground transition-colors">Browse</Link>
+          <Link to="/browse" search={{ q: "", activity: "", location: "", category: "all", type: "all", when: "any", duration: "any", capacity: "any", spots: "any", media: "any", sort: "newest" }} className="text-foreground/80 hover:text-foreground transition-colors">Browse</Link>
           <Link to="/host" className="text-foreground/80 hover:text-foreground transition-colors">For hosts</Link>
         </nav>
 
@@ -88,6 +93,11 @@ export function SiteHeader() {
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-2 py-1.5 text-xs text-muted-foreground truncate">{email}</div>
                 <DropdownMenuSeparator />
+                {uid && (
+                  <DropdownMenuItem onClick={() => navigate({ to: "/profile/$userId", params: { userId: uid }, search: { activity: "", when: "any", type: "all", kind: "all", sort: "soonest" } })}>
+                    <IdCard className="mr-2 h-4 w-4" /> My profile
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={() => navigate({ to: "/bookings" })}>
                   <Calendar className="mr-2 h-4 w-4" /> My bookings
                 </DropdownMenuItem>

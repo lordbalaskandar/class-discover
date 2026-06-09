@@ -249,9 +249,24 @@ function ClassDetailPage() {
                 <h2 className="font-semibold text-lg mb-2">{cls.listing_type === "trainer" ? "Your trainer" : "Your host"}</h2>
                 <Card>
                   <CardContent className="p-4">
-                    <p className="font-medium">{profile.display_name ?? "Host"}</p>
+                    <Link
+                      to="/profile/$userId"
+                      params={{ userId: cls.host_id }}
+                      search={{ activity: "", when: "any", type: "all", kind: "all", sort: "soonest" }}
+                      className="font-medium hover:underline"
+                    >
+                      {profile.display_name ?? "Host"}
+                    </Link>
                     {profile.city && <p className="text-sm text-muted-foreground">{profile.city}</p>}
                     {profile.bio && <p className="text-sm mt-2">{profile.bio}</p>}
+                    <Link
+                      to="/profile/$userId"
+                      params={{ userId: cls.host_id }}
+                      search={{ activity: "", when: "any", type: "all", kind: "all", sort: "soonest" }}
+                      className="text-sm text-primary hover:underline inline-block mt-2"
+                    >
+                      View profile & sessions →
+                    </Link>
                   </CardContent>
                 </Card>
               </div>
