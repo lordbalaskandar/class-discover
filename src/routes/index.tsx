@@ -65,7 +65,7 @@ type FeaturedRow = {
   listing_type: "class" | "trainer";
 };
 
-const baseSearch: { q: string; activity: string; location: string; category: "all" | "class" | "trainer"; type: "all" | "scheduled" | "on_request"; sort: "newest" | "soonest" | "duration" } = { q: "", activity: "", location: "", category: "all", type: "all", sort: "newest" };
+const baseSearch: { q: string; activity: string; location: string; category: "all" | "class" | "trainer"; type: "all" | "scheduled" | "on_request"; when: "any" | "today" | "tomorrow" | "this_week" | "this_weekend" | "next_week"; duration: "any" | "short" | "medium" | "long"; capacity: "any" | "private" | "small" | "medium" | "large"; spots: "any" | "available"; media: "any" | "with_image"; sort: "newest" | "soonest" | "duration" } = { q: "", activity: "", location: "", category: "all", type: "all", when: "any", duration: "any", capacity: "any", spots: "any", media: "any", sort: "newest" };
 
 function HomePage() {
   const navigate = useNavigate();
