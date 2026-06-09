@@ -73,6 +73,10 @@ type Screen =
   | "bookings"
   | "profile"
   | "saved"
+  | "pPayment"
+  | "pNotifications"
+  | "pBecomeHost"
+  | "pHelp"
   | "filters";
 
 type HostItem = {
