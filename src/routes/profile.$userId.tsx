@@ -27,7 +27,7 @@ const profileSearchSchema = z.object({
 
 export const Route = createFileRoute("/profile/$userId")({
   validateSearch: zodValidator(profileSearchSchema),
-  head: ({ params }) => ({
+  head: () => ({
     meta: [
       { title: `Profile — Dryvon` },
       { name: "description", content: `View sessions and notes for this Dryvon member.` },
