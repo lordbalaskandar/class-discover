@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import { useAuthModal } from "@/components/AuthModal";
 
 export const Route = createFileRoute("/bookings")({
   head: () => ({ meta: [{ title: "My bookings — Dryvon" }] }),

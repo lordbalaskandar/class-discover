@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Plus, Users, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import { useAuthModal } from "@/components/AuthModal";
 
 export const Route = createFileRoute("/host")({
   head: () => ({ meta: [{ title: "Host dashboard — Dryvon" }] }),

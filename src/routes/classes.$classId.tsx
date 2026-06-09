@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Calendar, MapPin, Clock, Users, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { useAuthModal } from "@/components/AuthModal";
 
 export const Route = createFileRoute("/classes/$classId")({
   component: ClassDetailPage,
