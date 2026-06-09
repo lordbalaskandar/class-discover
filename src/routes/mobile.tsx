@@ -426,6 +426,7 @@ function UserFlow() {
         <PhoneTabBar
           screen={screen}
           onHome={() => setScreen("browse")}
+          onHosts={() => setScreen("hosts")}
           onBookings={() => setScreen("bookings")}
           onProfile={() => setScreen("profile")}
         />
@@ -437,8 +438,9 @@ function UserFlow() {
         </p>
         {(
           [
-            ["browse", "Browse"],
-            ["filters", "Filters"],
+            ["browse", "Sessions"],
+            ["filters", "Session filters"],
+            ["hosts", "Hosts"],
             ["host", "Host profile"],
             ["gym", "Gym profile"],
             ["class", "Class detail"],
