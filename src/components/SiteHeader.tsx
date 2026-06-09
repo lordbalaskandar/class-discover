@@ -39,6 +39,7 @@ export function SiteHeader() {
   const { open: openAuthModal } = useAuthModal();
   const { isDark, toggle } = useThemeToggle();
   const [email, setEmail] = useState<string | null>(null);
+  const [uid, setUid] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setEmail(data.session?.user.email ?? null));
