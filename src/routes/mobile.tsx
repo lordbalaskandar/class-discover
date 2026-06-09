@@ -699,6 +699,7 @@ function BookingScreen({
                   disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
+                  classNames={{ day: "text-black hover:text-black" }}
                 />
               </PopoverContent>
             </Popover>
