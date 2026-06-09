@@ -1887,7 +1887,12 @@ type HostScreenId =
   | "manage"
   | "earnings"
   | "metrics"
-  | "hostProfile";
+  | "hostProfile"
+  | "hpTemplates"
+  | "hpPayouts"
+  | "hpAvailability"
+  | "hpReviews"
+  | "hpSupport";
 
 type HostClass = {
   id: string;
