@@ -497,6 +497,9 @@ function BrowseScreen({
   filtersOpenInitially?: boolean;
 }) {
   const [filtersOpen, setFiltersOpen] = useState(filtersOpenInitially);
+  useEffect(() => {
+    if (filtersOpenInitially) setFiltersOpen(true);
+  }, [filtersOpenInitially]);
   const [filters, setFilters] = useState({
     category: "all" as "all" | "class" | "trainer",
     activity: "all" as "all" | "Yoga" | "BJJ" | "Running" | "HIIT" | "Climbing",
@@ -575,7 +578,7 @@ function BrowseScreen({
           <span className="text-xs text-primary">See all</span>
         </div>
         <div className="space-y-3">
-          {CLASSES.map((c) => (
+          {CLASSES.filter((c) => filters.activity === "all" || c.activity === filters.activity).map((c) => (
             <Card
               key={c.id}
               onClick={() => onSelect(c.id)}
