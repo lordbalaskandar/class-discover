@@ -1272,6 +1272,7 @@ type HostScreenId =
   | "create"
   | "manage"
   | "earnings"
+  | "metrics"
   | "hostProfile";
 
 type HostClass = {
