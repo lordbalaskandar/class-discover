@@ -139,11 +139,6 @@ function BrowsePage() {
                   loading={i < HERO_SLIDES.length ? "eager" : "lazy"}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-foreground/20" />
-                <div className="absolute bottom-4 left-4">
-                  <span className="rounded-md bg-background/80 px-2.5 py-1 text-xs font-semibold text-foreground backdrop-blur-sm">
-                    {s.label}
-                  </span>
-                </div>
               </div>
             ))}
           </div>
