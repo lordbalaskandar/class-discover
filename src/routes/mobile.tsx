@@ -50,7 +50,9 @@ type Screen =
   | "class"
   | "booking"
   | "payment"
-  | "confirmation";
+  | "confirmation"
+  | "bookings"
+  | "profile";
 
 type ClassItem = {
   id: string;
@@ -202,12 +204,33 @@ function MobileShowcase() {
                 />
               )}
               {screen === "confirmation" && (
-                <ConfirmationScreen cls={selected} onDone={reset} />
+                <ConfirmationScreen
+                  cls={selected}
+                  onDone={reset}
+                  onViewBookings={() => setScreen("bookings")}
+                />
+              )}
+              {screen === "bookings" && (
+                <BookingsScreen
+                  onOpen={(id) => {
+                    setSelectedId(id);
+                    setScreen("class");
+                  }}
+                  onProfile={() => setScreen("profile")}
+                />
+              )}
+              {screen === "profile" && (
+                <ProfileScreen
+                  onBookings={() => setScreen("bookings")}
+                  onBrowse={() => setScreen("browse")}
+                />
               )}
             </div>
             <PhoneTabBar
               screen={screen}
               onHome={() => setScreen("browse")}
+              onBookings={() => setScreen("bookings")}
+              onProfile={() => setScreen("profile")}
             />
           </PhoneFrame>
 
@@ -224,6 +247,8 @@ function MobileShowcase() {
                 ["booking", "Booking"],
                 ["payment", "Payment"],
                 ["confirmation", "Confirmation"],
+                ["bookings", "My bookings"],
+                ["profile", "Profile"],
               ] as [Screen, string][]
             ).map(([s, label]) => (
               <button
@@ -281,20 +306,30 @@ function PhoneStatusBar() {
   );
 }
 
-function PhoneTabBar({ screen, onHome }: { screen: Screen; onHome: () => void }) {
+function PhoneTabBar({
+  screen,
+  onHome,
+  onBookings,
+  onProfile,
+}: {
+  screen: Screen;
+  onHome: () => void;
+  onBookings: () => void;
+  onProfile: () => void;
+}) {
   const tabs = [
-    { id: "browse" as Screen, icon: Home, label: "Browse" },
-    { id: "bookings" as const, icon: CalendarDays, label: "Bookings" },
-    { id: "profile" as const, icon: UserIcon, label: "Profile" },
+    { id: "browse" as Screen, icon: Home, label: "Browse", onClick: onHome },
+    { id: "bookings" as Screen, icon: CalendarDays, label: "Bookings", onClick: onBookings },
+    { id: "profile" as Screen, icon: UserIcon, label: "Profile", onClick: onProfile },
   ];
   return (
     <div className="border-t bg-card flex items-center justify-around py-2 px-4">
       {tabs.map((t) => {
-        const active = t.id === "browse" && screen === "browse";
+        const active = screen === t.id;
         return (
           <button
             key={t.label}
-            onClick={t.id === "browse" ? onHome : undefined}
+            onClick={t.onClick}
             className={cn(
               "flex flex-col items-center gap-0.5 px-3 py-1 text-[10px]",
               active ? "text-primary" : "text-muted-foreground",
@@ -926,7 +961,15 @@ function PaymentScreen({
   );
 }
 
-function ConfirmationScreen({ cls, onDone }: { cls: ClassItem; onDone: () => void }) {
+function ConfirmationScreen({
+  cls,
+  onDone,
+  onViewBookings,
+}: {
+  cls: ClassItem;
+  onDone: () => void;
+  onViewBookings: () => void;
+}) {
   return (
     <div className="h-full flex flex-col">
       <ScreenScroll>
@@ -965,11 +1008,200 @@ function ConfirmationScreen({ cls, onDone }: { cls: ClassItem; onDone: () => voi
         </div>
       </ScreenScroll>
       <div className="border-t bg-card px-5 py-3 space-y-2">
-        <Button className="w-full bg-gradient-hero shadow-elegant">Add to calendar</Button>
+        <Button onClick={onViewBookings} className="w-full bg-gradient-hero shadow-elegant">
+          View my bookings
+        </Button>
         <Button variant="outline" onClick={onDone} className="w-full">
           Back to browse
         </Button>
       </div>
     </div>
+  );
+}
+
+/* ---------------- Bookings ---------------- */
+
+function BookingsScreen({
+  onOpen,
+  onProfile,
+}: {
+  onOpen: (id: string) => void;
+  onProfile: () => void;
+}) {
+  const upcoming = [
+    { cls: CLASSES[0], code: "DRY-08421", status: "Confirmed" as const },
+    { cls: CLASSES[2], code: "DRY-08390", status: "Confirmed" as const },
+  ];
+  const past = [
+    { cls: CLASSES[1], code: "DRY-07712", status: "Completed" as const },
+  ];
+
+  return (
+    <ScreenScroll>
+      <div className="px-5 pt-5 pb-3 flex items-center justify-between">
+        <div>
+          <h2 className="font-display text-2xl font-semibold">My bookings</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {upcoming.length} upcoming · {past.length} past
+          </p>
+        </div>
+        <button
+          onClick={onProfile}
+          className="h-10 w-10 rounded-full bg-gradient-hero text-primary-foreground flex items-center justify-center font-semibold text-sm shadow-elegant"
+        >
+          AM
+        </button>
+      </div>
+
+      <div className="px-5">
+        <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-3 mb-2">
+          Upcoming
+        </p>
+        <div className="space-y-2">
+          {upcoming.map((b) => (
+            <Card
+              key={b.code}
+              onClick={() => onOpen(b.cls.id)}
+              className="overflow-hidden cursor-pointer active:scale-[0.99] transition-transform"
+            >
+              <div className="flex">
+                <div className="w-20 shrink-0" style={{ background: b.cls.image }} />
+                <div className="p-3 flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold text-sm truncate">{b.cls.title}</p>
+                    <Badge variant="secondary" className="text-[10px] shrink-0">
+                      {b.status}
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    with {b.cls.host}
+                  </p>
+                  <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <CalendarIcon className="h-3 w-3" />
+                      {b.cls.date}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {b.cls.time}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-5 mb-2">
+          Past
+        </p>
+        <div className="space-y-2 pb-4">
+          {past.map((b) => (
+            <Card
+              key={b.code}
+              onClick={() => onOpen(b.cls.id)}
+              className="overflow-hidden cursor-pointer opacity-80"
+            >
+              <div className="flex">
+                <div className="w-20 shrink-0 grayscale" style={{ background: b.cls.image }} />
+                <div className="p-3 flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold text-sm truncate">{b.cls.title}</p>
+                    <Badge variant="outline" className="text-[10px] shrink-0">
+                      {b.status}
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    with {b.cls.host}
+                  </p>
+                  <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Star className="h-3 w-3 fill-primary text-primary" />
+                      Rate this class
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </ScreenScroll>
+  );
+}
+
+/* ---------------- Profile ---------------- */
+
+function ProfileScreen({
+  onBookings,
+  onBrowse,
+}: {
+  onBookings: () => void;
+  onBrowse: () => void;
+}) {
+  const stats = [
+    { label: "Booked", value: "12" },
+    { label: "Hosts", value: "7" },
+    { label: "Reviews", value: "9" },
+  ];
+  const rows: { label: string; sub: string; onClick?: () => void }[] = [
+    { label: "My bookings", sub: "View upcoming & past classes", onClick: onBookings },
+    { label: "Payment methods", sub: "Visa •••• 4242" },
+    { label: "Saved classes", sub: "5 favourites" },
+    { label: "Notifications", sub: "Push & email" },
+    { label: "Become a host", sub: "Share your craft on Dryvon" },
+    { label: "Help & support", sub: "FAQ, contact us" },
+  ];
+
+  return (
+    <ScreenScroll>
+      <div className="px-5 pt-6 pb-4 flex flex-col items-center text-center">
+        <div className="h-20 w-20 rounded-full bg-gradient-hero text-primary-foreground flex items-center justify-center font-display text-2xl font-semibold shadow-elegant">
+          AM
+        </div>
+        <h2 className="font-display text-xl font-semibold mt-3">Alex Morgan</h2>
+        <p className="text-xs text-muted-foreground">alex@dryvon.com</p>
+        <Badge variant="secondary" className="mt-2 text-[10px]">
+          <Sparkles className="h-3 w-3 mr-1" />
+          Member since 2024
+        </Badge>
+      </div>
+
+      <div className="px-5">
+        <Card className="p-3 grid grid-cols-3 divide-x">
+          {stats.map((s) => (
+            <div key={s.label} className="text-center px-2">
+              <p className="font-display text-lg font-semibold">{s.value}</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                {s.label}
+              </p>
+            </div>
+          ))}
+        </Card>
+      </div>
+
+      <div className="px-5 mt-4 space-y-2 pb-4">
+        {rows.map((r) => (
+          <Card
+            key={r.label}
+            onClick={r.onClick}
+            className={cn(
+              "p-3 flex items-center gap-3",
+              r.onClick && "cursor-pointer active:scale-[0.99] transition-transform",
+            )}
+          >
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm">{r.label}</p>
+              <p className="text-[11px] text-muted-foreground truncate">{r.sub}</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Card>
+        ))}
+
+        <Button onClick={onBrowse} variant="outline" className="w-full mt-2">
+          Find your next class
+        </Button>
+      </div>
+    </ScreenScroll>
   );
 }
