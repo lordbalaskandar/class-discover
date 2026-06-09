@@ -771,9 +771,23 @@ function BrowseScreen({
                 className="h-28 relative"
                 style={{ background: c.image }}
               >
-                <div className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/90 flex items-center justify-center">
-                  <Heart className="h-4 w-4" />
-                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleSaved(c.id);
+                  }}
+                  aria-label={savedIds.has(c.id) ? "Unsave class" : "Save class"}
+                  className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/90 flex items-center justify-center active:scale-90 transition-transform"
+                >
+                  <Heart
+                    className={cn(
+                      "h-4 w-4 transition-colors",
+                      savedIds.has(c.id)
+                        ? "fill-primary text-primary"
+                        : "text-foreground",
+                    )}
+                  />
+                </button>
                 <div className="absolute bottom-2 left-2 flex gap-1">
                   <Badge className="bg-background/90 text-foreground hover:bg-background/90">{c.activity}</Badge>
                   {c.hostType === "gym" && (
