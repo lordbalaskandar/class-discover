@@ -334,6 +334,14 @@ function UserFlow() {
   const [screen, setScreen] = useState<Screen>("browse");
   const [selectedId, setSelectedId] = useState<string>("1");
   const [browseFiltersOpen, setBrowseFiltersOpen] = useState(false);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const toggleSaved = (id: string) =>
+    setSavedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   const selected = useMemo(
     () => CLASSES.find((c) => c.id === selectedId) ?? CLASSES[0],
     [selectedId],
