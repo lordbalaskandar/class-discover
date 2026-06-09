@@ -4485,3 +4485,566 @@ function HostMetricsScreen({ onBack }: { onBack: () => void }) {
     </ScreenScroll>
   );
 }
+
+/* ---------------- Gym management ---------------- */
+
+const GYM_AMENITIES = [
+  "Showers",
+  "Lockers",
+  "Free weights",
+  "Open gym hours",
+  "Sauna",
+  "Childcare",
+  "Parking",
+  "Towel service",
+];
+
+function HostGymScreen({
+  gym,
+  memberCount,
+  onBack,
+  onCreate,
+  onMembers,
+  onEdit,
+}: {
+  gym: GymInfo;
+  memberCount: number;
+  onBack: () => void;
+  onCreate: () => void;
+  onMembers: () => void;
+  onEdit: () => void;
+}) {
+  if (!gym.created) {
+    return (
+      <div className="h-full flex flex-col">
+        <ScreenHeader title="My gym" onBack={onBack} />
+        <ScreenScroll>
+          <div
+            className="mx-5 mt-3 rounded-2xl p-5 text-primary-foreground shadow-elegant"
+            style={{ background: "linear-gradient(135deg,#5f4bdb,#9d8df1)" }}
+          >
+            <Badge className="bg-background/20 text-primary-foreground hover:bg-background/20 border-0 mb-2">
+              New
+            </Badge>
+            <h3 className="font-display text-xl font-semibold leading-tight">
+              Own a space? Open your gym.
+            </h3>
+            <p className="text-xs opacity-90 mt-1">
+              Manage members, plans, and open-gym hours alongside your classes.
+            </p>
+          </div>
+          <div className="px-5 mt-4 space-y-2">
+            {[
+              { icon: Users, label: "Manage members", sub: "Invite, suspend, set roles" },
+              { icon: CreditCard, label: "Recurring plans", sub: "Monthly, annual, day passes" },
+              { icon: BarChart3, label: "Track activity", sub: "Check-ins, retention, growth" },
+              { icon: Building2, label: "Your branded page", sub: "A public profile on Dryvon" },
+            ].map((b) => (
+              <Card key={b.label} className="p-3 flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
+                  <b.icon className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">{b.label}</p>
+                  <p className="text-[11px] text-muted-foreground">{b.sub}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+          <div className="px-5 mt-5 pb-4">
+            <Button onClick={onCreate} className="w-full bg-gradient-hero hover:opacity-90 shadow-elegant">
+              Create your gym
+            </Button>
+          </div>
+        </ScreenScroll>
+      </div>
+    );
+  }
+
+  const active = "—";
+  return (
+    <div className="h-full flex flex-col">
+      <ScreenHeader title="My gym" onBack={onBack} />
+      <ScreenScroll>
+        <div className="px-5 pt-3">
+          <Card className="overflow-hidden">
+            <div
+              className="h-24 w-full"
+              style={{ background: "linear-gradient(135deg,#5f4bdb,#9d8df1)" }}
+            />
+            <div className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="font-display text-lg font-semibold leading-tight">{gym.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{gym.address}</p>
+                </div>
+                <Badge variant="secondary" className="text-[10px] shrink-0">
+                  <Building2 className="h-3 w-3 mr-1" />
+                  Owner
+                </Badge>
+              </div>
+              <p className="text-xs mt-2 text-muted-foreground">{gym.tagline}</p>
+            </div>
+          </Card>
+
+          <Card className="p-3 mt-3 grid grid-cols-3 divide-x">
+            <div className="text-center px-2">
+              <p className="font-display text-lg font-semibold">{memberCount}</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Members</p>
+            </div>
+            <div className="text-center px-2">
+              <p className="font-display text-lg font-semibold">${gym.monthlyPrice}</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Monthly</p>
+            </div>
+            <div className="text-center px-2">
+              <p className="font-display text-lg font-semibold">{gym.capacity}</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Capacity</p>
+            </div>
+          </Card>
+
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mt-4 mb-1">
+            Manage
+          </p>
+          <div className="space-y-2">
+            {[
+              { label: "Members", sub: `${memberCount} total · review pending`, icon: Users, onClick: onMembers },
+              { label: "Gym details", sub: "Name, address, amenities", icon: Building2, onClick: onEdit },
+              { label: "Plans & pricing", sub: `From $${gym.monthlyPrice}/mo`, icon: CreditCard },
+              { label: "Check-ins", sub: `${active} today`, icon: Activity },
+              { label: "Insights", sub: "Retention & growth", icon: BarChart3 },
+            ].map((r) => (
+              <Card
+                key={r.label}
+                onClick={r.onClick}
+                className={cn(
+                  "p-3 flex items-center gap-3",
+                  r.onClick && "cursor-pointer active:scale-[0.99] transition-transform",
+                )}
+              >
+                <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
+                  <r.icon className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">{r.label}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">{r.sub}</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </Card>
+            ))}
+          </div>
+
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mt-4 mb-1">
+            Amenities
+          </p>
+          <div className="flex flex-wrap gap-1.5 pb-4">
+            {gym.amenities.map((a) => (
+              <Badge key={a} variant="secondary" className="text-[10px]">
+                {a}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      </ScreenScroll>
+    </div>
+  );
+}
+
+function HostGymCreateScreen({
+  onBack,
+  onCreate,
+}: {
+  onBack: () => void;
+  onCreate: (g: GymInfo) => void;
+}) {
+  const [name, setName] = useState("");
+  const [tagline, setTagline] = useState("");
+  const [address, setAddress] = useState("");
+  const [capacity, setCapacity] = useState("20");
+  const [monthlyPrice, setMonthlyPrice] = useState("99");
+  const [amenities, setAmenities] = useState<string[]>(["Showers", "Lockers"]);
+  const toggle = (a: string) =>
+    setAmenities((arr) => (arr.includes(a) ? arr.filter((x) => x !== a) : [...arr, a]));
+  const valid = name.trim().length > 1 && address.trim().length > 3;
+  return (
+    <div className="h-full flex flex-col">
+      <ScreenHeader title="Create your gym" onBack={onBack} />
+      <ScreenScroll>
+        <div className="px-5 pt-3 pb-4 space-y-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Gym name</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Calder Strength Lab" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Tagline</Label>
+            <Input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="One line about your gym" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Address</Label>
+            <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Street, city, state" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Capacity</Label>
+              <Input type="number" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Monthly $</Label>
+              <Input type="number" value={monthlyPrice} onChange={(e) => setMonthlyPrice(e.target.value)} />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Amenities</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {GYM_AMENITIES.map((a) => {
+                const on = amenities.includes(a);
+                return (
+                  <button
+                    key={a}
+                    onClick={() => toggle(a)}
+                    className={cn(
+                      "text-[11px] px-2.5 py-1 rounded-full border transition-colors",
+                      on
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-card border-border text-muted-foreground",
+                    )}
+                  >
+                    {a}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <Button
+            disabled={!valid}
+            onClick={() =>
+              onCreate({
+                created: true,
+                name: name.trim(),
+                tagline: tagline.trim() || "Welcome to our gym.",
+                address: address.trim(),
+                capacity: Math.max(1, parseInt(capacity || "20", 10)),
+                monthlyPrice: Math.max(0, parseInt(monthlyPrice || "0", 10)),
+                amenities,
+              })
+            }
+            className="w-full bg-gradient-hero hover:opacity-90 shadow-elegant"
+          >
+            Create gym
+          </Button>
+          <p className="text-[10px] text-muted-foreground text-center">
+            You can edit any of these later.
+          </p>
+        </div>
+      </ScreenScroll>
+    </div>
+  );
+}
+
+function HostGymEditScreen({
+  gym,
+  onBack,
+  onSave,
+}: {
+  gym: GymInfo;
+  onBack: () => void;
+  onSave: (g: GymInfo) => void;
+}) {
+  const [name, setName] = useState(gym.name);
+  const [tagline, setTagline] = useState(gym.tagline);
+  const [address, setAddress] = useState(gym.address);
+  const [capacity, setCapacity] = useState(String(gym.capacity));
+  const [monthlyPrice, setMonthlyPrice] = useState(String(gym.monthlyPrice));
+  const [amenities, setAmenities] = useState<string[]>(gym.amenities);
+  const toggle = (a: string) =>
+    setAmenities((arr) => (arr.includes(a) ? arr.filter((x) => x !== a) : [...arr, a]));
+  return (
+    <div className="h-full flex flex-col">
+      <ScreenHeader title="Edit gym" onBack={onBack} />
+      <ScreenScroll>
+        <div className="px-5 pt-3 pb-4 space-y-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Gym name</Label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Tagline</Label>
+            <Input value={tagline} onChange={(e) => setTagline(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Address</Label>
+            <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Capacity</Label>
+              <Input type="number" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Monthly $</Label>
+              <Input type="number" value={monthlyPrice} onChange={(e) => setMonthlyPrice(e.target.value)} />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Amenities</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {GYM_AMENITIES.map((a) => {
+                const on = amenities.includes(a);
+                return (
+                  <button
+                    key={a}
+                    onClick={() => toggle(a)}
+                    className={cn(
+                      "text-[11px] px-2.5 py-1 rounded-full border transition-colors",
+                      on
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-card border-border text-muted-foreground",
+                    )}
+                  >
+                    {a}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <Button
+            onClick={() =>
+              onSave({
+                created: true,
+                name: name.trim() || gym.name,
+                tagline: tagline.trim(),
+                address: address.trim() || gym.address,
+                capacity: Math.max(1, parseInt(capacity || "1", 10)),
+                monthlyPrice: Math.max(0, parseInt(monthlyPrice || "0", 10)),
+                amenities,
+              })
+            }
+            className="w-full bg-gradient-hero hover:opacity-90 shadow-elegant"
+          >
+            Save changes
+          </Button>
+        </div>
+      </ScreenScroll>
+    </div>
+  );
+}
+
+function HostGymMembersScreen({
+  members,
+  onChange,
+  onBack,
+}: {
+  members: GymMember[];
+  onChange: (m: GymMember[]) => void;
+  onBack: () => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<"all" | "Active" | "Pending" | "Paused">("all");
+  const [adding, setAdding] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newPlan, setNewPlan] = useState<GymMember["plan"]>("Monthly");
+
+  const filtered = members.filter((m) => {
+    const matchQ =
+      !query ||
+      m.name.toLowerCase().includes(query.toLowerCase()) ||
+      m.email.toLowerCase().includes(query.toLowerCase());
+    const matchF = filter === "all" || m.status === filter;
+    return matchQ && matchF;
+  });
+
+  const setRole = (id: string, role: GymMember["role"]) =>
+    onChange(members.map((m) => (m.id === id ? { ...m, role } : m)));
+  const setStatus = (id: string, status: GymMember["status"]) =>
+    onChange(members.map((m) => (m.id === id ? { ...m, status } : m)));
+  const remove = (id: string) => onChange(members.filter((m) => m.id !== id));
+  const add = () => {
+    if (!newName.trim() || !newEmail.trim()) return;
+    const initials = newName
+      .trim()
+      .split(/\s+/)
+      .map((p) => p[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+    onChange([
+      ...members,
+      {
+        id: `m${Date.now()}`,
+        name: newName.trim(),
+        email: newEmail.trim(),
+        initials,
+        plan: newPlan,
+        role: "Member",
+        joined: "Today",
+        status: "Pending",
+      },
+    ]);
+    setNewName("");
+    setNewEmail("");
+    setAdding(false);
+  };
+
+  const counts = {
+    all: members.length,
+    Active: members.filter((m) => m.status === "Active").length,
+    Pending: members.filter((m) => m.status === "Pending").length,
+    Paused: members.filter((m) => m.status === "Paused").length,
+  };
+
+  return (
+    <div className="h-full flex flex-col">
+      <ScreenHeader title="Members" onBack={onBack} />
+      <ScreenScroll>
+        <div className="px-5 pt-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search name or email"
+              className="pl-9"
+            />
+          </div>
+
+          <div className="flex gap-1.5 mt-3 overflow-x-auto no-scrollbar">
+            {(["all", "Active", "Pending", "Paused"] as const).map((f) => {
+              const on = filter === f;
+              return (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={cn(
+                    "text-[11px] px-2.5 py-1 rounded-full border whitespace-nowrap transition-colors",
+                    on
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card border-border text-muted-foreground",
+                  )}
+                >
+                  {f === "all" ? "All" : f} · {counts[f]}
+                </button>
+              );
+            })}
+          </div>
+
+          {adding ? (
+            <Card className="p-3 mt-3 space-y-2">
+              <div className="space-y-1">
+                <Label className="text-xs">Full name</Label>
+                <Input value={newName} onChange={(e) => setNewName(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Email</Label>
+                <Input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} type="email" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Plan</Label>
+                <div className="flex gap-1.5">
+                  {(["Monthly", "Annual", "Day pass"] as const).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setNewPlan(p)}
+                      className={cn(
+                        "text-[11px] px-2.5 py-1 rounded-full border transition-colors",
+                        newPlan === p
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-card border-border text-muted-foreground",
+                      )}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2 pt-1">
+                <Button onClick={add} size="sm" className="flex-1">Send invite</Button>
+                <Button onClick={() => setAdding(false)} variant="outline" size="sm">Cancel</Button>
+              </div>
+            </Card>
+          ) : (
+            <Button onClick={() => setAdding(true)} variant="outline" className="w-full mt-3">
+              <Plus className="h-4 w-4 mr-1" /> Invite member
+            </Button>
+          )}
+
+          <div className="mt-3 space-y-2 pb-4">
+            {filtered.length === 0 && (
+              <Card className="p-6 text-center">
+                <p className="text-xs text-muted-foreground">No members match.</p>
+              </Card>
+            )}
+            {filtered.map((m) => (
+              <Card key={m.id} className="p-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-gradient-hero text-primary-foreground flex items-center justify-center font-semibold text-xs">
+                    {m.initials}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{m.name}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{m.email}</p>
+                  </div>
+                  <Badge
+                    variant={m.status === "Active" ? "secondary" : "outline"}
+                    className={cn(
+                      "text-[10px]",
+                      m.status === "Pending" && "border-amber-500 text-amber-600",
+                      m.status === "Paused" && "border-muted-foreground text-muted-foreground",
+                    )}
+                  >
+                    {m.status}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-3 mt-2 text-[11px] text-muted-foreground">
+                  <span>{m.plan}</span>
+                  <span>·</span>
+                  <span>{m.role}</span>
+                  <span>·</span>
+                  <span>Joined {m.joined}</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 mt-2">
+                  {(["Member", "Coach", "Owner"] as const).map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => setRole(m.id, r)}
+                      className={cn(
+                        "text-[10px] px-2 py-0.5 rounded-full border transition-colors",
+                        m.role === r
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-card border-border text-muted-foreground",
+                      )}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                  <div className="flex-1" />
+                  {m.status !== "Active" && (
+                    <button
+                      onClick={() => setStatus(m.id, "Active")}
+                      className="text-[10px] px-2 py-0.5 rounded-full border border-border text-primary"
+                    >
+                      Activate
+                    </button>
+                  )}
+                  {m.status === "Active" && (
+                    <button
+                      onClick={() => setStatus(m.id, "Paused")}
+                      className="text-[10px] px-2 py-0.5 rounded-full border border-border text-muted-foreground"
+                    >
+                      Pause
+                    </button>
+                  )}
+                  <button
+                    onClick={() => remove(m.id)}
+                    className="text-[10px] px-2 py-0.5 rounded-full border border-border text-destructive"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </ScreenScroll>
+    </div>
+  );
+}
