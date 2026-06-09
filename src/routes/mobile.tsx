@@ -462,6 +462,7 @@ function UserFlow() {
               onBookings={() => setScreen("bookings")}
               onBrowse={() => setScreen("browse")}
               onSaved={() => setScreen("saved")}
+              onOpenSection={(s) => setScreen(s)}
             />
           )}
           {screen === "saved" && (
@@ -475,6 +476,18 @@ function UserFlow() {
                 setScreen("class");
               }}
             />
+          )}
+          {screen === "pPayment" && (
+            <ProfilePaymentScreen onBack={() => setScreen("profile")} />
+          )}
+          {screen === "pNotifications" && (
+            <ProfileNotificationsScreen onBack={() => setScreen("profile")} />
+          )}
+          {screen === "pBecomeHost" && (
+            <ProfileBecomeHostScreen onBack={() => setScreen("profile")} />
+          )}
+          {screen === "pHelp" && (
+            <ProfileHelpScreen onBack={() => setScreen("profile")} />
           )}
         </div>
         <PhoneTabBar
