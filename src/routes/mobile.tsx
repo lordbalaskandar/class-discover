@@ -3056,6 +3056,7 @@ type HostScreenId =
   | "hpGym"
   | "hpGymCreate"
   | "hpGymMembers"
+  | "hpGymCoach"
   | "hpGymEdit";
 
 type HostClass = {
