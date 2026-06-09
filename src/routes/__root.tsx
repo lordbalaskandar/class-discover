@@ -85,10 +85,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  const themeScript = `
+    (function() {
+      var t = localStorage.getItem('theme');
+      var s = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (t === 'dark' || (!t && s)) document.documentElement.classList.add('dark');
+    })()
+  `;
   return (
     <html lang="en">
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
         {children}

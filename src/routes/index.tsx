@@ -116,12 +116,9 @@ function HomePage() {
 
         <div className="container relative mx-auto px-4 py-16 md:py-24 lg:py-28">
           <div className="max-w-3xl text-primary-foreground">
-            <Badge className="bg-background/15 text-primary-foreground border-background/30 backdrop-blur mb-4">
-              Classes · Trainers · Pilates · Boxing · Pickleball
-            </Badge>
-            <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-              Find your next <span className="text-accent">class</span> or <span className="text-accent">trainer</span>.
-            </h1>
+          <h1 className="text-4xl md:text-6xl font-bold leading-tight">
+            Unlock your <span className="text-accent">potential</span>.
+          </h1>
             <p className="mt-3 text-lg text-primary-foreground/90 max-w-xl">
               Book scheduled sessions or hire personal trainers around your availability — all in one place.
             </p>
