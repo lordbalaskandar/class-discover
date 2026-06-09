@@ -5152,3 +5152,239 @@ function HostGymMembersScreen({
     </div>
   );
 }
+
+/* ---------------- Host: coach-of-a-gym view ---------------- */
+
+function HostGymCoachScreen({
+  gym,
+  members,
+  onBack,
+  onMembers,
+}: {
+  gym: GymInfo;
+  members: GymMember[];
+  onBack: () => void;
+  onMembers: () => void;
+}) {
+  const myStudents = members.filter((m) => m.role === "Member").slice(0, 4);
+  const upcoming = [
+    { day: "Today", time: "6:30 PM", title: "Strength Foundations", attendees: 9, cap: 12 },
+    { day: "Tomorrow", time: "7:00 AM", title: "Olympic Lifting", attendees: 6, cap: 8 },
+    { day: "Wed", time: "5:30 PM", title: "Conditioning", attendees: 11, cap: 12 },
+  ];
+  return (
+    <div className="h-full flex flex-col">
+      <ScreenHeader title="Coach view" onBack={onBack} />
+      <ScreenScroll>
+        <div className="px-5 pt-3">
+          <Card className="overflow-hidden">
+            <div
+              className="h-20 w-full"
+              style={{ background: "linear-gradient(135deg,#0ea5a3,#22c55e)" }}
+            />
+            <div className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                    Coaching at
+                  </p>
+                  <h3 className="font-display text-lg font-semibold leading-tight">{gym.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{gym.address}</p>
+                </div>
+                <Badge variant="secondary" className="text-[10px] shrink-0">
+                  <Sparkles className="h-3 w-3 mr-1" /> Coach
+                </Badge>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-3 mt-3 grid grid-cols-3 divide-x">
+            <div className="text-center px-2">
+              <p className="font-display text-lg font-semibold">{myStudents.length * 4}</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Students</p>
+            </div>
+            <div className="text-center px-2">
+              <p className="font-display text-lg font-semibold">14</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Sessions / wk</p>
+            </div>
+            <div className="text-center px-2">
+              <p className="font-display text-lg font-semibold">4.9</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Rating</p>
+            </div>
+          </Card>
+
+          <h3 className="font-semibold text-sm mt-4 mb-2">Your schedule</h3>
+          <div className="space-y-2">
+            {upcoming.map((u) => (
+              <Card key={u.title + u.day} className="p-3">
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                      {u.day} · {u.time}
+                    </p>
+                    <p className="font-medium text-sm truncate">{u.title}</p>
+                  </div>
+                  <Badge variant="secondary" className="text-[10px] shrink-0">
+                    <Users className="h-3 w-3 mr-1" />
+                    {u.attendees}/{u.cap}
+                  </Badge>
+                </div>
+                <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-primary"
+                    style={{ width: `${(u.attendees / u.cap) * 100}%` }}
+                  />
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between mt-4 mb-2">
+            <h3 className="font-semibold text-sm">My students</h3>
+            <button onClick={onMembers} className="text-xs text-primary">
+              See all
+            </button>
+          </div>
+          <div className="space-y-2 pb-4">
+            {myStudents.map((m) => (
+              <Card key={m.id} className="p-3 flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-gradient-hero text-primary-foreground flex items-center justify-center text-xs font-semibold">
+                  {m.initials}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{m.name}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    {m.plan} · joined {m.joined}
+                  </p>
+                </div>
+                <button className="text-[10px] px-2 py-1 rounded-full border border-border">
+                  Message
+                </button>
+              </Card>
+            ))}
+          </div>
+
+          <div className="rounded-lg bg-primary/10 border border-primary/30 p-3 mb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <span className="text-[10px] uppercase tracking-widest font-semibold text-primary">
+                Coach tip
+              </span>
+            </div>
+            <p className="text-xs">
+              3 of your students haven't booked in 2 weeks. Send a quick check-in to keep them on track.
+            </p>
+          </div>
+        </div>
+      </ScreenScroll>
+    </div>
+  );
+}
+
+/* ---------------- User: my gym ---------------- */
+
+function ProfileMyGymScreen({ onBack }: { onBack: () => void }) {
+  const gym = {
+    name: "Calder Strength Lab",
+    address: "248 Brannan St, San Francisco, CA",
+    plan: "Monthly · $129",
+    nextBill: "Jul 14, 2026",
+    visitsThisMonth: 9,
+    streak: 4,
+  };
+  const perks = [
+    { icon: Building2, label: "Open gym access", sub: "5:30 AM – 10 PM daily" },
+    { icon: CalendarDays, label: "Unlimited classes", sub: "Book up to 7 days ahead" },
+    { icon: Users, label: "Bring a friend", sub: "2 guest passes / month" },
+    { icon: Star, label: "Member-only events", sub: "Workshops & socials" },
+  ];
+  const upcoming = [
+    { day: "Tonight", time: "6:30 PM", title: "Strength Foundations", coach: "Devon W." },
+    { day: "Thu", time: "7:00 AM", title: "Olympic Lifting", coach: "Devon W." },
+  ];
+  return (
+    <div className="h-full flex flex-col">
+      <ScreenHeader title="My gym" onBack={onBack} />
+      <ScreenScroll>
+        <div className="px-5 pt-3">
+          <Card className="overflow-hidden">
+            <div
+              className="h-24 w-full"
+              style={{ background: "linear-gradient(135deg,#5f4bdb,#9d8df1)" }}
+            />
+            <div className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="font-display text-lg font-semibold leading-tight">{gym.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{gym.address}</p>
+                </div>
+                <Badge variant="secondary" className="text-[10px] shrink-0">
+                  <CheckCircle2 className="h-3 w-3 mr-1" /> Active
+                </Badge>
+              </div>
+              <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+                <span>{gym.plan}</span>
+                <span>Renews {gym.nextBill}</span>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-3 mt-3 grid grid-cols-3 divide-x">
+            <div className="text-center px-2">
+              <p className="font-display text-lg font-semibold">{gym.visitsThisMonth}</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Visits</p>
+            </div>
+            <div className="text-center px-2">
+              <p className="font-display text-lg font-semibold">{gym.streak}w</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Streak</p>
+            </div>
+            <div className="text-center px-2">
+              <p className="font-display text-lg font-semibold">2</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Guest pass</p>
+            </div>
+          </Card>
+
+          <h3 className="font-semibold text-sm mt-4 mb-2">Your perks</h3>
+          <div className="space-y-2">
+            {perks.map((p) => (
+              <Card key={p.label} className="p-3 flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
+                  <p.icon className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">{p.label}</p>
+                  <p className="text-[11px] text-muted-foreground">{p.sub}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <h3 className="font-semibold text-sm mt-4 mb-2">Upcoming at your gym</h3>
+          <div className="space-y-2">
+            {upcoming.map((u) => (
+              <Card key={u.title + u.day} className="p-3">
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                      {u.day} · {u.time}
+                    </p>
+                    <p className="font-medium text-sm truncate">{u.title}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">with {u.coach}</p>
+                  </div>
+                  <Button size="sm" className="h-8 text-xs">Book</Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <div className="mt-4 pb-4 space-y-2">
+            <Button variant="outline" className="w-full">Manage plan</Button>
+            <Button variant="ghost" className="w-full text-destructive hover:text-destructive">
+              Cancel membership
+            </Button>
+          </div>
+        </div>
+      </ScreenScroll>
+    </div>
+  );
+}
