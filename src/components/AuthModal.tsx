@@ -102,12 +102,22 @@ function AuthModalDialog({
         </DialogHeader>
 
         <div className="space-y-2">
-          <Button variant="outline" className="w-full" onClick={() => oauth("google")}>
-            Continue with Google
-          </Button>
-          <Button variant="outline" className="w-full" onClick={() => oauth("apple")}>
-            Continue with Apple
-          </Button>
+          <button
+            type="button"
+            onClick={() => oauth("google")}
+            className="flex w-full items-center justify-center gap-3 h-11 rounded-md border border-input bg-background hover:bg-accent transition-colors text-sm font-medium"
+          >
+            <GoogleIcon className="h-[18px] w-[18px]" />
+            <span>Continue with Google</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => oauth("apple")}
+            className="flex w-full items-center justify-center gap-3 h-11 rounded-md bg-black text-white hover:bg-black/90 transition-colors text-sm font-medium"
+          >
+            <AppleIcon className="h-[18px] w-[18px]" />
+            <span>Continue with Apple</span>
+          </button>
         </div>
 
         <div className="relative my-4">
