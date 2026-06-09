@@ -29,13 +29,12 @@ const browseSearchSchema = z.object({
   duration: fallback(z.enum(["any", "short", "medium", "long"]), "any").default("any"),
   capacity: fallback(z.enum(["any", "private", "small", "medium", "large"]), "any").default("any"),
   spots: fallback(z.enum(["any", "available"]), "any").default("any"),
-  media: fallback(z.enum(["any", "with_image"]), "any").default("any"),
   sort: fallback(z.enum(["newest", "soonest", "duration"]), "newest").default("newest"),
 });
 
 const DEFAULTS = {
   q: "", activity: "", location: "", category: "all", type: "all",
-  when: "any", duration: "any", capacity: "any", spots: "any", media: "any",
+  when: "any", duration: "any", capacity: "any", spots: "any",
   sort: "newest",
 } as const;
 
@@ -128,7 +127,6 @@ function BrowsePage() {
       if (search.category !== "all" && c.listing_type !== search.category) return false;
       if (search.activity && c.activity !== search.activity) return false;
       if (search.type !== "all" && c.booking_type !== search.type) return false;
-      if (search.media === "with_image" && !c.image_url) return false;
       if (search.location) {
         const loc = search.location.toLowerCase();
         if (!c.location.toLowerCase().includes(loc)) return false;
@@ -191,7 +189,7 @@ function BrowsePage() {
     search.q || search.activity || search.location ||
     search.type !== "all" || search.category !== "all" ||
     search.when !== "any" || search.duration !== "any" ||
-    search.capacity !== "any" || search.spots !== "any" || search.media !== "any";
+    search.capacity !== "any" || search.spots !== "any";
 
   const categoryLabel = search.category === "trainer" ? "trainers" : search.category === "class" ? "classes" : "listings";
 
@@ -360,16 +358,6 @@ function BrowsePage() {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Media</label>
-              <Select value={search.media} onValueChange={(v) => updateSearch({ media: v as typeof search.media })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="any">Any</SelectItem>
-                  <SelectItem value="with_image">With photo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
             <div className="space-y-2">
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Sort by</label>
