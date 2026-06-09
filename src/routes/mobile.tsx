@@ -60,6 +60,7 @@ export const Route = createFileRoute("/mobile")({
 
 type Screen =
   | "browse"
+  | "hosts"
   | "host"
   | "gym"
   | "class"
@@ -69,6 +70,110 @@ type Screen =
   | "bookings"
   | "profile"
   | "filters";
+
+type HostItem = {
+  id: string;
+  name: string;
+  type: "person" | "gym";
+  activities: string[];
+  location: string;
+  distance: number; // miles
+  rating: number;
+  reviews: number;
+  pricePerHour: number;
+  classId: string; // links to a CLASS for the existing host/gym detail screens
+  image: string;
+  bio: string;
+};
+
+const HOSTS: HostItem[] = [
+  {
+    id: "h1",
+    name: "Maya Calder",
+    type: "person",
+    activities: ["Yoga", "Mobility"],
+    location: "Mission, SF",
+    distance: 1.2,
+    rating: 4.9,
+    reviews: 184,
+    pricePerHour: 60,
+    classId: "1",
+    image: "linear-gradient(135deg,#f4b942,#e07a5f)",
+    bio: "RYT-500 yoga teacher. Sunrise flows in the park.",
+  },
+  {
+    id: "h2",
+    name: "Iron Forge Gym",
+    type: "gym",
+    activities: ["BJJ", "Strength", "HIIT"],
+    location: "SoMa, SF",
+    distance: 2.8,
+    rating: 4.8,
+    reviews: 96,
+    pricePerHour: 45,
+    classId: "2",
+    image: "linear-gradient(135deg,#2c2c2e,#5c5c5e)",
+    bio: "Combat sports & strength gym. Open mats nightly.",
+  },
+  {
+    id: "h3",
+    name: "Devon Walsh",
+    type: "person",
+    activities: ["Running", "HIIT"],
+    location: "Marin, SF",
+    distance: 6.4,
+    rating: 5.0,
+    reviews: 42,
+    pricePerHour: 50,
+    classId: "3",
+    image: "linear-gradient(135deg,#84a98c,#52796f)",
+    bio: "Endurance coach. Trail runs & threshold work.",
+  },
+  {
+    id: "h4",
+    name: "Priya Anand",
+    type: "person",
+    activities: ["Climbing", "Mobility"],
+    location: "Dogpatch, SF",
+    distance: 3.1,
+    rating: 4.7,
+    reviews: 58,
+    pricePerHour: 70,
+    classId: "1",
+    image: "linear-gradient(135deg,#7c83fd,#96baff)",
+    bio: "Climbing coach — bouldering technique & projecting.",
+  },
+  {
+    id: "h5",
+    name: "Mission Athletic Club",
+    type: "gym",
+    activities: ["Strength", "Yoga", "HIIT"],
+    location: "Mission, SF",
+    distance: 1.6,
+    rating: 4.6,
+    reviews: 212,
+    pricePerHour: 35,
+    classId: "2",
+    image: "linear-gradient(135deg,#3a506b,#5bc0be)",
+    bio: "Boutique club with daily group classes.",
+  },
+  {
+    id: "h6",
+    name: "Sam Okafor",
+    type: "person",
+    activities: ["Boxing", "HIIT", "Strength"],
+    location: "SoMa, SF",
+    distance: 4.2,
+    rating: 4.9,
+    reviews: 73,
+    pricePerHour: 80,
+    classId: "3",
+    image: "linear-gradient(135deg,#e63946,#f1a208)",
+    bio: "Former amateur boxer. 1-on-1 pad work & conditioning.",
+  },
+];
+
+const HOST_ACTIVITIES = ["Yoga", "BJJ", "Running", "HIIT", "Climbing", "Strength", "Boxing", "Mobility"] as const;
 
 type ClassItem = {
   id: string;
