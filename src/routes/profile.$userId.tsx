@@ -90,7 +90,7 @@ function ProfilePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, display_name, bio, avatar_url, city, special_notes")
+        .select("id, display_name, bio, avatar_url, city, special_notes, account_type")
         .eq("id", userId)
         .maybeSingle();
       if (error) throw error;
