@@ -586,10 +586,12 @@ function HostScreen({
   cls,
   onBack,
   onSelectClass,
+  onGym,
 }: {
   cls: ClassItem;
   onBack: () => void;
   onSelectClass: () => void;
+  onGym?: () => void;
 }) {
   const isGym = cls.hostType === "gym";
   return (
