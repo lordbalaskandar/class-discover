@@ -2542,7 +2542,103 @@ function BookingsScreen({
 
 /* ---------------- Profile ---------------- */
 
+function SavedScreen({
+  savedIds,
+  onToggleSaved,
+  onBack,
+  onBrowse,
+  onOpen,
+}: {
+  savedIds: Set<string>;
+  onToggleSaved: (id: string) => void;
+  onBack: () => void;
+  onBrowse: () => void;
+  onOpen: (id: string) => void;
+}) {
+  const saved = CLASSES.filter((c) => savedIds.has(c.id));
+  return (
+    <div className="h-full flex flex-col">
+      <ScreenHeader title="Saved classes" onBack={onBack} />
+      <ScreenScroll>
+        {saved.length === 0 ? (
+          <div className="px-6 pt-14 pb-10 text-center">
+            <div className="mx-auto h-14 w-14 rounded-full bg-muted flex items-center justify-center mb-3">
+              <Heart className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h3 className="font-semibold text-sm">No saved classes yet</h3>
+            <p className="text-xs text-muted-foreground mt-1 max-w-[240px] mx-auto">
+              Tap the heart on any class to save it here for later.
+            </p>
+            <Button onClick={onBrowse} className="mt-5 bg-gradient-hero shadow-elegant">
+              Browse classes
+            </Button>
+          </div>
+        ) : (
+          <div className="px-5 pt-3">
+            <p className="text-xs text-muted-foreground mb-3">
+              {saved.length} saved class{saved.length === 1 ? "" : "es"}
+            </p>
+            <div className="space-y-3">
+              {saved.map((c) => (
+                <Card
+                  key={c.id}
+                  onClick={() => onOpen(c.id)}
+                  className="overflow-hidden cursor-pointer active:scale-[0.98] transition-transform border-border/60"
+                >
+                  <div className="flex">
+                    <div
+                      className="h-24 w-28 shrink-0"
+                      style={{ background: c.image }}
+                    />
+                    <div className="p-3 flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="font-semibold text-sm leading-tight truncate">
+                          {c.title}
+                        </h4>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleSaved(c.id);
+                          }}
+                          aria-label="Unsave"
+                          className="h-7 w-7 -mt-1 -mr-1 rounded-full flex items-center justify-center active:scale-90 transition-transform"
+                        >
+                          <Heart className="h-4 w-4 fill-primary text-primary" />
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                        {c.host}
+                      </p>
+                      <div className="mt-1.5 flex items-center gap-3 text-[11px] text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <CalendarIcon className="h-3 w-3" />
+                          {c.date}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {c.location}
+                        </span>
+                      </div>
+                      <div className="mt-1.5 flex items-center justify-between">
+                        <Badge variant="secondary" className="text-[10px]">
+                          {c.activity}
+                        </Badge>
+                        <span className="text-sm font-semibold">${c.price}</span>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+      </ScreenScroll>
+    </div>
+  );
+}
+
 function ProfileScreen({
+
   onBookings,
   onBrowse,
   onSaved,
