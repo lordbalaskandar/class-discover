@@ -584,7 +584,7 @@ function ClassScreen({
           </button>
 
           <div className="grid grid-cols-2 gap-3 mt-4">
-            <Info icon={Calendar} label={cls.date} sub={cls.time} />
+            <Info icon={CalendarIcon} label={cls.date} sub={cls.time} />
             <Info icon={Clock} label="Duration" sub={cls.duration} />
             <Info icon={MapPin} label="Location" sub={cls.location} />
             <Info icon={Users} label={`${cls.spots} of ${cls.capacity} left`} sub="Small group" />
@@ -932,7 +932,7 @@ function ConfirmationScreen({ cls, onDone }: { cls: ClassItem; onDone: () => voi
               <h3 className="font-semibold mt-1">{cls.title}</h3>
               <p className="text-xs text-muted-foreground">with {cls.host}</p>
               <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                <Info icon={Calendar} label={cls.date} sub={cls.time} />
+                <Info icon={CalendarIcon} label={cls.date} sub={cls.time} />
                 <Info icon={MapPin} label="Location" sub={cls.location} />
               </div>
             </div>
