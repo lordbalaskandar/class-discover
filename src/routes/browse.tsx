@@ -251,7 +251,7 @@ function BrowsePage() {
           <main>
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-muted-foreground">
-                {isLoading ? "Loading…" : `${filtered.length} ${filtered.length === 1 ? "class" : "classes"} found`}
+                {isLoading ? "Loading…" : `${filtered.length} ${categoryLabel} found`}
               </p>
             </div>
 
