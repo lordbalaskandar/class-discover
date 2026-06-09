@@ -39,6 +39,8 @@ import {
   Repeat,
   Target,
   Activity,
+  SlidersHorizontal,
+  X,
 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -481,7 +483,26 @@ function BrowseScreen({
   onSelect: (id: string) => void;
   onHost: (id: string) => void;
 }) {
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    category: "all" as "all" | "class" | "trainer",
+    when: "any" as "any" | "today" | "tomorrow" | "this_week" | "this_weekend",
+    duration: "any" as "any" | "short" | "medium" | "long",
+    capacity: "any" as "any" | "private" | "small" | "medium" | "large",
+    type: "all" as "all" | "scheduled" | "on_request",
+    spots: "any" as "any" | "available",
+    sort: "newest" as "newest" | "soonest" | "duration",
+  });
+  const activeCount =
+    (filters.category !== "all" ? 1 : 0) +
+    (filters.when !== "any" ? 1 : 0) +
+    (filters.duration !== "any" ? 1 : 0) +
+    (filters.capacity !== "any" ? 1 : 0) +
+    (filters.type !== "all" ? 1 : 0) +
+    (filters.spots !== "any" ? 1 : 0);
+
   return (
+    <div className="h-full relative">
     <ScreenScroll>
       <div className="px-5 pt-3 pb-4">
         <div className="flex items-center justify-between mb-3">
@@ -493,9 +514,27 @@ function BrowseScreen({
             J
           </div>
         </div>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search classes, trainers, gyms" className="pl-9 rounded-full bg-muted/60 border-0" />
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search classes, trainers, gyms" className="pl-9 rounded-full bg-muted/60 border-0" />
+          </div>
+          <button
+            onClick={() => setFiltersOpen(true)}
+            className={cn(
+              "relative h-10 w-10 shrink-0 rounded-full flex items-center justify-center border",
+              activeCount > 0
+                ? "bg-foreground text-background border-foreground"
+                : "bg-card border-border",
+            )}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            {activeCount > 0 && (
+              <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-semibold flex items-center justify-center">
+                {activeCount}
+              </span>
+            )}
+          </button>
         </div>
         <div className="flex gap-2 overflow-x-auto mt-3 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {["All", "Yoga", "BJJ", "Running", "HIIT", "Climbing"].map((c, i) => (
@@ -513,6 +552,7 @@ function BrowseScreen({
           ))}
         </div>
       </div>
+
 
       <div className="px-5">
         <div className="flex items-center justify-between mb-2">
@@ -565,8 +605,182 @@ function BrowseScreen({
         </div>
       </div>
     </ScreenScroll>
+
+      {/* Filters slide-up */}
+      <div
+        className={cn(
+          "absolute inset-0 z-30 transition-opacity",
+          filtersOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
+        )}
+      >
+        <div
+          className="absolute inset-0 bg-foreground/40"
+          onClick={() => setFiltersOpen(false)}
+        />
+        <div
+          className={cn(
+            "absolute inset-x-0 bottom-0 bg-background rounded-t-3xl border-t shadow-elegant max-h-[88%] flex flex-col transition-transform duration-300",
+            filtersOpen ? "translate-y-0" : "translate-y-full",
+          )}
+        >
+          <div className="pt-2 flex justify-center">
+            <div className="h-1 w-10 rounded-full bg-muted-foreground/30" />
+          </div>
+          <div className="px-5 py-3 flex items-center justify-between border-b">
+            <h3 className="font-display text-lg font-semibold">Filters</h3>
+            <button
+              onClick={() => setFiltersOpen(false)}
+              className="h-8 w-8 rounded-full bg-muted flex items-center justify-center"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <FilterGroup
+              label="Category"
+              value={filters.category}
+              onChange={(v) => setFilters((f) => ({ ...f, category: v as typeof f.category }))}
+              options={[
+                { v: "all", l: "All" },
+                { v: "class", l: "Classes" },
+                { v: "trainer", l: "Trainers" },
+              ]}
+            />
+            <FilterGroup
+              label="When"
+              value={filters.when}
+              onChange={(v) => setFilters((f) => ({ ...f, when: v as typeof f.when }))}
+              options={[
+                { v: "any", l: "Anytime" },
+                { v: "today", l: "Today" },
+                { v: "tomorrow", l: "Tomorrow" },
+                { v: "this_week", l: "This week" },
+                { v: "this_weekend", l: "This weekend" },
+              ]}
+            />
+            <FilterGroup
+              label="Duration"
+              value={filters.duration}
+              onChange={(v) => setFilters((f) => ({ ...f, duration: v as typeof f.duration }))}
+              options={[
+                { v: "any", l: "Any" },
+                { v: "short", l: "≤ 30 min" },
+                { v: "medium", l: "31–60 min" },
+                { v: "long", l: "60+ min" },
+              ]}
+            />
+            <FilterGroup
+              label="Group size"
+              value={filters.capacity}
+              onChange={(v) => setFilters((f) => ({ ...f, capacity: v as typeof f.capacity }))}
+              options={[
+                { v: "any", l: "Any" },
+                { v: "private", l: "1-on-1" },
+                { v: "small", l: "Small (2–6)" },
+                { v: "medium", l: "Medium (7–15)" },
+                { v: "large", l: "Large (16+)" },
+              ]}
+            />
+            <FilterGroup
+              label="Booking type"
+              value={filters.type}
+              onChange={(v) => setFilters((f) => ({ ...f, type: v as typeof f.type }))}
+              options={[
+                { v: "all", l: "All" },
+                { v: "scheduled", l: "Scheduled" },
+                { v: "on_request", l: "On request" },
+              ]}
+            />
+            <FilterGroup
+              label="Availability"
+              value={filters.spots}
+              onChange={(v) => setFilters((f) => ({ ...f, spots: v as typeof f.spots }))}
+              options={[
+                { v: "any", l: "Any" },
+                { v: "available", l: "Open / upcoming only" },
+              ]}
+            />
+            <FilterGroup
+              label="Sort by"
+              value={filters.sort}
+              onChange={(v) => setFilters((f) => ({ ...f, sort: v as typeof f.sort }))}
+              options={[
+                { v: "newest", l: "Newest" },
+                { v: "soonest", l: "Soonest" },
+                { v: "duration", l: "Shortest" },
+              ]}
+            />
+          </div>
+          <div className="border-t bg-card px-5 py-3 flex items-center gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() =>
+                setFilters({
+                  category: "all",
+                  when: "any",
+                  duration: "any",
+                  capacity: "any",
+                  type: "all",
+                  spots: "any",
+                  sort: "newest",
+                })
+              }
+            >
+              Clear all
+            </Button>
+            <Button
+              className="flex-[1.4] bg-gradient-hero shadow-elegant"
+              onClick={() => setFiltersOpen(false)}
+            >
+              Show results
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
+
+function FilterGroup({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: { v: string; l: string }[];
+}) {
+  return (
+    <div>
+      <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">
+        {label}
+      </p>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((o) => {
+          const active = value === o.v;
+          return (
+            <button
+              key={o.v}
+              onClick={() => onChange(o.v)}
+              className={cn(
+                "px-3 py-1.5 rounded-full text-xs border transition-all",
+                active
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-card text-foreground border-border",
+              )}
+            >
+              {o.l}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 
 function ScreenHeader({ title, onBack }: { title: string; onBack: () => void }) {
   return (
