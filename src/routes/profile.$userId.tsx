@@ -44,6 +44,16 @@ type ProfileRow = {
   avatar_url: string | null;
   city: string | null;
   special_notes: string | null;
+  account_type: "person" | "gym";
+};
+
+type EventRow = {
+  id: string;
+  title: string;
+  event_date: string;
+  location: string;
+  capacity: number | null;
+  image_url: string | null;
 };
 
 type ClassRow = {
