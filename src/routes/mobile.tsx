@@ -204,12 +204,33 @@ function MobileShowcase() {
                 />
               )}
               {screen === "confirmation" && (
-                <ConfirmationScreen cls={selected} onDone={reset} />
+                <ConfirmationScreen
+                  cls={selected}
+                  onDone={reset}
+                  onViewBookings={() => setScreen("bookings")}
+                />
+              )}
+              {screen === "bookings" && (
+                <BookingsScreen
+                  onOpen={(id) => {
+                    setSelectedId(id);
+                    setScreen("class");
+                  }}
+                  onProfile={() => setScreen("profile")}
+                />
+              )}
+              {screen === "profile" && (
+                <ProfileScreen
+                  onBookings={() => setScreen("bookings")}
+                  onBrowse={() => setScreen("browse")}
+                />
               )}
             </div>
             <PhoneTabBar
               screen={screen}
               onHome={() => setScreen("browse")}
+              onBookings={() => setScreen("bookings")}
+              onProfile={() => setScreen("profile")}
             />
           </PhoneFrame>
 
