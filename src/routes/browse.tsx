@@ -298,9 +298,11 @@ function ClassCard({ cls }: { cls: ClassRow }) {
             </div>
           )}
           <Badge className="absolute top-3 left-3 bg-background/95 text-foreground border-0">{cls.activity}</Badge>
-          {cls.booking_type === "on_request" && (
+          {cls.listing_type === "trainer" ? (
+            <Badge className="absolute top-3 right-3 bg-accent text-accent-foreground border-0">Trainer</Badge>
+          ) : cls.booking_type === "on_request" ? (
             <Badge className="absolute top-3 right-3 bg-accent text-accent-foreground border-0">On request</Badge>
-          )}
+          ) : null}
         </div>
         <CardContent className="p-5">
           <h3 className="font-semibold text-lg leading-tight line-clamp-1">{cls.title}</h3>
