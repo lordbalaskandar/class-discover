@@ -58,6 +58,7 @@ export const Route = createFileRoute("/mobile")({
 type Screen =
   | "browse"
   | "host"
+  | "gym"
   | "class"
   | "booking"
   | "payment"
@@ -239,6 +240,20 @@ function UserFlow() {
               cls={selected}
               onBack={() => setScreen("browse")}
               onSelectClass={() => setScreen("class")}
+              onGym={() => {
+                setSelectedId("2");
+                setScreen("gym");
+              }}
+            />
+          )}
+          {screen === "gym" && (
+            <GymScreen
+              cls={CLASSES.find((c) => c.id === "2") ?? CLASSES[1]}
+              onBack={() => setScreen("browse")}
+              onSelectClass={() => {
+                setSelectedId("2");
+                setScreen("class");
+              }}
             />
           )}
           {screen === "class" && (
@@ -302,6 +317,7 @@ function UserFlow() {
           [
             ["browse", "Browse"],
             ["host", "Host profile"],
+            ["gym", "Gym profile"],
             ["class", "Class detail"],
             ["booking", "Booking"],
             ["payment", "Payment"],
@@ -570,10 +586,12 @@ function HostScreen({
   cls,
   onBack,
   onSelectClass,
+  onGym,
 }: {
   cls: ClassItem;
   onBack: () => void;
   onSelectClass: () => void;
+  onGym?: () => void;
 }) {
   const isGym = cls.hostType === "gym";
   return (
@@ -754,19 +772,195 @@ function HostScreen({
           </button>
         </div>
 
-        {isGym && (
+        {isGym && onGym && (
           <div className="mt-5 pb-4">
-            <h3 className="font-semibold text-sm mb-2">Special events</h3>
-            <Card className="p-3 bg-gradient-to-br from-primary/10 to-transparent border-primary/30">
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <span className="text-[10px] uppercase tracking-widest text-primary font-semibold">Event</span>
+            <button
+              onClick={onGym}
+              className="w-full p-4 rounded-xl border border-primary/30 bg-gradient-to-br from-primary/10 to-transparent flex items-center gap-3 active:scale-[0.98] transition-transform"
+            >
+              <div className="h-10 w-10 rounded-lg bg-foreground text-background flex items-center justify-center">
+                <Building2 className="h-5 w-5" />
               </div>
-              <p className="font-semibold text-sm">Summer Open Mat & BBQ</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Jul 4 · 12:00 PM · Free</p>
-            </Card>
+              <div className="flex-1 text-left">
+                <p className="font-semibold text-sm">View gym profile</p>
+                <p className="text-[11px] text-muted-foreground">Special events, coaches & facility</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </button>
           </div>
         )}
+      </div>
+    </ScreenScroll>
+  );
+}
+
+function GymScreen({
+  cls,
+  onBack,
+  onSelectClass,
+}: {
+  cls: ClassItem;
+  onBack: () => void;
+  onSelectClass: () => void;
+}) {
+  const events = [
+    {
+      title: "Summer Open Mat & BBQ",
+      date: "Jul 4 · 12:00 PM",
+      tag: "Community",
+      price: "Free",
+      spots: "32 going",
+      gradient: "linear-gradient(135deg,#f4b942,#e07a5f)",
+      desc: "All-levels open mat followed by a backyard BBQ. Family & friends welcome.",
+    },
+    {
+      title: "No-Gi Submission Tournament",
+      date: "Jul 19 · 10:00 AM",
+      tag: "Competition",
+      price: "$45",
+      spots: "18 / 40 spots",
+      gradient: "linear-gradient(135deg,#2c2c2e,#5c5c5e)",
+      desc: "In-house bracket across three weight classes. Medals & post-event film review.",
+    },
+    {
+      title: "Women's Self-Defense Seminar",
+      date: "Aug 2 · 2:00 PM",
+      tag: "Seminar",
+      price: "$25",
+      spots: "Limited",
+      gradient: "linear-gradient(135deg,#84a98c,#52796f)",
+      desc: "2-hour fundamentals workshop led by Coach Renata. Open to non-members.",
+    },
+    {
+      title: "Black Belt Guest Class — Prof. Lima",
+      date: "Aug 16 · 11:00 AM",
+      tag: "Guest coach",
+      price: "$30",
+      spots: "12 / 25 spots",
+      gradient: "linear-gradient(135deg,#5b8def,#3d5a80)",
+      desc: "Special drop-in class with ADCC veteran Prof. Marcelo Lima.",
+    },
+  ];
+
+  const coaches = [
+    { name: "Renata Costa", role: "Head coach · Black belt", initials: "RC" },
+    { name: "Marcus Hale", role: "No-gi · Brown belt", initials: "MH" },
+    { name: "Yuki Tanaka", role: "Kids program · Purple", initials: "YT" },
+  ];
+
+  return (
+    <ScreenScroll>
+      <ScreenHeader title={cls.host} onBack={onBack} />
+      <div className="h-40 relative" style={{ background: cls.image }}>
+        <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 to-transparent" />
+        <Badge className="absolute top-3 left-3 bg-background/95 text-foreground hover:bg-background/95">
+          <Building2 className="h-3 w-3 mr-1" />Gym profile
+        </Badge>
+      </div>
+      <div className="px-5 -mt-10 relative">
+        <div className="h-20 w-20 rounded-2xl bg-card border-4 border-background shadow-card flex items-center justify-center">
+          <Building2 className="h-8 w-8" />
+        </div>
+        <div className="mt-3">
+          <h2 className="font-display text-xl font-semibold">{cls.host}</h2>
+          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+            <MapPin className="h-3 w-3" />{cls.location} · Open today 6am–10pm
+          </p>
+          <div className="flex items-center gap-3 mt-2 text-xs">
+            <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-primary text-primary" />{cls.rating} · {cls.reviews} reviews</span>
+            <span className="text-muted-foreground">·</span>
+            <span className="text-muted-foreground">240 members</span>
+          </div>
+        </div>
+
+        {/* Quick stats */}
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          {[
+            { label: "Classes / wk", value: "32" },
+            { label: "Coaches", value: "8" },
+            { label: "Events / mo", value: "4" },
+          ].map((s) => (
+            <div key={s.label} className="p-3 rounded-lg bg-muted/60 text-center">
+              <p className="font-display text-lg font-semibold leading-none">{s.value}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Special events */}
+        <div className="mt-5">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <h3 className="font-semibold text-sm">Special events</h3>
+            </div>
+            <span className="text-xs text-primary">See all</span>
+          </div>
+          <div className="space-y-2">
+            {events.map((e) => (
+              <Card
+                key={e.title}
+                onClick={onSelectClass}
+                className="overflow-hidden cursor-pointer active:scale-[0.98] transition-transform border-border/60"
+              >
+                <div className="h-20 relative" style={{ background: e.gradient }}>
+                  <Badge className="absolute top-2 left-2 bg-background/90 text-foreground hover:bg-background/90 text-[10px]">
+                    {e.tag}
+                  </Badge>
+                  <div className="absolute top-2 right-2 bg-foreground/90 text-background text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                    {e.price}
+                  </div>
+                </div>
+                <div className="p-3">
+                  <p className="font-semibold text-sm leading-tight">{e.title}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                    <CalendarIcon className="h-3 w-3" />{e.date}
+                  </p>
+                  <p className="text-xs text-foreground/80 mt-2 leading-relaxed">{e.desc}</p>
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                      <Users className="h-3 w-3" />{e.spots}
+                    </span>
+                    <Button size="sm" variant="secondary" className="h-7 text-xs">
+                      RSVP
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Coaches */}
+        <div className="mt-5">
+          <h3 className="font-semibold text-sm mb-2">Coaches</h3>
+          <div className="space-y-2">
+            {coaches.map((c) => (
+              <Card key={c.name} className="p-3 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-gradient-hero text-primary-foreground flex items-center justify-center text-xs font-semibold">
+                  {c.initials}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm leading-tight">{c.name}</p>
+                  <p className="text-[11px] text-muted-foreground">{c.role}</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Facility */}
+        <div className="mt-5 pb-4">
+          <h3 className="font-semibold text-sm mb-2">Facility</h3>
+          <div className="flex flex-wrap gap-1.5">
+            {["1,800 sq ft mat space", "Showers", "Lockers", "Free parking", "Kids area", "Pro shop"].map((a) => (
+              <span key={a} className="text-[11px] px-2.5 py-1 rounded-full bg-muted border">
+                {a}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
     </ScreenScroll>
   );
