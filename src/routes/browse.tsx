@@ -64,7 +64,7 @@ function BrowsePage() {
   useEffect(() => { setLocation(search.location); }, [search.location]);
 
   const updateSearch = (patch: Partial<typeof search>) => {
-    navigate({ search: (prev) => ({ ...prev, ...patch }) });
+    navigate({ search: (prev: typeof search) => ({ ...prev, ...patch }) });
   };
 
   const { data: classes = [], isLoading } = useQuery({
