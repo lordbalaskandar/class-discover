@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ACTIVITIES } from "@/lib/activities";
-import { Calendar, MapPin, Clock, Search, Users, SlidersHorizontal, X } from "lucide-react";
+import { Calendar, MapPin, Clock, Search, Users, SlidersHorizontal, X, Image as ImageIcon } from "lucide-react";
 
 const browseSearchSchema = z.object({
   q: fallback(z.string(), "").default(""),
@@ -25,8 +25,19 @@ const browseSearchSchema = z.object({
   location: fallback(z.string(), "").default(""),
   category: fallback(z.enum(["all", "class", "trainer"]), "all").default("all"),
   type: fallback(z.enum(["all", "scheduled", "on_request"]), "all").default("all"),
+  when: fallback(z.enum(["any", "today", "tomorrow", "this_week", "this_weekend", "next_week"]), "any").default("any"),
+  duration: fallback(z.enum(["any", "short", "medium", "long"]), "any").default("any"),
+  capacity: fallback(z.enum(["any", "private", "small", "medium", "large"]), "any").default("any"),
+  spots: fallback(z.enum(["any", "available"]), "any").default("any"),
+  media: fallback(z.enum(["any", "with_image"]), "any").default("any"),
   sort: fallback(z.enum(["newest", "soonest", "duration"]), "newest").default("newest"),
 });
+
+const DEFAULTS = {
+  q: "", activity: "", location: "", category: "all", type: "all",
+  when: "any", duration: "any", capacity: "any", spots: "any", media: "any",
+  sort: "newest",
+} as const;
 
 export const Route = createFileRoute("/browse")({
   validateSearch: zodValidator(browseSearchSchema),
@@ -54,11 +65,40 @@ type ClassRow = {
   capacity: number | null;
 };
 
+function startOfDay(d: Date) { const x = new Date(d); x.setHours(0,0,0,0); return x; }
+function addDays(d: Date, n: number) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+
+function whenRange(when: string): { from: Date; to: Date } | null {
+  const now = new Date();
+  const today = startOfDay(now);
+  switch (when) {
+    case "today": return { from: today, to: addDays(today, 1) };
+    case "tomorrow": return { from: addDays(today, 1), to: addDays(today, 2) };
+    case "this_week": {
+      const dow = today.getDay(); // 0 Sun..6 Sat
+      const daysToSun = (7 - dow) % 7 || 7;
+      return { from: today, to: addDays(today, daysToSun) };
+    }
+    case "this_weekend": {
+      const dow = today.getDay();
+      const toSat = (6 - dow + 7) % 7;
+      const sat = addDays(today, toSat);
+      return { from: sat, to: addDays(sat, 2) };
+    }
+    case "next_week": {
+      const dow = today.getDay();
+      const toNextMon = ((8 - dow) % 7) || 7;
+      const mon = addDays(today, toNextMon);
+      return { from: mon, to: addDays(mon, 7) };
+    }
+    default: return null;
+  }
+}
+
 function BrowsePage() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: "/browse" });
 
-  // Local form state synced with URL
   const [q, setQ] = useState(search.q);
   const [location, setLocation] = useState(search.location);
 
@@ -83,13 +123,41 @@ function BrowsePage() {
   });
 
   const filtered = useMemo(() => {
+    const range = whenRange(search.when);
     let result = classes.filter((c) => {
       if (search.category !== "all" && c.listing_type !== search.category) return false;
       if (search.activity && c.activity !== search.activity) return false;
       if (search.type !== "all" && c.booking_type !== search.type) return false;
+      if (search.media === "with_image" && !c.image_url) return false;
       if (search.location) {
         const loc = search.location.toLowerCase();
         if (!c.location.toLowerCase().includes(loc)) return false;
+      }
+      if (search.duration !== "any") {
+        const d = c.duration_min;
+        if (search.duration === "short" && d > 30) return false;
+        if (search.duration === "medium" && (d <= 30 || d > 60)) return false;
+        if (search.duration === "long" && d <= 60) return false;
+      }
+      if (search.capacity !== "any") {
+        const cap = c.capacity ?? 0;
+        if (search.capacity === "private" && cap !== 1) return false;
+        if (search.capacity === "small" && !(cap >= 2 && cap <= 6)) return false;
+        if (search.capacity === "medium" && !(cap >= 7 && cap <= 15)) return false;
+        if (search.capacity === "large" && cap < 16) return false;
+      }
+      if (search.spots === "available") {
+        // available only applies to scheduled with start in future
+        if (c.booking_type === "scheduled") {
+          if (!c.start_at || new Date(c.start_at).getTime() < Date.now()) return false;
+        }
+      }
+      if (range && c.booking_type === "scheduled") {
+        if (!c.start_at) return false;
+        const t = new Date(c.start_at).getTime();
+        if (t < range.from.getTime() || t >= range.to.getTime()) return false;
+      } else if (range && c.booking_type === "on_request") {
+        // on-request listings always pass time-window filter
       }
       if (search.q) {
         const qq = search.q.toLowerCase();
@@ -119,7 +187,12 @@ function BrowsePage() {
     updateSearch({ q, location });
   };
 
-  const hasFilters = search.q || search.activity || search.location || search.type !== "all" || search.category !== "all";
+  const hasFilters =
+    search.q || search.activity || search.location ||
+    search.type !== "all" || search.category !== "all" ||
+    search.when !== "any" || search.duration !== "any" ||
+    search.capacity !== "any" || search.spots !== "any" || search.media !== "any";
+
   const categoryLabel = search.category === "trainer" ? "trainers" : search.category === "class" ? "classes" : "listings";
 
   return (
@@ -191,7 +264,7 @@ function BrowsePage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate({ search: { q: "", activity: "", location: "", category: "all", type: "all", sort: "newest" } })}
+                  onClick={() => navigate({ search: { ...DEFAULTS } })}
                   className="h-7 text-xs"
                 >
                   <X className="h-3 w-3" /> Clear
@@ -223,6 +296,32 @@ function BrowsePage() {
             </div>
 
             <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Availability</label>
+              <Select value={search.when} onValueChange={(v) => updateSearch({ when: v as typeof search.when })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">Anytime</SelectItem>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="tomorrow">Tomorrow</SelectItem>
+                  <SelectItem value="this_week">This week</SelectItem>
+                  <SelectItem value="this_weekend">This weekend</SelectItem>
+                  <SelectItem value="next_week">Next week</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Spots</label>
+              <Select value={search.spots} onValueChange={(v) => updateSearch({ spots: v as typeof search.spots })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">Any</SelectItem>
+                  <SelectItem value="available">Open / upcoming only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Booking type</label>
               <Select value={search.type} onValueChange={(v) => updateSearch({ type: v as typeof search.type })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
@@ -230,6 +329,44 @@ function BrowsePage() {
                   <SelectItem value="all">All</SelectItem>
                   <SelectItem value="scheduled">Scheduled</SelectItem>
                   <SelectItem value="on_request">On request</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Duration</label>
+              <Select value={search.duration} onValueChange={(v) => updateSearch({ duration: v as typeof search.duration })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">Any length</SelectItem>
+                  <SelectItem value="short">Short (≤ 30 min)</SelectItem>
+                  <SelectItem value="medium">Medium (31–60 min)</SelectItem>
+                  <SelectItem value="long">Long (60+ min)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Group size</label>
+              <Select value={search.capacity} onValueChange={(v) => updateSearch({ capacity: v as typeof search.capacity })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">Any size</SelectItem>
+                  <SelectItem value="private">1-on-1</SelectItem>
+                  <SelectItem value="small">Small (2–6)</SelectItem>
+                  <SelectItem value="medium">Medium (7–15)</SelectItem>
+                  <SelectItem value="large">Large (16+)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Media</label>
+              <Select value={search.media} onValueChange={(v) => updateSearch({ media: v as typeof search.media })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">Any</SelectItem>
+                  <SelectItem value="with_image">With photo</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -294,7 +431,7 @@ function ClassCard({ cls }: { cls: ClassRow }) {
             <img src={cls.image_url} alt={cls.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
           ) : (
             <div className="h-full w-full bg-gradient-hero flex items-center justify-center text-primary-foreground text-3xl font-bold">
-              {cls.activity}
+              <ImageIcon className="h-8 w-8 opacity-70" />
             </div>
           )}
           <Badge className="absolute top-3 left-3 bg-background/95 text-foreground border-0">{cls.activity}</Badge>
