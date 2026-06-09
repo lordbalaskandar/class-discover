@@ -23,6 +23,7 @@ const browseSearchSchema = z.object({
   q: fallback(z.string(), "").default(""),
   activity: fallback(z.string(), "").default(""),
   location: fallback(z.string(), "").default(""),
+  category: fallback(z.enum(["all", "class", "trainer"]), "all").default("all"),
   type: fallback(z.enum(["all", "scheduled", "on_request"]), "all").default("all"),
   sort: fallback(z.enum(["newest", "soonest", "duration"]), "newest").default("newest"),
 });
@@ -48,6 +49,7 @@ type ClassRow = {
   image_url: string | null;
   duration_min: number;
   booking_type: "scheduled" | "on_request";
+  listing_type: "class" | "trainer";
   start_at: string | null;
   capacity: number | null;
 };
@@ -72,7 +74,7 @@ function BrowsePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("classes")
-        .select("id, host_id, title, description, activity, location, image_url, duration_min, booking_type, start_at, capacity")
+        .select("id, host_id, title, description, activity, location, image_url, duration_min, booking_type, listing_type, start_at, capacity")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -82,6 +84,7 @@ function BrowsePage() {
 
   const filtered = useMemo(() => {
     let result = classes.filter((c) => {
+      if (search.category !== "all" && c.listing_type !== search.category) return false;
       if (search.activity && c.activity !== search.activity) return false;
       if (search.type !== "all" && c.booking_type !== search.type) return false;
       if (search.location) {
@@ -116,11 +119,38 @@ function BrowsePage() {
     updateSearch({ q, location });
   };
 
-  const hasFilters = search.q || search.activity || search.location || search.type !== "all";
+  const hasFilters = search.q || search.activity || search.location || search.type !== "all" || search.category !== "all";
+  const categoryLabel = search.category === "trainer" ? "trainers" : search.category === "class" ? "classes" : "listings";
 
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
+
+      {/* Category tabs */}
+      <section className="border-b">
+        <div className="container mx-auto px-4 pt-4">
+          <div className="flex gap-1">
+            {([
+              { key: "all", label: "All" },
+              { key: "class", label: "Classes" },
+              { key: "trainer", label: "Trainers" },
+            ] as const).map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => updateSearch({ category: t.key })}
+                className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
+                  search.category === t.key
+                    ? "border-primary text-primary"
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Search bar */}
       <section className="border-b bg-muted/30">
@@ -131,7 +161,7 @@ function BrowsePage() {
               <Input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Search classes, activities or studios"
+                placeholder={search.category === "trainer" ? "Search trainers, activities or cities" : "Search classes, activities or studios"}
                 className="pl-9 h-11"
               />
             </div>
@@ -161,7 +191,7 @@ function BrowsePage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate({ search: { q: "", activity: "", location: "", type: "all", sort: "newest" } })}
+                  onClick={() => navigate({ search: { q: "", activity: "", location: "", category: "all", type: "all", sort: "newest" } })}
                   className="h-7 text-xs"
                 >
                   <X className="h-3 w-3" /> Clear
@@ -221,7 +251,7 @@ function BrowsePage() {
           <main>
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-muted-foreground">
-                {isLoading ? "Loading…" : `${filtered.length} ${filtered.length === 1 ? "class" : "classes"} found`}
+                {isLoading ? "Loading…" : `${filtered.length} ${categoryLabel} found`}
               </p>
             </div>
 
@@ -268,9 +298,11 @@ function ClassCard({ cls }: { cls: ClassRow }) {
             </div>
           )}
           <Badge className="absolute top-3 left-3 bg-background/95 text-foreground border-0">{cls.activity}</Badge>
-          {cls.booking_type === "on_request" && (
+          {cls.listing_type === "trainer" ? (
+            <Badge className="absolute top-3 right-3 bg-accent text-accent-foreground border-0">Trainer</Badge>
+          ) : cls.booking_type === "on_request" ? (
             <Badge className="absolute top-3 right-3 bg-accent text-accent-foreground border-0">On request</Badge>
-          )}
+          ) : null}
         </div>
         <CardContent className="p-5">
           <h3 className="font-semibold text-lg leading-tight line-clamp-1">{cls.title}</h3>
