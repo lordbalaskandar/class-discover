@@ -746,6 +746,7 @@ function BrowseScreen({
               onClick={() =>
                 setFilters({
                   category: "all",
+                  activity: "all",
                   when: "any",
                   duration: "any",
                   capacity: "any",
