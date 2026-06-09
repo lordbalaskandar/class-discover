@@ -3115,9 +3115,50 @@ const HOST_ATTENDEES = [
   { name: "Toni Brooks", initials: "TB", note: "" },
 ];
 
+type GymMember = {
+  id: string;
+  name: string;
+  initials: string;
+  email: string;
+  plan: "Monthly" | "Annual" | "Day pass";
+  role: "Owner" | "Coach" | "Member";
+  joined: string;
+  status: "Active" | "Pending" | "Paused";
+};
+
+type GymInfo = {
+  created: boolean;
+  name: string;
+  tagline: string;
+  address: string;
+  capacity: number;
+  monthlyPrice: number;
+  amenities: string[];
+};
+
+const DEFAULT_GYM: GymInfo = {
+  created: true,
+  name: "Calder Strength Lab",
+  tagline: "Small-group strength & conditioning in SoMa.",
+  address: "248 Brannan St, San Francisco, CA",
+  capacity: 18,
+  monthlyPrice: 129,
+  amenities: ["Showers", "Lockers", "Free weights", "Open gym hours"],
+};
+
+const DEFAULT_MEMBERS: GymMember[] = [
+  { id: "m1", name: "Alex Morgan", initials: "AM", email: "alex@dryvon.com", plan: "Monthly", role: "Member", joined: "Mar 2025", status: "Active" },
+  { id: "m2", name: "Priya Shah", initials: "PS", email: "priya.s@mail.com", plan: "Annual", role: "Member", joined: "Jan 2025", status: "Active" },
+  { id: "m3", name: "Devon Walsh", initials: "DW", email: "devon@walsh.io", plan: "Monthly", role: "Coach", joined: "Nov 2024", status: "Active" },
+  { id: "m4", name: "Mika Chen", initials: "MC", email: "mika.c@mail.com", plan: "Day pass", role: "Member", joined: "Today", status: "Pending" },
+  { id: "m5", name: "Sam Reyes", initials: "SR", email: "sam.r@mail.com", plan: "Monthly", role: "Member", joined: "Feb 2025", status: "Paused" },
+];
+
 function HostFlow() {
   const [screen, setScreen] = useState<HostScreenId>("dashboard");
   const [selectedId, setSelectedId] = useState<string>("h1");
+  const [gym, setGym] = useState<GymInfo>(DEFAULT_GYM);
+  const [members, setMembers] = useState<GymMember[]>(DEFAULT_MEMBERS);
   const selected = useMemo(
     () => HOST_CLASSES.find((c) => c.id === selectedId) ?? HOST_CLASSES[0],
     [selectedId],
@@ -3130,6 +3171,7 @@ function HostFlow() {
     { id: "earnings", label: "Track earnings" },
     { id: "metrics", label: "Review metrics" },
     { id: "hostProfile", label: "Your host profile" },
+    { id: "hpGym", label: "Manage your gym" },
   ];
   const idx = steps.findIndex((s) => s.id === screen);
 
