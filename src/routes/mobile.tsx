@@ -510,7 +510,7 @@ function BrowseScreen({
     spots: "any" as "any" | "available",
     sort: "newest" as "newest" | "soonest" | "duration",
     distance: "any" as "any" | "1" | "5" | "10" | "25" | "50",
-    date: undefined as Date | undefined,
+    dateRange: undefined as { from: Date; to?: Date } | undefined,
   });
   const activeCount =
     (filters.category !== "all" ? 1 : 0) +
@@ -521,7 +521,7 @@ function BrowseScreen({
     (filters.type !== "all" ? 1 : 0) +
     (filters.spots !== "any" ? 1 : 0) +
     (filters.distance !== "any" ? 1 : 0) +
-    (filters.date ? 1 : 0);
+    (filters.dateRange ? 1 : 0);
 
   return (
     <div className="h-full relative">
