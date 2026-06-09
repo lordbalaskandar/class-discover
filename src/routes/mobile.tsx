@@ -2794,19 +2794,39 @@ function HostMetricsScreen({ onBack }: { onBack: () => void }) {
         <Card className="p-4">
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Peak booking hours</p>
           <p className="font-display text-lg font-semibold">When students book</p>
-          <div className="mt-3 flex items-end gap-1.5 h-20">
-            {peakHours.map((p) => (
-              <div key={p.h} className="flex-1 flex flex-col items-center gap-1">
-                <div
-                  className={cn(
-                    "w-full rounded-t",
-                    p.v > 70 ? "bg-primary" : "bg-foreground/60",
-                  )}
-                  style={{ height: `${p.v}%` }}
-                />
-                <span className="text-[9px] text-muted-foreground">{p.h}</span>
-              </div>
-            ))}
+          <div className="mt-3">
+            <svg viewBox="0 0 280 80" className="w-full h-20" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="gradPeak" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.05" />
+                </linearGradient>
+              </defs>
+              {(() => {
+                const w = 280, h = 76;
+                const pts = peakHours.map((p, i) => {
+                  const x = (i / (peakHours.length - 1)) * w;
+                  const y = h - (p.v / 100) * h + 2;
+                  return [x, y] as const;
+                });
+                const line = pts.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x},${y}`).join(" ");
+                const area = `${line} L${w},${h + 2} L0,${h + 2} Z`;
+                return (
+                  <>
+                    <path d={area} fill="url(#gradPeak)" />
+                    <path d={line} fill="none" stroke="hsl(var(--primary))" strokeWidth="1.5" />
+                    {pts.map(([x, y], i) => (
+                      <circle key={i} cx={x} cy={y} r={peakHours[i].v > 70 ? 3 : 2} fill="hsl(var(--primary))" />
+                    ))}
+                  </>
+                );
+              })()}
+            </svg>
+            <div className="flex justify-between mt-1 px-0.5">
+              {peakHours.map((p) => (
+                <span key={p.h} className="text-[9px] text-muted-foreground">{p.h}</span>
+              ))}
+            </div>
           </div>
           <p className="text-[11px] text-muted-foreground mt-2">
             Most bookings happen Thursday evenings — consider adding a 6:30 PM slot.
