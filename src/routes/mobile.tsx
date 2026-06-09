@@ -3296,6 +3296,14 @@ function HostFlow() {
               onBack={() => setScreen("hpGym")}
             />
           )}
+          {screen === "hpGymCoach" && (
+            <HostGymCoachScreen
+              gym={gym}
+              members={members}
+              onBack={() => setScreen("hpGym")}
+              onMembers={() => setScreen("hpGymMembers")}
+            />
+          )}
           {screen === "hpGymEdit" && (
             <HostGymEditScreen
               gym={gym}
