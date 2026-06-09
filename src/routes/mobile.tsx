@@ -450,6 +450,7 @@ function UserFlow() {
           screen={screen}
           onHome={() => setScreen("browse")}
           onHosts={() => setScreen("hosts")}
+          onMap={() => setScreen("map")}
           onBookings={() => setScreen("bookings")}
           onProfile={() => setScreen("profile")}
         />
