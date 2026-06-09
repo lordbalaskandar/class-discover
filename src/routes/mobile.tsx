@@ -3330,36 +3330,38 @@ function HostFlow() {
         </p>
         {(
           [
-            ["dashboard", "Dashboard", false],
-            ["create", "Publish a class", false],
-            ["manage", "Manage class", false],
-            ["earnings", "Earnings", false],
-            ["metrics", "Metrics", false],
-            ["hostProfile", "Host profile", false],
-            ["hpTemplates", "Class templates", true],
-            ["hpPayouts", "Payout settings", true],
-            ["hpAvailability", "Availability", true],
-            ["hpReviews", "Reviews", true],
-            ["hpSupport", "Help & support", true],
-            ["hpGym", "My gym", true],
-            ["hpGymCreate", "Create gym", true],
-            ["hpGymMembers", "Gym members", true],
-            ["hpGymEdit", "Edit gym", true],
-          ] as [HostScreenId, string, boolean][]
-        ).map(([s, label, sub]) => (
+            ["dashboard", "Dashboard", 0],
+            ["create", "Publish a class", 0],
+            ["manage", "Manage class", 0],
+            ["earnings", "Earnings", 0],
+            ["metrics", "Metrics", 0],
+            ["hostProfile", "Host profile", 0],
+            ["hpGym", "My gym", 1],
+            ["hpGymCreate", "Create gym", 2],
+            ["hpGymMembers", "Gym members", 2],
+            ["hpGymCoach", "Coach view", 2],
+            ["hpGymEdit", "Edit gym", 2],
+            ["hpTemplates", "Class templates", 1],
+            ["hpPayouts", "Payout settings", 1],
+            ["hpAvailability", "Availability", 1],
+            ["hpReviews", "Reviews", 1],
+            ["hpSupport", "Help & support", 1],
+          ] as [HostScreenId, string, number][]
+        ).map(([s, label, level]) => (
           <button
             key={s}
             onClick={() => setScreen(s)}
             className={cn(
               "w-full text-left px-4 py-3 rounded-lg border transition-all",
-              sub && "ml-4 w-[calc(100%-1rem)] py-2",
+              level === 1 && "ml-4 w-[calc(100%-1rem)] py-2",
+              level === 2 && "ml-8 w-[calc(100%-2rem)] py-1.5",
               screen === s
                 ? "bg-primary text-primary-foreground border-primary shadow-elegant"
                 : "bg-card hover:bg-muted border-border",
             )}
           >
             <div className="flex items-center justify-between">
-              <span className={cn("font-medium", sub && "text-sm")}>{label}</span>
+              <span className={cn("font-medium", level === 1 && "text-sm", level === 2 && "text-xs")}>{label}</span>
               <ChevronRight className="h-4 w-4 opacity-60" />
             </div>
           </button>
