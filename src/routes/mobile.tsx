@@ -2079,26 +2079,32 @@ function HostFlow() {
         </p>
         {(
           [
-            ["dashboard", "Dashboard"],
-            ["create", "Publish a class"],
-            ["manage", "Manage class"],
-            ["earnings", "Earnings"],
-            ["metrics", "Metrics"],
-            ["hostProfile", "Host profile"],
-          ] as [HostScreenId, string][]
-        ).map(([s, label]) => (
+            ["dashboard", "Dashboard", false],
+            ["create", "Publish a class", false],
+            ["manage", "Manage class", false],
+            ["earnings", "Earnings", false],
+            ["metrics", "Metrics", false],
+            ["hostProfile", "Host profile", false],
+            ["hpTemplates", "Class templates", true],
+            ["hpPayouts", "Payout settings", true],
+            ["hpAvailability", "Availability", true],
+            ["hpReviews", "Reviews", true],
+            ["hpSupport", "Help & support", true],
+          ] as [HostScreenId, string, boolean][]
+        ).map(([s, label, sub]) => (
           <button
             key={s}
             onClick={() => setScreen(s)}
             className={cn(
               "w-full text-left px-4 py-3 rounded-lg border transition-all",
+              sub && "ml-4 w-[calc(100%-1rem)] py-2",
               screen === s
                 ? "bg-primary text-primary-foreground border-primary shadow-elegant"
                 : "bg-card hover:bg-muted border-border",
             )}
           >
             <div className="flex items-center justify-between">
-              <span className="font-medium">{label}</span>
+              <span className={cn("font-medium", sub && "text-sm")}>{label}</span>
               <ChevronRight className="h-4 w-4 opacity-60" />
             </div>
           </button>
