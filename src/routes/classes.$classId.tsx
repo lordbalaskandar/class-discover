@@ -28,12 +28,18 @@ function ClassDetailPage() {
   const { open: openAuthModal } = useAuthModal();
   const [userId, setUserId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
-  const [preferredAt, setPreferredAt] = useState("");
+  const [preferredDate, setPreferredDate] = useState<Date | undefined>(undefined);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
   }, []);
+
+  const fetchAvailability = useServerFn(getClassAvailability);
+  const { data: availability } = useQuery({
+    queryKey: ["availability", classId],
+    queryFn: () => fetchAvailability({ data: { classId } }),
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["class", classId],
