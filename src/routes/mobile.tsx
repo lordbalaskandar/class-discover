@@ -42,7 +42,6 @@ import {
   SlidersHorizontal,
   X,
   Map as MapIcon,
-  Users,
 } from "lucide-react";
 import { HostsMap } from "@/components/mobile/HostsMap";
 import { Calendar } from "@/components/ui/calendar";
