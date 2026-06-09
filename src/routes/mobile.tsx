@@ -745,6 +745,47 @@ function BrowseScreen({
                 { v: "duration", l: "Shortest" },
               ]}
             />
+            <FilterGroup
+              label="Distance"
+              value={filters.distance}
+              onChange={(v) => setFilters((f) => ({ ...f, distance: v as typeof f.distance }))}
+              options={[
+                { v: "any", l: "Any" },
+                { v: "1", l: "< 1 mi" },
+                { v: "5", l: "< 5 mi" },
+                { v: "10", l: "< 10 mi" },
+                { v: "25", l: "< 25 mi" },
+                { v: "50", l: "< 50 mi" },
+              ]}
+            />
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">
+                Specific date
+              </p>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal rounded-full",
+                      !filters.date && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {filters.date ? format(filters.date, "PPP") : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={filters.date}
+                    onSelect={(d) => setFilters((f) => ({ ...f, date: d }))}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
           <div className="border-t bg-card px-5 py-3 flex items-center gap-3">
             <Button
