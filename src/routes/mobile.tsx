@@ -1251,3 +1251,649 @@ function ProfileScreen({
     </ScreenScroll>
   );
 }
+
+/* ============================================================
+   HOST FLOW
+   ============================================================ */
+
+type HostScreenId =
+  | "dashboard"
+  | "create"
+  | "manage"
+  | "earnings"
+  | "hostProfile";
+
+type HostClass = {
+  id: string;
+  title: string;
+  activity: string;
+  date: string;
+  time: string;
+  duration: string;
+  price: number;
+  booked: number;
+  capacity: number;
+  image: string;
+};
+
+const HOST_CLASSES: HostClass[] = [
+  {
+    id: "h1",
+    title: "Sunrise Vinyasa Flow",
+    activity: "Yoga",
+    date: "Today",
+    time: "7:00 AM",
+    duration: "60 min",
+    price: 22,
+    booked: 8,
+    capacity: 12,
+    image: "linear-gradient(135deg,#f4b942,#e07a5f)",
+  },
+  {
+    id: "h2",
+    title: "Lunchtime Mobility",
+    activity: "Mobility",
+    date: "Today",
+    time: "12:15 PM",
+    duration: "45 min",
+    price: 18,
+    booked: 5,
+    capacity: 10,
+    image: "linear-gradient(135deg,#84a98c,#52796f)",
+  },
+  {
+    id: "h3",
+    title: "Evening Power Flow",
+    activity: "Yoga",
+    date: "Tomorrow",
+    time: "6:30 PM",
+    duration: "75 min",
+    price: 28,
+    booked: 11,
+    capacity: 14,
+    image: "linear-gradient(135deg,#9d8df1,#5f4bdb)",
+  },
+];
+
+const HOST_ATTENDEES = [
+  { name: "Alex Morgan", initials: "AM", note: "First class!" },
+  { name: "Priya Shah", initials: "PS", note: "Returning" },
+  { name: "Devon Walsh", initials: "DW", note: "" },
+  { name: "Mika Chen", initials: "MC", note: "Brought a mat" },
+  { name: "Sam Reyes", initials: "SR", note: "" },
+  { name: "Jordan Lee", initials: "JL", note: "First class!" },
+  { name: "Riya Patel", initials: "RP", note: "" },
+  { name: "Toni Brooks", initials: "TB", note: "" },
+];
+
+function HostFlow() {
+  const [screen, setScreen] = useState<HostScreenId>("dashboard");
+  const [selectedId, setSelectedId] = useState<string>("h1");
+  const selected = useMemo(
+    () => HOST_CLASSES.find((c) => c.id === selectedId) ?? HOST_CLASSES[0],
+    [selectedId],
+  );
+
+  const steps: { id: HostScreenId; label: string }[] = [
+    { id: "dashboard", label: "Open dashboard" },
+    { id: "create", label: "Publish a class" },
+    { id: "manage", label: "Manage attendees" },
+    { id: "earnings", label: "Track earnings" },
+    { id: "hostProfile", label: "Your host profile" },
+  ];
+  const idx = steps.findIndex((s) => s.id === screen);
+
+  return (
+    <div className="grid md:grid-cols-[1fr_auto_1fr] items-center gap-8">
+      <div className="space-y-1">
+        <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">
+          The flow
+        </p>
+        {steps.map((s, i) => {
+          const done = i < idx;
+          const active = i === idx;
+          return (
+            <div key={s.id} className="flex items-center gap-3 py-2">
+              <div
+                className={cn(
+                  "h-7 w-7 rounded-full flex items-center justify-center text-xs font-semibold border",
+                  active && "bg-primary text-primary-foreground border-primary",
+                  done && "bg-foreground/80 text-background border-foreground/80",
+                  !active && !done && "bg-muted text-muted-foreground border-border",
+                )}
+              >
+                {done ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
+              </div>
+              <span
+                className={cn(
+                  "text-sm",
+                  active ? "font-semibold text-foreground" : "text-muted-foreground",
+                )}
+              >
+                {s.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      <PhoneFrame>
+        <PhoneStatusBar />
+        <div className="flex-1 overflow-hidden relative bg-background">
+          {screen === "dashboard" && (
+            <HostDashboardScreen
+              onCreate={() => setScreen("create")}
+              onOpenClass={(id) => {
+                setSelectedId(id);
+                setScreen("manage");
+              }}
+              onEarnings={() => setScreen("earnings")}
+            />
+          )}
+          {screen === "create" && (
+            <HostCreateScreen
+              onBack={() => setScreen("dashboard")}
+              onPublish={() => setScreen("dashboard")}
+            />
+          )}
+          {screen === "manage" && (
+            <HostManageScreen
+              cls={selected}
+              onBack={() => setScreen("dashboard")}
+            />
+          )}
+          {screen === "earnings" && (
+            <HostEarningsScreen onBack={() => setScreen("dashboard")} />
+          )}
+          {screen === "hostProfile" && (
+            <HostProfileScreen
+              onDashboard={() => setScreen("dashboard")}
+            />
+          )}
+        </div>
+        <HostTabBar
+          screen={screen}
+          onDashboard={() => setScreen("dashboard")}
+          onCreate={() => setScreen("create")}
+          onEarnings={() => setScreen("earnings")}
+          onProfile={() => setScreen("hostProfile")}
+        />
+      </PhoneFrame>
+
+      <div className="space-y-3">
+        <p className="text-xs uppercase tracking-widest text-muted-foreground">
+          Jump to screen
+        </p>
+        {(
+          [
+            ["dashboard", "Dashboard"],
+            ["create", "Publish a class"],
+            ["manage", "Manage class"],
+            ["earnings", "Earnings"],
+            ["hostProfile", "Host profile"],
+          ] as [HostScreenId, string][]
+        ).map(([s, label]) => (
+          <button
+            key={s}
+            onClick={() => setScreen(s)}
+            className={cn(
+              "w-full text-left px-4 py-3 rounded-lg border transition-all",
+              screen === s
+                ? "bg-primary text-primary-foreground border-primary shadow-elegant"
+                : "bg-card hover:bg-muted border-border",
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-medium">{label}</span>
+              <ChevronRight className="h-4 w-4 opacity-60" />
+            </div>
+          </button>
+        ))}
+        <Button onClick={() => setScreen("dashboard")} variant="outline" className="w-full mt-2">
+          Restart flow
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function HostTabBar({
+  screen,
+  onDashboard,
+  onCreate,
+  onEarnings,
+  onProfile,
+}: {
+  screen: HostScreenId;
+  onDashboard: () => void;
+  onCreate: () => void;
+  onEarnings: () => void;
+  onProfile: () => void;
+}) {
+  const tabs = [
+    { id: "dashboard" as HostScreenId, icon: Home, label: "Home", onClick: onDashboard },
+    { id: "create" as HostScreenId, icon: Plus, label: "Create", onClick: onCreate },
+    { id: "earnings" as HostScreenId, icon: DollarSign, label: "Earnings", onClick: onEarnings },
+    { id: "hostProfile" as HostScreenId, icon: UserIcon, label: "Profile", onClick: onProfile },
+  ];
+  return (
+    <div className="border-t bg-card flex items-center justify-around py-2 px-4">
+      {tabs.map((t) => {
+        const active = screen === t.id;
+        return (
+          <button
+            key={t.label}
+            onClick={t.onClick}
+            className={cn(
+              "flex flex-col items-center gap-0.5 px-3 py-1 text-[10px]",
+              active ? "text-primary" : "text-muted-foreground",
+            )}
+          >
+            <t.icon className="h-5 w-5" />
+            {t.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function HostDashboardScreen({
+  onCreate,
+  onOpenClass,
+  onEarnings,
+}: {
+  onCreate: () => void;
+  onOpenClass: (id: string) => void;
+  onEarnings: () => void;
+}) {
+  const totalBooked = HOST_CLASSES.reduce((a, c) => a + c.booked, 0);
+  const today = HOST_CLASSES.filter((c) => c.date === "Today");
+  return (
+    <ScreenScroll>
+      <div className="px-5 pt-3 pb-4">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="text-xs text-muted-foreground">Welcome back</p>
+            <h2 className="font-display text-2xl font-semibold">Maya</h2>
+          </div>
+          <button className="h-10 w-10 rounded-full bg-muted flex items-center justify-center relative">
+            <Bell className="h-4 w-4" />
+            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-primary" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            onClick={onEarnings}
+            className="p-3 rounded-xl bg-gradient-hero text-primary-foreground text-left shadow-elegant"
+          >
+            <DollarSign className="h-4 w-4 mb-1 opacity-90" />
+            <p className="text-[10px] uppercase tracking-widest opacity-80">This week</p>
+            <p className="font-display text-lg font-semibold">$842</p>
+          </button>
+          <div className="p-3 rounded-xl bg-card border">
+            <Users className="h-4 w-4 mb-1 text-primary" />
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Booked</p>
+            <p className="font-display text-lg font-semibold">{totalBooked}</p>
+          </div>
+          <div className="p-3 rounded-xl bg-card border">
+            <Star className="h-4 w-4 mb-1 fill-primary text-primary" />
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Rating</p>
+            <p className="font-display text-lg font-semibold">4.9</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-5">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-semibold text-sm">Today's classes</h3>
+          <span className="text-xs text-muted-foreground">{today.length} sessions</span>
+        </div>
+        <div className="space-y-2">
+          {today.map((c) => (
+            <Card
+              key={c.id}
+              onClick={() => onOpenClass(c.id)}
+              className="overflow-hidden cursor-pointer active:scale-[0.99] transition-transform"
+            >
+              <div className="flex">
+                <div className="w-20 shrink-0" style={{ background: c.image }} />
+                <div className="p-3 flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold text-sm truncate">{c.title}</p>
+                    <Badge variant="secondary" className="text-[10px]">{c.activity}</Badge>
+                  </div>
+                  <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground">
+                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{c.time}</span>
+                    <span className="flex items-center gap-1"><Users className="h-3 w-3" />{c.booked}/{c.capacity}</span>
+                  </div>
+                  <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full bg-primary"
+                      style={{ width: `${(c.booked / c.capacity) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        <h3 className="font-semibold text-sm mt-5 mb-2">Coming up</h3>
+        <div className="space-y-2 pb-4">
+          {HOST_CLASSES.filter((c) => c.date !== "Today").map((c) => (
+            <Card
+              key={c.id}
+              onClick={() => onOpenClass(c.id)}
+              className="p-3 flex items-center gap-3 cursor-pointer"
+            >
+              <div className="h-10 w-10 rounded-lg shrink-0" style={{ background: c.image }} />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">{c.title}</p>
+                <p className="text-[11px] text-muted-foreground">{c.date} · {c.time}</p>
+              </div>
+              <span className="text-xs text-muted-foreground">{c.booked}/{c.capacity}</span>
+            </Card>
+          ))}
+        </div>
+
+        <Button onClick={onCreate} className="w-full bg-gradient-hero shadow-elegant mb-4">
+          <Plus className="h-4 w-4" /> Publish a new class
+        </Button>
+      </div>
+    </ScreenScroll>
+  );
+}
+
+function HostCreateScreen({
+  onBack,
+  onPublish,
+}: {
+  onBack: () => void;
+  onPublish: () => void;
+}) {
+  const [title, setTitle] = useState("Evening Power Flow");
+  const [activity, setActivity] = useState("Yoga");
+  const [location, setLocation] = useState("Dolores Park, SF");
+  const [price, setPrice] = useState("28");
+  const [capacity, setCapacity] = useState("12");
+  const [bookingType, setBookingType] = useState<"scheduled" | "request">("scheduled");
+
+  return (
+    <div className="h-full flex flex-col">
+      <ScreenScroll>
+        <ScreenHeader title="New class" onBack={onBack} />
+        <div className="px-5 py-4 space-y-4">
+          <div className="h-28 rounded-xl bg-muted/60 border-2 border-dashed flex flex-col items-center justify-center text-muted-foreground">
+            <Sparkles className="h-5 w-5 mb-1" />
+            <p className="text-xs">Add a cover photo</p>
+          </div>
+
+          <div>
+            <Label className="text-xs uppercase tracking-widest text-muted-foreground">Title</Label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-2" />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label className="text-xs uppercase tracking-widest text-muted-foreground">Activity</Label>
+              <Input value={activity} onChange={(e) => setActivity(e.target.value)} className="mt-2" />
+            </div>
+            <div>
+              <Label className="text-xs uppercase tracking-widest text-muted-foreground">Price</Label>
+              <Input value={price} onChange={(e) => setPrice(e.target.value)} className="mt-2" />
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-xs uppercase tracking-widest text-muted-foreground">Location</Label>
+            <Input value={location} onChange={(e) => setLocation(e.target.value)} className="mt-2" />
+          </div>
+
+          <div>
+            <Label className="text-xs uppercase tracking-widest text-muted-foreground">Booking type</Label>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              {([
+                { id: "scheduled", label: "Scheduled" },
+                { id: "request", label: "On request" },
+              ] as const).map((b) => (
+                <button
+                  key={b.id}
+                  onClick={() => setBookingType(b.id)}
+                  className={cn(
+                    "py-2.5 rounded-lg border text-sm font-medium transition-all",
+                    bookingType === b.id
+                      ? "bg-foreground text-background border-foreground"
+                      : "bg-card border-border",
+                  )}
+                >
+                  {b.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-xs uppercase tracking-widest text-muted-foreground">Capacity</Label>
+            <Input value={capacity} onChange={(e) => setCapacity(e.target.value)} className="mt-2" />
+          </div>
+
+          <div>
+            <Label className="text-xs uppercase tracking-widest text-muted-foreground">Description</Label>
+            <textarea
+              rows={3}
+              defaultValue="A grounded, breath-led session for all levels."
+              className="mt-2 w-full rounded-lg border bg-card p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+          </div>
+        </div>
+      </ScreenScroll>
+      <div className="border-t bg-card px-5 py-3">
+        <Button onClick={onPublish} className="w-full bg-gradient-hero shadow-elegant">
+          Publish class
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function HostManageScreen({
+  cls,
+  onBack,
+}: {
+  cls: HostClass;
+  onBack: () => void;
+}) {
+  const attendees = HOST_ATTENDEES.slice(0, cls.booked);
+  return (
+    <div className="h-full flex flex-col">
+      <ScreenScroll>
+        <ScreenHeader title="Manage class" onBack={onBack} />
+        <div className="h-28" style={{ background: cls.image }} />
+        <div className="px-5 py-4">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-display text-xl font-semibold leading-tight">{cls.title}</h2>
+            <button className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
+              <Pencil className="h-4 w-4" />
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5">{cls.date} · {cls.time} · {cls.duration}</p>
+
+          <div className="grid grid-cols-3 gap-2 mt-4">
+            <div className="p-3 rounded-lg bg-muted/60">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Booked</p>
+              <p className="font-display text-lg font-semibold">{cls.booked}/{cls.capacity}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/60">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Revenue</p>
+              <p className="font-display text-lg font-semibold">${cls.booked * cls.price}</p>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/60">
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Waitlist</p>
+              <p className="font-display text-lg font-semibold">2</p>
+            </div>
+          </div>
+
+          <div className="mt-5">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold text-sm">Attendees</h3>
+              <button className="text-xs text-primary inline-flex items-center gap-1">
+                <MessageSquare className="h-3 w-3" /> Message all
+              </button>
+            </div>
+            <div className="space-y-2">
+              {attendees.map((a) => (
+                <Card key={a.name} className="p-3 flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-gradient-hero text-primary-foreground flex items-center justify-center text-xs font-semibold">
+                    {a.initials}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{a.name}</p>
+                    {a.note && <p className="text-[11px] text-muted-foreground">{a.note}</p>}
+                  </div>
+                  <button className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                    <MessageSquare className="h-3.5 w-3.5" />
+                  </button>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      </ScreenScroll>
+      <div className="border-t bg-card px-5 py-3 flex items-center gap-2">
+        <Button variant="outline" className="flex-1">Check in</Button>
+        <Button className="flex-1 bg-gradient-hero shadow-elegant">Start class</Button>
+      </div>
+    </div>
+  );
+}
+
+function HostEarningsScreen({ onBack }: { onBack: () => void }) {
+  const bars = [40, 65, 30, 80, 55, 90, 70];
+  const days = ["M", "T", "W", "T", "F", "S", "S"];
+  const recent = [
+    { label: "Sunrise Vinyasa", date: "Today", amount: 176 },
+    { label: "Lunchtime Mobility", date: "Today", amount: 90 },
+    { label: "Evening Power Flow", date: "Yesterday", amount: 308 },
+    { label: "Trail Run", date: "Mon", amount: 120 },
+    { label: "Sunrise Vinyasa", date: "Sun", amount: 198 },
+  ];
+  return (
+    <ScreenScroll>
+      <ScreenHeader title="Earnings" onBack={onBack} />
+      <div className="px-5 py-4 space-y-5">
+        <div className="rounded-2xl p-4 bg-gradient-to-br from-foreground to-foreground/70 text-background shadow-elegant">
+          <p className="text-[10px] uppercase tracking-widest opacity-80">Available to cash out</p>
+          <p className="font-display text-3xl font-semibold mt-1">$842.50</p>
+          <div className="flex items-center justify-between mt-4 text-xs">
+            <span className="opacity-80">Next payout · Fri</span>
+            <button className="px-3 py-1.5 rounded-full bg-background text-foreground font-semibold">
+              Cash out
+            </button>
+          </div>
+        </div>
+
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">This week</p>
+              <p className="font-display text-xl font-semibold">$842</p>
+            </div>
+            <Badge variant="secondary" className="text-[10px]">
+              <BarChart3 className="h-3 w-3 mr-1" /> +18%
+            </Badge>
+          </div>
+          <div className="mt-4 flex items-end gap-1.5 h-24">
+            {bars.map((h, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                <div
+                  className={cn(
+                    "w-full rounded-t",
+                    i === bars.length - 1 ? "bg-primary" : "bg-foreground/70",
+                  )}
+                  style={{ height: `${h}%` }}
+                />
+                <span className="text-[10px] text-muted-foreground">{days[i]}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <div>
+          <h3 className="font-semibold text-sm mb-2">Recent</h3>
+          <div className="space-y-2 pb-4">
+            {recent.map((r, i) => (
+              <Card key={i} className="p-3 flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-sm">{r.label}</p>
+                  <p className="text-[11px] text-muted-foreground">{r.date}</p>
+                </div>
+                <span className="font-semibold text-sm">+${r.amount}</span>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    </ScreenScroll>
+  );
+}
+
+function HostProfileScreen({ onDashboard }: { onDashboard: () => void }) {
+  const stats = [
+    { label: "Classes", value: "128" },
+    { label: "Students", value: "1.2k" },
+    { label: "Rating", value: "4.9" },
+  ];
+  const rows = [
+    { label: "Class templates", sub: "5 saved" },
+    { label: "Payout settings", sub: "Bank •••• 6201" },
+    { label: "Availability", sub: "Mon–Sat mornings" },
+    { label: "Reviews", sub: "184 reviews" },
+    { label: "Help & support", sub: "FAQ, contact us" },
+  ];
+  return (
+    <ScreenScroll>
+      <div className="px-5 pt-6 pb-4 flex flex-col items-center text-center">
+        <div className="h-20 w-20 rounded-full bg-gradient-hero text-primary-foreground flex items-center justify-center font-display text-2xl font-semibold shadow-elegant">
+          M
+        </div>
+        <h2 className="font-display text-xl font-semibold mt-3">Maya Calder</h2>
+        <p className="text-xs text-muted-foreground">RYT-500 · SF, CA</p>
+        <Badge variant="secondary" className="mt-2 text-[10px]">
+          <Sparkles className="h-3 w-3 mr-1" />
+          Top host 2025
+        </Badge>
+      </div>
+
+      <div className="px-5">
+        <Card className="p-3 grid grid-cols-3 divide-x">
+          {stats.map((s) => (
+            <div key={s.label} className="text-center px-2">
+              <p className="font-display text-lg font-semibold">{s.value}</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                {s.label}
+              </p>
+            </div>
+          ))}
+        </Card>
+      </div>
+
+      <div className="px-5 mt-4 space-y-2 pb-4">
+        {rows.map((r) => (
+          <Card key={r.label} className="p-3 flex items-center gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm">{r.label}</p>
+              <p className="text-[11px] text-muted-foreground truncate">{r.sub}</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Card>
+        ))}
+
+        <Button onClick={onDashboard} variant="outline" className="w-full mt-2">
+          Back to dashboard
+        </Button>
+      </div>
+    </ScreenScroll>
+  );
+}
