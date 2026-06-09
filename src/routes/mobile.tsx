@@ -2045,7 +2045,23 @@ function HostFlow() {
           {screen === "hostProfile" && (
             <HostProfileScreen
               onDashboard={() => setScreen("dashboard")}
+              onOpenSection={(s) => setScreen(s)}
             />
+          )}
+          {screen === "hpTemplates" && (
+            <HostTemplatesScreen onBack={() => setScreen("hostProfile")} />
+          )}
+          {screen === "hpPayouts" && (
+            <HostPayoutsScreen onBack={() => setScreen("hostProfile")} />
+          )}
+          {screen === "hpAvailability" && (
+            <HostAvailabilityScreen onBack={() => setScreen("hostProfile")} />
+          )}
+          {screen === "hpReviews" && (
+            <HostReviewsScreen onBack={() => setScreen("hostProfile")} />
+          )}
+          {screen === "hpSupport" && (
+            <HostSupportScreen onBack={() => setScreen("hostProfile")} />
           )}
         </div>
         <HostTabBar
