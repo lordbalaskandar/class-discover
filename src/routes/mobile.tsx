@@ -34,6 +34,11 @@ import {
   Bell,
   MessageSquare,
   Pencil,
+  Eye,
+  TrendingUp,
+  Repeat,
+  Target,
+  Activity,
 } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
