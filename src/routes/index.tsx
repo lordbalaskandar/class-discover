@@ -107,7 +107,7 @@ function HomePage() {
             {scrollSlides.map((s, i) => (
               <div key={`${s.src}-${i}`} className="relative h-full w-[40vw] min-w-[320px] flex-shrink-0 overflow-hidden">
                 <img src={s.src} alt={`${s.label} class`} className="h-full w-full object-cover" loading={i < HERO_SLIDES.length ? "eager" : "lazy"} />
-                <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-foreground/20" />
+                <div className="absolute inset-0 bg-gradient-to-t from-white/60 via-transparent to-white/20" />
               </div>
             ))}
           </div>
