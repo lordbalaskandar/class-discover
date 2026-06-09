@@ -2665,7 +2665,7 @@ function SavedScreen({
   );
 }
 
-type ProfileSection = "pPayment" | "pNotifications" | "pBecomeHost" | "pHelp";
+type ProfileSection = "pPayment" | "pNotifications" | "pBecomeHost" | "pHelp" | "pMyGym";
 
 function ProfileScreen({
   onBookings,
@@ -2687,6 +2687,7 @@ function ProfileScreen({
   ];
   const rows: { label: string; sub: string; onClick?: () => void }[] = [
     { label: "My bookings", sub: "View upcoming & past classes", onClick: onBookings },
+    { label: "My gym", sub: "Calder Strength Lab · Active", onClick: () => onOpenSection("pMyGym") },
     { label: "Payment methods", sub: "Visa •••• 4242", onClick: () => onOpenSection("pPayment") },
     {
       label: "Saved classes",
