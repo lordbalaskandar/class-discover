@@ -67,6 +67,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean
+          listing_type: Database["public"]["Enums"]["listing_type"]
           location: string
           start_at: string | null
           title: string
@@ -83,6 +84,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          listing_type?: Database["public"]["Enums"]["listing_type"]
           location: string
           start_at?: string | null
           title: string
@@ -99,6 +101,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          listing_type?: Database["public"]["Enums"]["listing_type"]
           location?: string
           start_at?: string | null
           title?: string
@@ -174,6 +177,7 @@ export type Database = {
       app_role: "host" | "admin"
       booking_status: "confirmed" | "requested" | "cancelled" | "declined"
       booking_type: "scheduled" | "on_request"
+      listing_type: "class" | "trainer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -304,6 +308,7 @@ export const Constants = {
       app_role: ["host", "admin"],
       booking_status: ["confirmed", "requested", "cancelled", "declined"],
       booking_type: ["scheduled", "on_request"],
+      listing_type: ["class", "trainer"],
     },
   },
 } as const
