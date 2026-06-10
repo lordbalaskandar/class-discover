@@ -50,7 +50,13 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 
+type MobileSearch = { flow?: "user" | "host"; screen?: string };
+
 export const Route = createFileRoute("/mobile")({
+  validateSearch: (search: Record<string, unknown>): MobileSearch => ({
+    flow: search.flow === "user" || search.flow === "host" ? search.flow : undefined,
+    screen: typeof search.screen === "string" ? search.screen : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Mobile preview — Dryvon" },
