@@ -14,6 +14,7 @@ import { Calendar, MapPin, Clock, Users, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthModal } from "@/components/AuthModal";
 import { getClassAvailability } from "@/lib/availability.functions";
+import { mockPriceForClass } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/classes/$classId")({
@@ -268,7 +269,7 @@ function ClassDetailPage() {
                   <p className="text-sm text-muted-foreground">
                     {cls.booking_type === "scheduled" ? "Reserve your spot" : "Request a session"}
                   </p>
-                  <p className="text-2xl font-bold mt-1">Free</p>
+                  <p className="text-2xl font-bold mt-1">${mockPriceForClass(cls.id)} <span className="text-sm font-normal text-muted-foreground">/ spot</span></p>
                 </div>
 
                 {isOwner ? (
@@ -297,18 +298,16 @@ function ClassDetailPage() {
                     </div>
                     <Button
                       onClick={handleBook}
-                      disabled={submitting || isFull}
+                      disabled={isFull}
                       className="w-full bg-gradient-hero hover:opacity-90"
                     >
-                      {submitting
-                        ? "Please wait…"
-                        : !userId
-                          ? "Sign in to book"
-                          : isFull
-                            ? "Fully booked"
-                            : cls.booking_type === "scheduled"
-                              ? "Reserve spot"
-                              : "Send request"}
+                      {!userId
+                        ? "Sign in to book"
+                        : isFull
+                          ? "Fully booked"
+                          : cls.booking_type === "scheduled"
+                            ? "Continue to booking"
+                            : "Continue to request"}
                     </Button>
                   </>
                 )}
