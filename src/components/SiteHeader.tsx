@@ -102,6 +102,12 @@ export function SiteHeader() {
                 <DropdownMenuItem onClick={() => navigate({ to: "/bookings" })}>
                   <Calendar className="mr-2 h-4 w-4" /> My bookings
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate({ to: "/mobile", search: { flow: "user", screen: "saved" } })}>
+                  <Heart className="mr-2 h-4 w-4" /> Saved classes
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate({ to: "/mobile", search: { flow: "user", screen: "pMyGym" } })}>
+                  <Building2 className="mr-2 h-4 w-4" /> My gym
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate({ to: "/host" })}>
                   <UserIcon className="mr-2 h-4 w-4" /> Host dashboard
                 </DropdownMenuItem>
