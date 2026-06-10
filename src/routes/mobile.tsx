@@ -277,6 +277,9 @@ const CLASSES: ClassItem[] = [
 ];
 
 function MobileShowcase() {
+  const { flow, screen } = Route.useSearch();
+  const showUser = !flow || flow === "user";
+  const showHost = !flow || flow === "host";
   return (
     <div className="min-h-screen">
       <SiteHeader />
@@ -292,23 +295,27 @@ function MobileShowcase() {
           </p>
         </div>
 
-        <FlowSection
-          eyebrow="User flow"
-          title="Book a class"
-          description="Browse, check the host, review the class, pick a date, pay, and confirm."
-        >
-          <UserFlow />
-        </FlowSection>
+        {showUser && (
+          <FlowSection
+            eyebrow="User flow"
+            title="Book a class"
+            description="Browse, check the host, review the class, pick a date, pay, and confirm."
+          >
+            <UserFlow initialScreen={flow === "user" ? (screen as Screen | undefined) : undefined} />
+          </FlowSection>
+        )}
 
-        <div className="my-16 border-t" />
+        {showUser && showHost && <div className="my-16 border-t" />}
 
-        <FlowSection
-          eyebrow="Host flow"
-          title="Run your classes"
-          description="See today's schedule, publish a class, manage attendees, and track earnings."
-        >
-          <HostFlow />
-        </FlowSection>
+        {showHost && (
+          <FlowSection
+            eyebrow="Host flow"
+            title="Run your classes"
+            description="See today's schedule, publish a class, manage attendees, and track earnings."
+          >
+            <HostFlow initialScreen={flow === "host" ? (screen as HostScreenId | undefined) : undefined} />
+          </FlowSection>
+        )}
       </div>
     </div>
   );
