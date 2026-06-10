@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Plus, Users, Calendar } from "lucide-react";
+import { Sparkles, Plus, Users, Calendar, BarChart3, Building2, UserCog, GraduationCap, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthModal } from "@/components/AuthModal";
 
