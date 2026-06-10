@@ -14,6 +14,7 @@ import { Calendar, MapPin, Clock, Users, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthModal } from "@/components/AuthModal";
 import { getClassAvailability } from "@/lib/availability.functions";
+import { mockPriceForClass } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/classes/$classId")({
@@ -29,7 +30,7 @@ function ClassDetailPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [preferredDate, setPreferredDate] = useState<Date | undefined>(undefined);
-  const [submitting, setSubmitting] = useState(false);
+  
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
@@ -112,7 +113,7 @@ function ClassDetailPage() {
   const spotsLeft = cls.capacity ? Math.max(0, cls.capacity - scheduledBookedCount) : null;
   const isFull = spotsLeft === 0;
 
-  const handleBook = async () => {
+  const handleBook = () => {
     if (!userId) {
       openAuthModal();
       return;
@@ -121,19 +122,7 @@ function ClassDetailPage() {
       toast.error("Please pick a preferred date");
       return;
     }
-    setSubmitting(true);
-    const status = cls.booking_type === "scheduled" ? "confirmed" : "requested";
-    const { error } = await supabase.from("bookings").insert({
-      class_id: cls.id,
-      customer_id: userId,
-      status,
-      message: message || null,
-      preferred_at: cls.booking_type === "on_request" && preferredDate ? preferredDate.toISOString() : null,
-    });
-    setSubmitting(false);
-    if (error) return toast.error(error.message);
-    toast.success(cls.booking_type === "scheduled" ? "Spot reserved!" : "Request sent to host");
-    navigate({ to: "/bookings" });
+    navigate({ to: "/classes/$classId/book", params: { classId: cls.id } });
   };
 
   return (
@@ -280,7 +269,7 @@ function ClassDetailPage() {
                   <p className="text-sm text-muted-foreground">
                     {cls.booking_type === "scheduled" ? "Reserve your spot" : "Request a session"}
                   </p>
-                  <p className="text-2xl font-bold mt-1">Free</p>
+                  <p className="text-2xl font-bold mt-1">${mockPriceForClass(cls.id)} <span className="text-sm font-normal text-muted-foreground">/ spot</span></p>
                 </div>
 
                 {isOwner ? (
@@ -309,18 +298,16 @@ function ClassDetailPage() {
                     </div>
                     <Button
                       onClick={handleBook}
-                      disabled={submitting || isFull}
+                      disabled={isFull}
                       className="w-full bg-gradient-hero hover:opacity-90"
                     >
-                      {submitting
-                        ? "Please wait…"
-                        : !userId
-                          ? "Sign in to book"
-                          : isFull
-                            ? "Fully booked"
-                            : cls.booking_type === "scheduled"
-                              ? "Reserve spot"
-                              : "Send request"}
+                      {!userId
+                        ? "Sign in to book"
+                        : isFull
+                          ? "Fully booked"
+                          : cls.booking_type === "scheduled"
+                            ? "Continue to booking"
+                            : "Continue to request"}
                     </Button>
                   </>
                 )}

@@ -29,6 +29,9 @@ import { Route as HostsMapRouteImport } from './routes/hosts/map'
 import { Route as HostNewRouteImport } from './routes/host.new'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as ClassesClassIdRouteImport } from './routes/classes.$classId'
+import { Route as ClassesClassIdPayRouteImport } from './routes/classes.$classId.pay'
+import { Route as ClassesClassIdConfirmationRouteImport } from './routes/classes.$classId.confirmation'
+import { Route as ClassesClassIdBookRouteImport } from './routes/classes.$classId.book'
 
 const SavedRoute = SavedRouteImport.update({
   id: '/saved',
@@ -130,6 +133,22 @@ const ClassesClassIdRoute = ClassesClassIdRouteImport.update({
   path: '/classes/$classId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClassesClassIdPayRoute = ClassesClassIdPayRouteImport.update({
+  id: '/pay',
+  path: '/pay',
+  getParentRoute: () => ClassesClassIdRoute,
+} as any)
+const ClassesClassIdConfirmationRoute =
+  ClassesClassIdConfirmationRouteImport.update({
+    id: '/confirmation',
+    path: '/confirmation',
+    getParentRoute: () => ClassesClassIdRoute,
+  } as any)
+const ClassesClassIdBookRoute = ClassesClassIdBookRouteImport.update({
+  id: '/book',
+  path: '/book',
+  getParentRoute: () => ClassesClassIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -139,7 +158,7 @@ export interface FileRoutesByFullPath {
   '/host': typeof HostRouteWithChildren
   '/mobile': typeof MobileRoute
   '/saved': typeof SavedRoute
-  '/classes/$classId': typeof ClassesClassIdRoute
+  '/classes/$classId': typeof ClassesClassIdRouteWithChildren
   '/events/$eventId': typeof EventsEventIdRoute
   '/host/new': typeof HostNewRoute
   '/hosts/map': typeof HostsMapRoute
@@ -152,6 +171,9 @@ export interface FileRoutesByFullPath {
   '/profile/$userId': typeof ProfileUserIdRoute
   '/hosts/': typeof HostsIndexRoute
   '/me/': typeof MeIndexRoute
+  '/classes/$classId/book': typeof ClassesClassIdBookRoute
+  '/classes/$classId/confirmation': typeof ClassesClassIdConfirmationRoute
+  '/classes/$classId/pay': typeof ClassesClassIdPayRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -161,7 +183,7 @@ export interface FileRoutesByTo {
   '/host': typeof HostRouteWithChildren
   '/mobile': typeof MobileRoute
   '/saved': typeof SavedRoute
-  '/classes/$classId': typeof ClassesClassIdRoute
+  '/classes/$classId': typeof ClassesClassIdRouteWithChildren
   '/events/$eventId': typeof EventsEventIdRoute
   '/host/new': typeof HostNewRoute
   '/hosts/map': typeof HostsMapRoute
@@ -174,6 +196,9 @@ export interface FileRoutesByTo {
   '/profile/$userId': typeof ProfileUserIdRoute
   '/hosts': typeof HostsIndexRoute
   '/me': typeof MeIndexRoute
+  '/classes/$classId/book': typeof ClassesClassIdBookRoute
+  '/classes/$classId/confirmation': typeof ClassesClassIdConfirmationRoute
+  '/classes/$classId/pay': typeof ClassesClassIdPayRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -184,7 +209,7 @@ export interface FileRoutesById {
   '/host': typeof HostRouteWithChildren
   '/mobile': typeof MobileRoute
   '/saved': typeof SavedRoute
-  '/classes/$classId': typeof ClassesClassIdRoute
+  '/classes/$classId': typeof ClassesClassIdRouteWithChildren
   '/events/$eventId': typeof EventsEventIdRoute
   '/host/new': typeof HostNewRoute
   '/hosts/map': typeof HostsMapRoute
@@ -197,6 +222,9 @@ export interface FileRoutesById {
   '/profile/$userId': typeof ProfileUserIdRoute
   '/hosts/': typeof HostsIndexRoute
   '/me/': typeof MeIndexRoute
+  '/classes/$classId/book': typeof ClassesClassIdBookRoute
+  '/classes/$classId/confirmation': typeof ClassesClassIdConfirmationRoute
+  '/classes/$classId/pay': typeof ClassesClassIdPayRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -221,6 +249,9 @@ export interface FileRouteTypes {
     | '/profile/$userId'
     | '/hosts/'
     | '/me/'
+    | '/classes/$classId/book'
+    | '/classes/$classId/confirmation'
+    | '/classes/$classId/pay'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -243,6 +274,9 @@ export interface FileRouteTypes {
     | '/profile/$userId'
     | '/hosts'
     | '/me'
+    | '/classes/$classId/book'
+    | '/classes/$classId/confirmation'
+    | '/classes/$classId/pay'
   id:
     | '__root__'
     | '/'
@@ -265,6 +299,9 @@ export interface FileRouteTypes {
     | '/profile/$userId'
     | '/hosts/'
     | '/me/'
+    | '/classes/$classId/book'
+    | '/classes/$classId/confirmation'
+    | '/classes/$classId/pay'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -275,7 +312,7 @@ export interface RootRouteChildren {
   HostRoute: typeof HostRouteWithChildren
   MobileRoute: typeof MobileRoute
   SavedRoute: typeof SavedRoute
-  ClassesClassIdRoute: typeof ClassesClassIdRoute
+  ClassesClassIdRoute: typeof ClassesClassIdRouteWithChildren
   EventsEventIdRoute: typeof EventsEventIdRoute
   HostsMapRoute: typeof HostsMapRoute
   MeBecomeHostRoute: typeof MeBecomeHostRoute
@@ -431,6 +468,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClassesClassIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/classes/$classId/pay': {
+      id: '/classes/$classId/pay'
+      path: '/pay'
+      fullPath: '/classes/$classId/pay'
+      preLoaderRoute: typeof ClassesClassIdPayRouteImport
+      parentRoute: typeof ClassesClassIdRoute
+    }
+    '/classes/$classId/confirmation': {
+      id: '/classes/$classId/confirmation'
+      path: '/confirmation'
+      fullPath: '/classes/$classId/confirmation'
+      preLoaderRoute: typeof ClassesClassIdConfirmationRouteImport
+      parentRoute: typeof ClassesClassIdRoute
+    }
+    '/classes/$classId/book': {
+      id: '/classes/$classId/book'
+      path: '/book'
+      fullPath: '/classes/$classId/book'
+      preLoaderRoute: typeof ClassesClassIdBookRouteImport
+      parentRoute: typeof ClassesClassIdRoute
+    }
   }
 }
 
@@ -444,6 +502,22 @@ const HostRouteChildren: HostRouteChildren = {
 
 const HostRouteWithChildren = HostRoute._addFileChildren(HostRouteChildren)
 
+interface ClassesClassIdRouteChildren {
+  ClassesClassIdBookRoute: typeof ClassesClassIdBookRoute
+  ClassesClassIdConfirmationRoute: typeof ClassesClassIdConfirmationRoute
+  ClassesClassIdPayRoute: typeof ClassesClassIdPayRoute
+}
+
+const ClassesClassIdRouteChildren: ClassesClassIdRouteChildren = {
+  ClassesClassIdBookRoute: ClassesClassIdBookRoute,
+  ClassesClassIdConfirmationRoute: ClassesClassIdConfirmationRoute,
+  ClassesClassIdPayRoute: ClassesClassIdPayRoute,
+}
+
+const ClassesClassIdRouteWithChildren = ClassesClassIdRoute._addFileChildren(
+  ClassesClassIdRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
@@ -452,7 +526,7 @@ const rootRouteChildren: RootRouteChildren = {
   HostRoute: HostRouteWithChildren,
   MobileRoute: MobileRoute,
   SavedRoute: SavedRoute,
-  ClassesClassIdRoute: ClassesClassIdRoute,
+  ClassesClassIdRoute: ClassesClassIdRouteWithChildren,
   EventsEventIdRoute: EventsEventIdRoute,
   HostsMapRoute: HostsMapRoute,
   MeBecomeHostRoute: MeBecomeHostRoute,
