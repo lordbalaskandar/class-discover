@@ -45,8 +45,8 @@ function PayPage() {
   if (!cls) return <AppShell title="Payment"><div className="p-8">Loading…</div></AppShell>;
 
   const draft = loadDraft();
-  const spots = draft?.classId === classId ? draft.spots : 1;
-  const note = draft?.classId === classId ? draft.note : "";
+  const spots = draft && draft.classId === classId ? draft.spots : 1;
+  const note = draft && draft.classId === classId ? draft.note : "";
   const price = mockPriceForClass(cls.id);
   const total = price * spots + SERVICE_FEE;
 

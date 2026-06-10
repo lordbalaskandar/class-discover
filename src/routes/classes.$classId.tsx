@@ -112,7 +112,7 @@ function ClassDetailPage() {
   const spotsLeft = cls.capacity ? Math.max(0, cls.capacity - scheduledBookedCount) : null;
   const isFull = spotsLeft === 0;
 
-  const handleBook = async () => {
+  const handleBook = () => {
     if (!userId) {
       openAuthModal();
       return;
@@ -121,19 +121,7 @@ function ClassDetailPage() {
       toast.error("Please pick a preferred date");
       return;
     }
-    setSubmitting(true);
-    const status = cls.booking_type === "scheduled" ? "confirmed" : "requested";
-    const { error } = await supabase.from("bookings").insert({
-      class_id: cls.id,
-      customer_id: userId,
-      status,
-      message: message || null,
-      preferred_at: cls.booking_type === "on_request" && preferredDate ? preferredDate.toISOString() : null,
-    });
-    setSubmitting(false);
-    if (error) return toast.error(error.message);
-    toast.success(cls.booking_type === "scheduled" ? "Spot reserved!" : "Request sent to host");
-    navigate({ to: "/bookings" });
+    navigate({ to: "/classes/$classId/book", params: { classId: cls.id } });
   };
 
   return (
