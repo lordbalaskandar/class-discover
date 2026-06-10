@@ -349,7 +349,8 @@ function FlowSection({
 }
 
 function UserFlow() {
-  const [screen, setScreen] = useState<Screen>("browse");
+function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
+  const [screen, setScreen] = useState<Screen>(initialScreen ?? "browse");
   const [selectedId, setSelectedId] = useState<string>("1");
   const [browseFiltersOpen, setBrowseFiltersOpen] = useState(false);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
