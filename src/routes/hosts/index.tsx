@@ -19,11 +19,19 @@ export const Route = createFileRoute("/hosts/")({
   component: HostsPage,
 });
 
-const DEFAULTS = { type: "all", activity: "All", distance: "any", minRating: "any", price: "any", sort: "recommended" } as const;
+type Filters = {
+  type: "all" | "person" | "gym";
+  activity: string;
+  distance: "any" | "1" | "5" | "10" | "25";
+  minRating: "any" | "4.5" | "4.8";
+  price: "any" | "low" | "mid" | "high";
+  sort: "recommended" | "rating" | "distance" | "price";
+};
+const DEFAULTS: Filters = { type: "all", activity: "All", distance: "any", minRating: "any", price: "any", sort: "recommended" };
 
 function HostsPage() {
   const [q, setQ] = useState("");
-  const [f, setF] = useState<typeof DEFAULTS>({ ...DEFAULTS });
+  const [f, setF] = useState<Filters>({ ...DEFAULTS });
 
   const filtered = useMemo(() => {
     let list = HOSTS.slice();
