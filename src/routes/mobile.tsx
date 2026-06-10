@@ -50,7 +50,13 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 
+type MobileSearch = { flow?: "user" | "host"; screen?: string };
+
 export const Route = createFileRoute("/mobile")({
+  validateSearch: (search: Record<string, unknown>): MobileSearch => ({
+    flow: search.flow === "user" || search.flow === "host" ? search.flow : undefined,
+    screen: typeof search.screen === "string" ? search.screen : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Mobile preview — Dryvon" },
@@ -271,6 +277,9 @@ const CLASSES: ClassItem[] = [
 ];
 
 function MobileShowcase() {
+  const { flow, screen } = Route.useSearch();
+  const showUser = !flow || flow === "user";
+  const showHost = !flow || flow === "host";
   return (
     <div className="min-h-screen">
       <SiteHeader />
@@ -286,23 +295,27 @@ function MobileShowcase() {
           </p>
         </div>
 
-        <FlowSection
-          eyebrow="User flow"
-          title="Book a class"
-          description="Browse, check the host, review the class, pick a date, pay, and confirm."
-        >
-          <UserFlow />
-        </FlowSection>
+        {showUser && (
+          <FlowSection
+            eyebrow="User flow"
+            title="Book a class"
+            description="Browse, check the host, review the class, pick a date, pay, and confirm."
+          >
+            <UserFlow initialScreen={flow === "user" ? (screen as Screen | undefined) : undefined} />
+          </FlowSection>
+        )}
 
-        <div className="my-16 border-t" />
+        {showUser && showHost && <div className="my-16 border-t" />}
 
-        <FlowSection
-          eyebrow="Host flow"
-          title="Run your classes"
-          description="See today's schedule, publish a class, manage attendees, and track earnings."
-        >
-          <HostFlow />
-        </FlowSection>
+        {showHost && (
+          <FlowSection
+            eyebrow="Host flow"
+            title="Run your classes"
+            description="See today's schedule, publish a class, manage attendees, and track earnings."
+          >
+            <HostFlow initialScreen={flow === "host" ? (screen as HostScreenId | undefined) : undefined} />
+          </FlowSection>
+        )}
       </div>
     </div>
   );
@@ -335,8 +348,8 @@ function FlowSection({
   );
 }
 
-function UserFlow() {
-  const [screen, setScreen] = useState<Screen>("browse");
+function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
+  const [screen, setScreen] = useState<Screen>(initialScreen ?? "browse");
   const [selectedId, setSelectedId] = useState<string>("1");
   const [browseFiltersOpen, setBrowseFiltersOpen] = useState(false);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
@@ -3162,8 +3175,8 @@ const DEFAULT_MEMBERS: GymMember[] = [
   { id: "m5", name: "Sam Reyes", initials: "SR", email: "sam.r@mail.com", plan: "Monthly", role: "Member", joined: "Feb 2025", status: "Paused" },
 ];
 
-function HostFlow() {
-  const [screen, setScreen] = useState<HostScreenId>("dashboard");
+function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
+  const [screen, setScreen] = useState<HostScreenId>(initialScreen ?? "dashboard");
   const [selectedId, setSelectedId] = useState<string>("h1");
   const [gym, setGym] = useState<GymInfo>(DEFAULT_GYM);
   const [members, setMembers] = useState<GymMember[]>(DEFAULT_MEMBERS);
