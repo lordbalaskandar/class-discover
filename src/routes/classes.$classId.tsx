@@ -30,7 +30,7 @@ function ClassDetailPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [preferredDate, setPreferredDate] = useState<Date | undefined>(undefined);
-  const [submitting, setSubmitting] = useState(false);
+  
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
