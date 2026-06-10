@@ -94,18 +94,16 @@ export function SiteHeader() {
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-2 py-1.5 text-xs text-muted-foreground truncate">{email}</div>
                 <DropdownMenuSeparator />
-                {uid && (
-                  <DropdownMenuItem onClick={() => navigate({ to: "/profile/$userId", params: { userId: uid }, search: { activity: "", when: "any", type: "all", kind: "all", sort: "soonest" } })}>
-                    <IdCard className="mr-2 h-4 w-4" /> My profile
-                  </DropdownMenuItem>
-                )}
+                <DropdownMenuItem onClick={() => navigate({ to: "/me" })}>
+                  <IdCard className="mr-2 h-4 w-4" /> My profile
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate({ to: "/bookings" })}>
                   <Calendar className="mr-2 h-4 w-4" /> My bookings
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate({ to: "/mobile", search: { flow: "user", screen: "saved" } })}>
+                <DropdownMenuItem onClick={() => navigate({ to: "/saved" })}>
                   <Heart className="mr-2 h-4 w-4" /> Saved classes
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate({ to: "/mobile", search: { flow: "user", screen: "pMyGym" } })}>
+                <DropdownMenuItem onClick={() => navigate({ to: "/me/my-gym" })}>
                   <Building2 className="mr-2 h-4 w-4" /> My gym
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate({ to: "/host" })}>

@@ -9,17 +9,32 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SavedRouteImport } from './routes/saved'
 import { Route as MobileRouteImport } from './routes/mobile'
 import { Route as HostRouteImport } from './routes/host'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as BookingsRouteImport } from './routes/bookings'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MeIndexRouteImport } from './routes/me/index'
+import { Route as HostsIndexRouteImport } from './routes/hosts/index'
 import { Route as ProfileUserIdRouteImport } from './routes/profile.$userId'
+import { Route as MeSettingsRouteImport } from './routes/me/settings'
+import { Route as MePaymentRouteImport } from './routes/me/payment'
+import { Route as MeNotificationsRouteImport } from './routes/me/notifications'
+import { Route as MeMyGymRouteImport } from './routes/me/my-gym'
+import { Route as MeHelpRouteImport } from './routes/me/help'
+import { Route as MeBecomeHostRouteImport } from './routes/me/become-host'
+import { Route as HostsMapRouteImport } from './routes/hosts/map'
 import { Route as HostNewRouteImport } from './routes/host.new'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as ClassesClassIdRouteImport } from './routes/classes.$classId'
 
+const SavedRoute = SavedRouteImport.update({
+  id: '/saved',
+  path: '/saved',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MobileRoute = MobileRouteImport.update({
   id: '/mobile',
   path: '/mobile',
@@ -50,9 +65,54 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MeIndexRoute = MeIndexRouteImport.update({
+  id: '/me/',
+  path: '/me/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HostsIndexRoute = HostsIndexRouteImport.update({
+  id: '/hosts/',
+  path: '/hosts/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileUserIdRoute = ProfileUserIdRouteImport.update({
   id: '/profile/$userId',
   path: '/profile/$userId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeSettingsRoute = MeSettingsRouteImport.update({
+  id: '/me/settings',
+  path: '/me/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MePaymentRoute = MePaymentRouteImport.update({
+  id: '/me/payment',
+  path: '/me/payment',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeNotificationsRoute = MeNotificationsRouteImport.update({
+  id: '/me/notifications',
+  path: '/me/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeMyGymRoute = MeMyGymRouteImport.update({
+  id: '/me/my-gym',
+  path: '/me/my-gym',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeHelpRoute = MeHelpRouteImport.update({
+  id: '/me/help',
+  path: '/me/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeBecomeHostRoute = MeBecomeHostRouteImport.update({
+  id: '/me/become-host',
+  path: '/me/become-host',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HostsMapRoute = HostsMapRouteImport.update({
+  id: '/hosts/map',
+  path: '/hosts/map',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HostNewRoute = HostNewRouteImport.update({
@@ -78,10 +138,20 @@ export interface FileRoutesByFullPath {
   '/browse': typeof BrowseRoute
   '/host': typeof HostRouteWithChildren
   '/mobile': typeof MobileRoute
+  '/saved': typeof SavedRoute
   '/classes/$classId': typeof ClassesClassIdRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/host/new': typeof HostNewRoute
+  '/hosts/map': typeof HostsMapRoute
+  '/me/become-host': typeof MeBecomeHostRoute
+  '/me/help': typeof MeHelpRoute
+  '/me/my-gym': typeof MeMyGymRoute
+  '/me/notifications': typeof MeNotificationsRoute
+  '/me/payment': typeof MePaymentRoute
+  '/me/settings': typeof MeSettingsRoute
   '/profile/$userId': typeof ProfileUserIdRoute
+  '/hosts/': typeof HostsIndexRoute
+  '/me/': typeof MeIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -90,10 +160,20 @@ export interface FileRoutesByTo {
   '/browse': typeof BrowseRoute
   '/host': typeof HostRouteWithChildren
   '/mobile': typeof MobileRoute
+  '/saved': typeof SavedRoute
   '/classes/$classId': typeof ClassesClassIdRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/host/new': typeof HostNewRoute
+  '/hosts/map': typeof HostsMapRoute
+  '/me/become-host': typeof MeBecomeHostRoute
+  '/me/help': typeof MeHelpRoute
+  '/me/my-gym': typeof MeMyGymRoute
+  '/me/notifications': typeof MeNotificationsRoute
+  '/me/payment': typeof MePaymentRoute
+  '/me/settings': typeof MeSettingsRoute
   '/profile/$userId': typeof ProfileUserIdRoute
+  '/hosts': typeof HostsIndexRoute
+  '/me': typeof MeIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -103,10 +183,20 @@ export interface FileRoutesById {
   '/browse': typeof BrowseRoute
   '/host': typeof HostRouteWithChildren
   '/mobile': typeof MobileRoute
+  '/saved': typeof SavedRoute
   '/classes/$classId': typeof ClassesClassIdRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/host/new': typeof HostNewRoute
+  '/hosts/map': typeof HostsMapRoute
+  '/me/become-host': typeof MeBecomeHostRoute
+  '/me/help': typeof MeHelpRoute
+  '/me/my-gym': typeof MeMyGymRoute
+  '/me/notifications': typeof MeNotificationsRoute
+  '/me/payment': typeof MePaymentRoute
+  '/me/settings': typeof MeSettingsRoute
   '/profile/$userId': typeof ProfileUserIdRoute
+  '/hosts/': typeof HostsIndexRoute
+  '/me/': typeof MeIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -117,10 +207,20 @@ export interface FileRouteTypes {
     | '/browse'
     | '/host'
     | '/mobile'
+    | '/saved'
     | '/classes/$classId'
     | '/events/$eventId'
     | '/host/new'
+    | '/hosts/map'
+    | '/me/become-host'
+    | '/me/help'
+    | '/me/my-gym'
+    | '/me/notifications'
+    | '/me/payment'
+    | '/me/settings'
     | '/profile/$userId'
+    | '/hosts/'
+    | '/me/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -129,10 +229,20 @@ export interface FileRouteTypes {
     | '/browse'
     | '/host'
     | '/mobile'
+    | '/saved'
     | '/classes/$classId'
     | '/events/$eventId'
     | '/host/new'
+    | '/hosts/map'
+    | '/me/become-host'
+    | '/me/help'
+    | '/me/my-gym'
+    | '/me/notifications'
+    | '/me/payment'
+    | '/me/settings'
     | '/profile/$userId'
+    | '/hosts'
+    | '/me'
   id:
     | '__root__'
     | '/'
@@ -141,10 +251,20 @@ export interface FileRouteTypes {
     | '/browse'
     | '/host'
     | '/mobile'
+    | '/saved'
     | '/classes/$classId'
     | '/events/$eventId'
     | '/host/new'
+    | '/hosts/map'
+    | '/me/become-host'
+    | '/me/help'
+    | '/me/my-gym'
+    | '/me/notifications'
+    | '/me/payment'
+    | '/me/settings'
     | '/profile/$userId'
+    | '/hosts/'
+    | '/me/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -154,13 +274,30 @@ export interface RootRouteChildren {
   BrowseRoute: typeof BrowseRoute
   HostRoute: typeof HostRouteWithChildren
   MobileRoute: typeof MobileRoute
+  SavedRoute: typeof SavedRoute
   ClassesClassIdRoute: typeof ClassesClassIdRoute
   EventsEventIdRoute: typeof EventsEventIdRoute
+  HostsMapRoute: typeof HostsMapRoute
+  MeBecomeHostRoute: typeof MeBecomeHostRoute
+  MeHelpRoute: typeof MeHelpRoute
+  MeMyGymRoute: typeof MeMyGymRoute
+  MeNotificationsRoute: typeof MeNotificationsRoute
+  MePaymentRoute: typeof MePaymentRoute
+  MeSettingsRoute: typeof MeSettingsRoute
   ProfileUserIdRoute: typeof ProfileUserIdRoute
+  HostsIndexRoute: typeof HostsIndexRoute
+  MeIndexRoute: typeof MeIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/saved': {
+      id: '/saved'
+      path: '/saved'
+      fullPath: '/saved'
+      preLoaderRoute: typeof SavedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mobile': {
       id: '/mobile'
       path: '/mobile'
@@ -203,11 +340,74 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/me/': {
+      id: '/me/'
+      path: '/me'
+      fullPath: '/me/'
+      preLoaderRoute: typeof MeIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hosts/': {
+      id: '/hosts/'
+      path: '/hosts'
+      fullPath: '/hosts/'
+      preLoaderRoute: typeof HostsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile/$userId': {
       id: '/profile/$userId'
       path: '/profile/$userId'
       fullPath: '/profile/$userId'
       preLoaderRoute: typeof ProfileUserIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me/settings': {
+      id: '/me/settings'
+      path: '/me/settings'
+      fullPath: '/me/settings'
+      preLoaderRoute: typeof MeSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me/payment': {
+      id: '/me/payment'
+      path: '/me/payment'
+      fullPath: '/me/payment'
+      preLoaderRoute: typeof MePaymentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me/notifications': {
+      id: '/me/notifications'
+      path: '/me/notifications'
+      fullPath: '/me/notifications'
+      preLoaderRoute: typeof MeNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me/my-gym': {
+      id: '/me/my-gym'
+      path: '/me/my-gym'
+      fullPath: '/me/my-gym'
+      preLoaderRoute: typeof MeMyGymRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me/help': {
+      id: '/me/help'
+      path: '/me/help'
+      fullPath: '/me/help'
+      preLoaderRoute: typeof MeHelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me/become-host': {
+      id: '/me/become-host'
+      path: '/me/become-host'
+      fullPath: '/me/become-host'
+      preLoaderRoute: typeof MeBecomeHostRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hosts/map': {
+      id: '/hosts/map'
+      path: '/hosts/map'
+      fullPath: '/hosts/map'
+      preLoaderRoute: typeof HostsMapRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/host/new': {
@@ -251,20 +451,20 @@ const rootRouteChildren: RootRouteChildren = {
   BrowseRoute: BrowseRoute,
   HostRoute: HostRouteWithChildren,
   MobileRoute: MobileRoute,
+  SavedRoute: SavedRoute,
   ClassesClassIdRoute: ClassesClassIdRoute,
   EventsEventIdRoute: EventsEventIdRoute,
+  HostsMapRoute: HostsMapRoute,
+  MeBecomeHostRoute: MeBecomeHostRoute,
+  MeHelpRoute: MeHelpRoute,
+  MeMyGymRoute: MeMyGymRoute,
+  MeNotificationsRoute: MeNotificationsRoute,
+  MePaymentRoute: MePaymentRoute,
+  MeSettingsRoute: MeSettingsRoute,
   ProfileUserIdRoute: ProfileUserIdRoute,
+  HostsIndexRoute: HostsIndexRoute,
+  MeIndexRoute: MeIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
