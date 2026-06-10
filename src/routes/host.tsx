@@ -147,6 +147,36 @@ function HostPage() {
           </Button>
         </div>
 
+        <div className="mt-8">
+          <h2 className="text-sm uppercase tracking-widest text-muted-foreground mb-3">Host tools</h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[
+              { icon: BarChart3, label: "Analytics & retention", sub: "Engagement, churn, LTV", screen: "metrics" },
+              { icon: Building2, label: "My gym", sub: "Overview & quick actions", screen: "hpGym" },
+              { icon: Plus, label: "Create a gym", sub: "Set up your studio", screen: "hpGymCreate" },
+              { icon: UserCog, label: "Gym members", sub: "Roster & invites", screen: "hpGymMembers" },
+              { icon: GraduationCap, label: "Coach view", sub: "Your schedule & students", screen: "hpGymCoach" },
+              { icon: Pencil, label: "Edit gym", sub: "Details, perks, hours", screen: "hpGymEdit" },
+            ].map((t) => (
+              <Link
+                key={t.screen}
+                to="/mobile"
+                search={{ flow: "host", screen: t.screen }}
+                className="rounded-xl border bg-card p-4 hover:bg-muted transition-colors flex items-start gap-3"
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <t.icon className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="font-medium text-sm">{t.label}</p>
+                  <p className="text-xs text-muted-foreground">{t.sub}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+
         <div className="grid md:grid-cols-2 gap-8 mt-8">
           <section>
             <h2 className="font-semibold text-lg mb-3 flex items-center gap-2"><Calendar className="h-4 w-4" /> Your classes ({classes.length})</h2>
