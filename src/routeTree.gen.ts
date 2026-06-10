@@ -19,6 +19,7 @@ import { Route as ProfileUserIdRouteImport } from './routes/profile.$userId'
 import { Route as HostNewRouteImport } from './routes/host.new'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as ClassesClassIdRouteImport } from './routes/classes.$classId'
+import { Route as ApiPublicSeedRouteImport } from './routes/api/public/seed'
 
 const MobileRoute = MobileRouteImport.update({
   id: '/mobile',
@@ -70,6 +71,11 @@ const ClassesClassIdRoute = ClassesClassIdRouteImport.update({
   path: '/classes/$classId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSeedRoute = ApiPublicSeedRouteImport.update({
+  id: '/api/public/seed',
+  path: '/api/public/seed',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/events/$eventId': typeof EventsEventIdRoute
   '/host/new': typeof HostNewRoute
   '/profile/$userId': typeof ProfileUserIdRoute
+  '/api/public/seed': typeof ApiPublicSeedRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/events/$eventId': typeof EventsEventIdRoute
   '/host/new': typeof HostNewRoute
   '/profile/$userId': typeof ProfileUserIdRoute
+  '/api/public/seed': typeof ApiPublicSeedRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,6 +115,7 @@ export interface FileRoutesById {
   '/events/$eventId': typeof EventsEventIdRoute
   '/host/new': typeof HostNewRoute
   '/profile/$userId': typeof ProfileUserIdRoute
+  '/api/public/seed': typeof ApiPublicSeedRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
     | '/events/$eventId'
     | '/host/new'
     | '/profile/$userId'
+    | '/api/public/seed'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -133,6 +143,7 @@ export interface FileRouteTypes {
     | '/events/$eventId'
     | '/host/new'
     | '/profile/$userId'
+    | '/api/public/seed'
   id:
     | '__root__'
     | '/'
@@ -145,6 +156,7 @@ export interface FileRouteTypes {
     | '/events/$eventId'
     | '/host/new'
     | '/profile/$userId'
+    | '/api/public/seed'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -157,6 +169,7 @@ export interface RootRouteChildren {
   ClassesClassIdRoute: typeof ClassesClassIdRoute
   EventsEventIdRoute: typeof EventsEventIdRoute
   ProfileUserIdRoute: typeof ProfileUserIdRoute
+  ApiPublicSeedRoute: typeof ApiPublicSeedRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -231,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClassesClassIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/seed': {
+      id: '/api/public/seed'
+      path: '/api/public/seed'
+      fullPath: '/api/public/seed'
+      preLoaderRoute: typeof ApiPublicSeedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -254,6 +274,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClassesClassIdRoute: ClassesClassIdRoute,
   EventsEventIdRoute: EventsEventIdRoute,
   ProfileUserIdRoute: ProfileUserIdRoute,
+  ApiPublicSeedRoute: ApiPublicSeedRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
