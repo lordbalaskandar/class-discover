@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Sparkles, LogOut, User as UserIcon, Calendar, Sun, Moon, IdCard } from "lucide-react";
+import { Sparkles, LogOut, User as UserIcon, Calendar, Sun, Moon, IdCard, Heart, Building2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
