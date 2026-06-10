@@ -3175,8 +3175,8 @@ const DEFAULT_MEMBERS: GymMember[] = [
   { id: "m5", name: "Sam Reyes", initials: "SR", email: "sam.r@mail.com", plan: "Monthly", role: "Member", joined: "Feb 2025", status: "Paused" },
 ];
 
-function HostFlow() {
-  const [screen, setScreen] = useState<HostScreenId>("dashboard");
+function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
+  const [screen, setScreen] = useState<HostScreenId>(initialScreen ?? "dashboard");
   const [selectedId, setSelectedId] = useState<string>("h1");
   const [gym, setGym] = useState<GymInfo>(DEFAULT_GYM);
   const [members, setMembers] = useState<GymMember[]>(DEFAULT_MEMBERS);
