@@ -348,7 +348,6 @@ function FlowSection({
   );
 }
 
-function UserFlow() {
 function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
   const [screen, setScreen] = useState<Screen>(initialScreen ?? "browse");
   const [selectedId, setSelectedId] = useState<string>("1");
