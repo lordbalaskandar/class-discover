@@ -1,53 +1,76 @@
+## Goal
 
-## Scope
+Every mobile screen becomes a real web URL inside a desktop chrome (sidebar + topbar `AppShell`), with a proper desktop layout per screen — not a centered phone column. Mobile preview at `/mobile` stays as-is.
 
-`src/routes/mobile.tsx` is ~5,400 lines and contains the full product surface (saved classes, my gym, gym creation/members/edit, host coach view, retention analytics, etc.) as a single in-memory screen router. The web app today only has `/`, `/browse`, `/host`, `/host/new`, `/bookings`, `/profile/$userId`, `/classes/$classId`, `/events/$eventId`, `/auth`.
+This is ~30 screens and is too large for a single turn. Below is the full route map and a 4-phase delivery so you can review after each phase.
 
-Doing a true 1:1 port screen-by-screen as new desktop pages would mean duplicating thousands of lines and double-maintaining every flow forever. The cleaner 1:1 approach is to **extract the screen components out of `mobile.tsx` into a shared module, then mount them in real web routes** with a desktop chrome (sidebar + topbar) instead of a phone frame.
+## Route map (1:1 with mobile)
 
-## Plan
+User
+- `/` — Home (existing)
+- `/browse` — Browse (existing, already desktop)
+- `/hosts` — Hosts directory (new)
+- `/hosts/map` — Map view (new)
+- `/hosts/$hostId` — Host profile (refactor of existing profile)
+- `/gyms/$gymId` — Gym page (new)
+- `/classes/$classId` — Class detail (existing)
+- `/classes/$classId/book` — Booking flow (new)
+- `/classes/$classId/pay` — Payment (new)
+- `/classes/$classId/confirmation` — Confirmation (new)
+- `/bookings` — My bookings (existing, redesign)
+- `/saved` — Saved classes (new)
+- `/profile` — Profile (new desktop layout)
+- `/profile/payment` · `/profile/notifications` · `/profile/become-host` · `/profile/help` · `/profile/my-gym`
 
-### 1. Extract shared screens
-- Create `src/features/app/` and move every `*Screen` component currently inline in `mobile.tsx` into focused files (`user/`, `host/`, `gym/`, `analytics/`).
-- Keep the existing `mobile.tsx` working by re-importing from the new modules — no behavior change for the mobile preview.
-- Lift shared types (`Screen`, `HostScreenId`, mock data) into `src/features/app/state.ts`.
+Host (all under `_authenticated/host/…`, role-gated)
+- `/host` — Dashboard (existing, redesign)
+- `/host/new` — Create listing (existing)
+- `/host/manage/$classId` — Manage listing
+- `/host/earnings` · `/host/payouts` · `/host/availability` · `/host/templates` · `/host/reviews` · `/host/support` · `/host/profile`
+- `/host/analytics` — Metrics & retention
+- `/host/gym` · `/host/gym/new` · `/host/gym/edit` · `/host/gym/members` · `/host/gym/coach`
 
-### 2. New web routes (1:1 with mobile)
-User side:
-- `/saved` — Saved classes
-- `/my-gym` — Member My Gym view
+## Desktop chrome
 
-Host side (all under `/host/…`, gated by host role):
-- `/host/analytics` — Retention/analytics dashboard
-- `/host/gym` — My gym overview
-- `/host/gym/new` — Create gym
-- `/host/gym/edit` — Edit gym
-- `/host/gym/members` — Members management
-- `/host/gym/coach` — Coach view
+New `src/components/AppShell.tsx`:
+- Left sidebar (collapsible, shadcn `Sidebar`) with grouped nav: Discover, My activity, Host, Account.
+- Topbar: search, notifications, profile menu.
+- Content area: route-specific `max-width` + multi-column layouts.
+- Used by all new app routes; marketing (`/`, `/browse`) keeps `SiteHeader`.
 
-Each route renders the extracted screen component inside a new `<AppShell>` (desktop sidebar nav + topbar) so the web app gets proper URLs, deep-linking, and SEO `head()` per route, while reusing 100% of the mobile UI logic.
+## Phased delivery
 
-### 3. Navigation
-- Add a "Saved" and "My gym" entry to the user dropdown in `SiteHeader`.
-- Extend `/host` dashboard with cards/links to Analytics, My gym, Members, Coach view.
+**Phase 1 — Foundation + User core (this turn)**
+- Build `AppShell` + sidebar nav.
+- Ship desktop redesigns for: `/saved`, `/profile` (+ 5 sub), `/bookings` (redesign), `/hosts`, `/hosts/map`.
+- Wire sidebar links + remove deep-link entries to `/mobile` from `SiteHeader` for these.
 
-### 4. Seed two test accounts + sample data
-Via a one-off server function using the service-role client:
-- `member@dryvon.test` / `Test1234!` — regular user, joined a sample gym, has saved classes + a confirmed booking.
-- `host@dryvon.test` / `Test1234!` — has `host` role, owns "Iron Forge" gym with 2 members, 3 classes, and 1 incoming booking.
+**Phase 2 — Booking flow + Gym/host pages**
+- `/classes/$classId/book` → `/pay` → `/confirmation` as a 3-step desktop flow with sticky summary sidebar.
+- `/gyms/$gymId`, `/hosts/$hostId` desktop layouts.
 
-Returned to you in chat after seeding; you can sign in at `/auth`.
+**Phase 3 — Host operations**
+- `/host` dashboard redesign (KPI grid + recent activity + quick actions).
+- `/host/manage/$classId`, `/host/earnings`, `/host/payouts`, `/host/availability`, `/host/templates`, `/host/reviews`, `/host/support`, `/host/profile`.
 
-Note: gyms/members aren't real tables yet — they live in mobile.tsx mock state. For now the seed will create real `classes` + `bookings` + `profiles` + `user_roles` rows so the booking/host flows are testable, and the gym/member data continues to come from the in-memory mock (same as mobile). Promoting gyms to real tables can be a follow-up.
+**Phase 4 — Host analytics + Gym admin**
+- `/host/analytics` — full retention dashboard (charts, cohort table, funnel).
+- `/host/gym/*` — gym CRUD + members table + coach view, all in proper desktop tables/forms.
 
 ## Technical notes
 
-- `AppShell` is a thin wrapper (sidebar + `<Outlet />`) used by all new authenticated app routes; non-authenticated marketing routes (`/`, `/browse`) keep `SiteHeader`.
-- Host-only routes live under `src/routes/_authenticated/host/…` and rely on the integration-managed auth gate; role check happens in the page component (toast + redirect on missing host role) since `user_roles` isn't in router context.
-- The seed runs once via `createServerFn` with `supabaseAdmin` (admin import done inside the handler per import-graph rules). Re-running is idempotent (upsert on email).
-- Mobile.tsx stays as a working preview but becomes a thin composition of the extracted screens.
+- Reuse extracted screen components where the mobile logic is correct; rebuild layout/markup for desktop (data tables, multi-column, sticky sidebars). Mobile screens in `mobile.tsx` are left untouched.
+- Host-only routes live under `src/routes/_authenticated/host/…` with role check in the page component (toast + redirect on missing host role).
+- Data: keep current Supabase tables (`classes`, `bookings`, `profiles`, `user_roles`); gym/member data stays in mock until promoted to real tables (out of scope here).
+- Each route defines its own `head()` (title + description).
+- Test accounts from prior turn remain: `member@dryvon.test` and `host@dryvon.test` (password `Dryvon-Demo-7K2x!`).
 
-## Out of scope (call out)
+## Out of scope
 
-- Promoting gym/member mock data to real DB tables.
-- Reskinning extracted screens for wide desktop layouts — they'll render at a sensible max-width inside `AppShell`. A later pass can add desktop-optimized layouts per screen.
+- Promoting gyms/members/saved/notifications mock state to real tables.
+- Real Stripe payments (payment screen stays UI-only).
+- Mobile responsive polish of the new desktop layouts beyond "doesn't break under 768px".
+
+## What I'll do next
+
+Start Phase 1 now. After it's working in preview I'll pause for your review before Phase 2.
