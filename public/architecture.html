@@ -1728,6 +1728,17 @@ function renderCalc() {
   calcCost();
 }
 
+document.querySelectorAll('#currency-switcher .currency-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#currency-switcher .currency-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedCurrency = btn.dataset.currency;
+    renderTiers();
+    renderBars(selectedTier);
+    calcCost();
+  });
+});
+
 renderTiers();
 renderBars(0);
 renderCalc();
