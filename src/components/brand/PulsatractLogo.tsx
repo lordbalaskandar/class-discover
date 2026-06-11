@@ -20,7 +20,11 @@ export function PulsatractMark({
   strokeWidth = 1.25,
 }: Props) {
   // viewBox 64x32, centre at (32,16). Diamond half-size = 3.2.
-  // Triangles: left tip at x=28.8, right tip at x=35.2.
+  // Triangles stop short of the diamond; a thin connector bridges tip → diamond.
+  const leftTriTip = 26;          // x where left triangle's right vertex sits
+  const rightTriTip = 38;         // x where right triangle's left vertex sits
+  const diamondLeft = 28.8;       // diamond's left point
+  const diamondRight = 35.2;      // diamond's right point
   return (
     <svg
       viewBox="0 0 64 32"
@@ -30,19 +34,37 @@ export function PulsatractMark({
       strokeLinecap="round"
       aria-hidden="true"
     >
-      {/* Left triangle (gold outline, tip pointing right toward diamond) */}
+      {/* Left triangle (gold outline, tip pointing right, stops short of diamond) */}
       <polygon
-        points="4,4 4,28 28.8,16"
+        points={`4,4 4,28 ${leftTriTip},16`}
         stroke={gold}
         strokeWidth={strokeWidth}
         fill="none"
       />
-      {/* Right triangle (light outline, tip pointing left toward diamond) */}
+      {/* Connector: left triangle tip → diamond left point */}
+      <line
+        x1={leftTriTip}
+        y1={16}
+        x2={diamondLeft}
+        y2={16}
+        stroke={gold}
+        strokeWidth={strokeWidth}
+      />
+      {/* Right triangle (light outline, tip pointing left, stops short of diamond) */}
       <polygon
-        points="60,4 60,28 35.2,16"
+        points={`60,4 60,28 ${rightTriTip},16`}
         stroke={light}
         strokeWidth={strokeWidth}
         fill="none"
+      />
+      {/* Connector: diamond right point → right triangle tip */}
+      <line
+        x1={diamondRight}
+        y1={16}
+        x2={rightTriTip}
+        y2={16}
+        stroke={light}
+        strokeWidth={strokeWidth}
       />
       {/* Centre diamond (filled gold) */}
       <rect
