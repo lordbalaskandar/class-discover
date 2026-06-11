@@ -529,6 +529,24 @@
     padding: 3px 0;
   }
   .cost-row .cost-val { color: var(--text); font-variant-numeric: tabular-nums; }
+  .currency-switcher {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+  .currency-btn {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  .currency-btn:hover { border-color: var(--border-hover); color: var(--text); }
+  .currency-btn.active { border-color: var(--purple); background: var(--purple-dim); color: var(--text); }
   .cost-bar-wrap { margin-top: 28px; }
   .cost-bar-title { font-size: 13px; font-weight: 500; margin-bottom: 14px; }
   .cost-bar-row { margin-bottom: 10px; }
