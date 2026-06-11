@@ -529,6 +529,24 @@
     padding: 3px 0;
   }
   .cost-row .cost-val { color: var(--text); font-variant-numeric: tabular-nums; }
+  .currency-switcher {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+  .currency-btn {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  .currency-btn:hover { border-color: var(--border-hover); color: var(--text); }
+  .currency-btn.active { border-color: var(--purple); background: var(--purple-dim); color: var(--text); }
   .cost-bar-wrap { margin-top: 28px; }
   .cost-bar-title { font-size: 13px; font-weight: 500; margin-bottom: 14px; }
   .cost-bar-row { margin-bottom: 10px; }
@@ -1032,6 +1050,12 @@
     </div>
     <p class="section-sub">Monthly AWS costs across three traffic tiers. All services on the AWS stack: Aurora PostgreSQL Serverless v2, ElastiCache, Cognito, SES, S3. Lambda pricing uses arm64 (Graviton2). Figures are estimates — actual costs vary with traffic shape.</p>
 
+    <div class="currency-switcher" id="currency-switcher">
+      <button class="currency-btn active" data-currency="USD">USD</button>
+      <button class="currency-btn" data-currency="EUR">EUR</button>
+      <button class="currency-btn" data-currency="GBP">GBP</button>
+    </div>
+
     <div class="cost-tier-grid" id="cost-tiers"></div>
 
     <div class="cost-bar-wrap">
@@ -1494,77 +1518,87 @@ infraItems.forEach(item => {
 });
 
 /* ── Costs ───────────────────────── */
+const exchangeRates = { USD: 1, EUR: 0.92, GBP: 0.79 };
+const currencySymbols = { USD: '$', EUR: '€', GBP: '£' };
+let selectedCurrency = 'USD';
+
+function fmt(val) {
+  const rate = exchangeRates[selectedCurrency];
+  const sym = currencySymbols[selectedCurrency];
+  return sym + (val * rate).toFixed(2);
+}
+
 const tiers = [
   {
     id: 'early', name: 'Early stage', label: 'TIER 1', req: '~5K req/day · 50 bookings/mo',
     total: 42,
     breakdown: [
-      { label: 'Lambda compute + requests', val: '$1.00' },
-      { label: 'API Gateway HTTP API', val: '$0.15' },
-      { label: 'Aurora Serverless v2 (0.5 ACU min)', val: '$22.00' },
-      { label: 'RDS Proxy', val: '$9.00' },
-      { label: 'ElastiCache Serverless', val: '$0.50' },
-      { label: 'Amazon SES', val: '$0.10' },
-      { label: 'SQS FIFO', val: '$0.05' },
-      { label: 'Amazon Cognito (MAUs)', val: '$0.00' },
-      { label: 'S3 + CloudFront', val: '$0.50' },
-      { label: 'CloudWatch + X-Ray', val: '$2.00' },
-      { label: 'SSM Parameter Store', val: '$0.00' },
+      { label: 'Lambda compute + requests', val: 1.00 },
+      { label: 'API Gateway HTTP API', val: 0.15 },
+      { label: 'Aurora Serverless v2 (0.5 ACU min)', val: 22.00 },
+      { label: 'RDS Proxy', val: 9.00 },
+      { label: 'ElastiCache Serverless', val: 0.50 },
+      { label: 'Amazon SES', val: 0.10 },
+      { label: 'SQS FIFO', val: 0.05 },
+      { label: 'Amazon Cognito (MAUs)', val: 0.00 },
+      { label: 'S3 + CloudFront', val: 0.50 },
+      { label: 'CloudWatch + X-Ray', val: 2.00 },
+      { label: 'SSM Parameter Store', val: 0.00 },
     ],
     bars: [
-      { label: 'Aurora Serverless v2', pct: 52, val: '$22.00', color: '#1d9e75' },
-      { label: 'RDS Proxy', pct: 21, val: '$9.00', color: '#378add' },
-      { label: 'Lambda + API GW', pct: 3, val: '$1.15', color: '#C9A24C' },
-      { label: 'Observability', pct: 5, val: '$2.00', color: '#d85a30' },
-      { label: 'ElastiCache + S3 + other', pct: 3, val: '$1.30', color: '#75695a' },
+      { label: 'Aurora Serverless v2', pct: 52, val: 22.00, color: '#1d9e75' },
+      { label: 'RDS Proxy', pct: 21, val: 9.00, color: '#378add' },
+      { label: 'Lambda + API GW', pct: 3, val: 1.15, color: '#C9A24C' },
+      { label: 'Observability', pct: 5, val: 2.00, color: '#d85a30' },
+      { label: 'ElastiCache + S3 + other', pct: 3, val: 1.30, color: '#75695a' },
     ]
   },
   {
     id: 'growth', name: 'Growth', label: 'TIER 2', req: '~50K req/day · 1K bookings/mo',
     total: 145,
     breakdown: [
-      { label: 'Lambda compute + requests', val: '$9.50' },
-      { label: 'API Gateway HTTP API', val: '$1.50' },
-      { label: 'Aurora Serverless v2 (~2 ACU avg)', val: '$65.00' },
-      { label: 'RDS Proxy', val: '$18.00' },
-      { label: 'ElastiCache Serverless', val: '$8.00' },
-      { label: 'Amazon SES (50K emails)', val: '$5.00' },
-      { label: 'SQS FIFO', val: '$0.50' },
-      { label: 'Amazon Cognito (10K MAUs)', val: '$0.00' },
-      { label: 'S3 + CloudFront', val: '$3.00' },
-      { label: 'CloudWatch + X-Ray', val: '$15.00' },
-      { label: 'SSM + misc', val: '$2.00' },
+      { label: 'Lambda compute + requests', val: 9.50 },
+      { label: 'API Gateway HTTP API', val: 1.50 },
+      { label: 'Aurora Serverless v2 (~2 ACU avg)', val: 65.00 },
+      { label: 'RDS Proxy', val: 18.00 },
+      { label: 'ElastiCache Serverless', val: 8.00 },
+      { label: 'Amazon SES (50K emails)', val: 5.00 },
+      { label: 'SQS FIFO', val: 0.50 },
+      { label: 'Amazon Cognito (10K MAUs)', val: 0.00 },
+      { label: 'S3 + CloudFront', val: 3.00 },
+      { label: 'CloudWatch + X-Ray', val: 15.00 },
+      { label: 'SSM + misc', val: 2.00 },
     ],
     bars: [
-      { label: 'Aurora Serverless v2', pct: 45, val: '$65.00', color: '#1d9e75' },
-      { label: 'RDS Proxy', pct: 12, val: '$18.00', color: '#378add' },
-      { label: 'Lambda + API GW', pct: 8, val: '$11.00', color: '#C9A24C' },
-      { label: 'Observability', pct: 10, val: '$15.00', color: '#d85a30' },
-      { label: 'ElastiCache + SES + other', pct: 11, val: '$16.00', color: '#75695a' },
+      { label: 'Aurora Serverless v2', pct: 45, val: 65.00, color: '#1d9e75' },
+      { label: 'RDS Proxy', pct: 12, val: 18.00, color: '#378add' },
+      { label: 'Lambda + API GW', pct: 8, val: 11.00, color: '#C9A24C' },
+      { label: 'Observability', pct: 10, val: 15.00, color: '#d85a30' },
+      { label: 'ElastiCache + SES + other', pct: 11, val: 16.00, color: '#75695a' },
     ]
   },
   {
     id: 'scale', name: 'Scale', label: 'TIER 3', req: '~500K req/day · 15K bookings/mo',
     total: 870,
     breakdown: [
-      { label: 'Lambda compute + requests', val: '$75.00' },
-      { label: 'API Gateway HTTP API', val: '$15.00' },
-      { label: 'Aurora Serverless v2 (~8 ACU avg)', val: '$430.00' },
-      { label: 'RDS Proxy', val: '$90.00' },
-      { label: 'ElastiCache Serverless', val: '$45.00' },
-      { label: 'Amazon SES (500K emails)', val: '$50.00' },
-      { label: 'SQS FIFO', val: '$5.00' },
-      { label: 'Amazon Cognito (100K+ MAUs)', val: '$55.00' },
-      { label: 'S3 + CloudFront', val: '$25.00' },
-      { label: 'CloudWatch + X-Ray', val: '$60.00' },
-      { label: 'SSM + misc', val: '$8.00' },
+      { label: 'Lambda compute + requests', val: 75.00 },
+      { label: 'API Gateway HTTP API', val: 15.00 },
+      { label: 'Aurora Serverless v2 (~8 ACU avg)', val: 430.00 },
+      { label: 'RDS Proxy', val: 90.00 },
+      { label: 'ElastiCache Serverless', val: 45.00 },
+      { label: 'Amazon SES (500K emails)', val: 50.00 },
+      { label: 'SQS FIFO', val: 5.00 },
+      { label: 'Amazon Cognito (100K+ MAUs)', val: 55.00 },
+      { label: 'S3 + CloudFront', val: 25.00 },
+      { label: 'CloudWatch + X-Ray', val: 60.00 },
+      { label: 'SSM + misc', val: 8.00 },
     ],
     bars: [
-      { label: 'Aurora Serverless v2', pct: 49, val: '$430.00', color: '#1d9e75' },
-      { label: 'RDS Proxy', pct: 10, val: '$90.00', color: '#378add' },
-      { label: 'Lambda + API GW', pct: 10, val: '$90.00', color: '#C9A24C' },
-      { label: 'Observability', pct: 7, val: '$60.00', color: '#d85a30' },
-      { label: 'ElastiCache + SES + Cognito + other', pct: 21, val: '$183.00', color: '#75695a' },
+      { label: 'Aurora Serverless v2', pct: 49, val: 430.00, color: '#1d9e75' },
+      { label: 'RDS Proxy', pct: 10, val: 90.00, color: '#378add' },
+      { label: 'Lambda + API GW', pct: 10, val: 90.00, color: '#C9A24C' },
+      { label: 'Observability', pct: 7, val: 60.00, color: '#d85a30' },
+      { label: 'ElastiCache + SES + Cognito + other', pct: 21, val: 183.00, color: '#75695a' },
     ]
   }
 ];
@@ -1573,15 +1607,16 @@ let selectedTier = 0;
 
 function renderTiers() {
   const container = document.getElementById('cost-tiers');
+  container.innerHTML = '';
   tiers.forEach((t, i) => {
     const card = document.createElement('div');
-    card.className = 'cost-tier' + (i === 0 ? ' selected' : '');
+    card.className = 'cost-tier' + (i === selectedTier ? ' selected' : '');
     card.innerHTML = `
       <div class="cost-tier-label">${t.label}</div>
       <div class="cost-tier-name">${t.name}</div>
       <div class="cost-tier-req">${t.req}</div>
-      <div class="cost-tier-total">$${t.total}<span>/mo</span></div>
-      <div class="cost-breakdown">${t.breakdown.map(r => `<div class="cost-row"><span>${r.label}</span><span class="cost-val">${r.val}</span></div>`).join('')}</div>`;
+      <div class="cost-tier-total">${fmt(t.total)}<span>/mo</span></div>
+      <div class="cost-breakdown">${t.breakdown.map(r => `<div class="cost-row"><span>${r.label}</span><span class="cost-val">${fmt(r.val)}</span></div>`).join('')}</div>`;
     card.addEventListener('click', () => {
       document.querySelectorAll('.cost-tier').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
@@ -1601,7 +1636,7 @@ function renderBars(idx) {
     const row = document.createElement('div');
     row.className = 'cost-bar-row';
     row.innerHTML = `
-      <div class="cost-bar-label"><span>${b.label}</span><span>${b.val}</span></div>
+      <div class="cost-bar-label"><span>${b.label}</span><span>${fmt(b.val)}</span></div>
       <div class="cost-bar-track"><div class="cost-bar-fill" style="width:0%;background:${b.color}"></div></div>`;
     container.appendChild(row);
     requestAnimationFrame(() => {
@@ -1654,20 +1689,20 @@ function calcCost() {
   const obs = 2 + (reqK / 30) * 1.2;
   const total = lambdaCompute + lambdaReqs + apigw + aurora + rdsProxy + elasticache + ses + sqs + cognito + s3cf + obs;
 
-  document.getElementById('calc-total').textContent = '$' + total.toFixed(2);
+  document.getElementById('calc-total').textContent = fmt(total);
   document.getElementById('calc-notes').innerHTML = `
     <strong>Breakdown</strong><br>
-    Lambda compute: $${lambdaCompute.toFixed(2)} &nbsp;·&nbsp;
-    Lambda requests: $${lambdaReqs.toFixed(2)} &nbsp;·&nbsp;
-    API Gateway: $${apigw.toFixed(2)}<br>
-    Aurora Serverless v2 (${acus} ACU avg): $${aurora.toFixed(2)} &nbsp;·&nbsp;
-    RDS Proxy: $${rdsProxy.toFixed(2)} &nbsp;·&nbsp;
-    ElastiCache: $${elasticache.toFixed(2)}<br>
-    SES email: $${ses.toFixed(2)} &nbsp;·&nbsp;
-    SQS: $${sqs.toFixed(2)} &nbsp;·&nbsp;
-    Cognito: $${cognito.toFixed(2)} &nbsp;·&nbsp;
-    S3+CF: $${s3cf.toFixed(2)} &nbsp;·&nbsp;
-    Observability: $${obs.toFixed(2)}<br>
+    Lambda compute: ${fmt(lambdaCompute)} &nbsp;·&nbsp;
+    Lambda requests: ${fmt(lambdaReqs)} &nbsp;·&nbsp;
+    API Gateway: ${fmt(apigw)}<br>
+    Aurora Serverless v2 (${acus} ACU avg): ${fmt(aurora)} &nbsp;·&nbsp;
+    RDS Proxy: ${fmt(rdsProxy)} &nbsp;·&nbsp;
+    ElastiCache: ${fmt(elasticache)}<br>
+    SES email: ${fmt(ses)} &nbsp;·&nbsp;
+    SQS: ${fmt(sqs)} &nbsp;·&nbsp;
+    Cognito: ${fmt(cognito)} &nbsp;·&nbsp;
+    S3+CF: ${fmt(s3cf)} &nbsp;·&nbsp;
+    Observability: ${fmt(obs)}<br>
     <span style="color:var(--text-tertiary);font-size:11px;margin-top:4px;display:block">Stripe fees (1.5% + 20p/transaction) not included. Aurora is the dominant cost at scale — consider Aurora Provisioned (db.t4g.medium ~$50/mo) once traffic is predictable.</span>`;
 }
 
@@ -1692,6 +1727,17 @@ function renderCalc() {
   });
   calcCost();
 }
+
+document.querySelectorAll('#currency-switcher .currency-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#currency-switcher .currency-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedCurrency = btn.dataset.currency;
+    renderTiers();
+    renderBars(selectedTier);
+    calcCost();
+  });
+});
 
 renderTiers();
 renderBars(0);
