@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Sparkles, LogOut, User as UserIcon, Calendar, Sun, Moon, IdCard, Heart, Building2 } from "lucide-react";
+import { PulsatractMark } from "@/components/brand/PulsatractLogo";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,11 +66,11 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-2 font-semibold text-lg">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-hero text-primary-foreground shadow-elegant">
-            <Sparkles className="h-4 w-4" />
+        <Link to="/" className="flex items-center gap-3 leading-none">
+          <PulsatractMark className="h-7 w-14" />
+          <span className="font-display text-base tracking-[0.22em] uppercase">
+            pulsa<span className="text-primary">t</span>ract
           </span>
-          <span className="tracking-tight">Pulsatract</span>
         </Link>
 
         <nav className="hidden md:flex items-center gap-6 text-sm">
