@@ -1689,20 +1689,20 @@ function calcCost() {
   const obs = 2 + (reqK / 30) * 1.2;
   const total = lambdaCompute + lambdaReqs + apigw + aurora + rdsProxy + elasticache + ses + sqs + cognito + s3cf + obs;
 
-  document.getElementById('calc-total').textContent = '$' + total.toFixed(2);
+  document.getElementById('calc-total').textContent = fmt(total);
   document.getElementById('calc-notes').innerHTML = `
     <strong>Breakdown</strong><br>
-    Lambda compute: $${lambdaCompute.toFixed(2)} &nbsp;·&nbsp;
-    Lambda requests: $${lambdaReqs.toFixed(2)} &nbsp;·&nbsp;
-    API Gateway: $${apigw.toFixed(2)}<br>
-    Aurora Serverless v2 (${acus} ACU avg): $${aurora.toFixed(2)} &nbsp;·&nbsp;
-    RDS Proxy: $${rdsProxy.toFixed(2)} &nbsp;·&nbsp;
-    ElastiCache: $${elasticache.toFixed(2)}<br>
-    SES email: $${ses.toFixed(2)} &nbsp;·&nbsp;
-    SQS: $${sqs.toFixed(2)} &nbsp;·&nbsp;
-    Cognito: $${cognito.toFixed(2)} &nbsp;·&nbsp;
-    S3+CF: $${s3cf.toFixed(2)} &nbsp;·&nbsp;
-    Observability: $${obs.toFixed(2)}<br>
+    Lambda compute: ${fmt(lambdaCompute)} &nbsp;·&nbsp;
+    Lambda requests: ${fmt(lambdaReqs)} &nbsp;·&nbsp;
+    API Gateway: ${fmt(apigw)}<br>
+    Aurora Serverless v2 (${acus} ACU avg): ${fmt(aurora)} &nbsp;·&nbsp;
+    RDS Proxy: ${fmt(rdsProxy)} &nbsp;·&nbsp;
+    ElastiCache: ${fmt(elasticache)}<br>
+    SES email: ${fmt(ses)} &nbsp;·&nbsp;
+    SQS: ${fmt(sqs)} &nbsp;·&nbsp;
+    Cognito: ${fmt(cognito)} &nbsp;·&nbsp;
+    S3+CF: ${fmt(s3cf)} &nbsp;·&nbsp;
+    Observability: ${fmt(obs)}<br>
     <span style="color:var(--text-tertiary);font-size:11px;margin-top:4px;display:block">Stripe fees (1.5% + 20p/transaction) not included. Aurora is the dominant cost at scale — consider Aurora Provisioned (db.t4g.medium ~$50/mo) once traffic is predictable.</span>`;
 }
 
