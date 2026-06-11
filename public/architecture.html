@@ -576,28 +576,24 @@
   .calc-val { font-size: 13px; font-weight: 500; min-width: 60px; text-align: right; font-variant-numeric: tabular-nums; }
 
   .currency-switcher {
-    display: inline-flex;
-    gap: 4px;
-    margin-bottom: 18px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 3px;
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
   }
   .currency-btn {
     font-size: 12px;
     font-weight: 600;
-    padding: 5px 12px;
-    border-radius: 5px;
-    border: 1px solid transparent;
-    background: transparent;
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface);
     color: var(--text-secondary);
     cursor: pointer;
-    font-family: inherit;
-    transition: all 0.15s ease;
+    transition: border-color .15s, color .15s, background .15s;
   }
-  .currency-btn:hover { color: var(--text); }
-  .currency-btn.active { background: var(--purple-dim); color: var(--text); border-color: var(--purple); }
+  .currency-btn:hover { border-color: var(--border-hover); color: var(--text); }
+  .currency-btn.active { border-color: var(--purple); background: var(--purple-dim); color: var(--text); }
+
 
 </style>
 </head>
