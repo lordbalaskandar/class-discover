@@ -1607,15 +1607,16 @@ let selectedTier = 0;
 
 function renderTiers() {
   const container = document.getElementById('cost-tiers');
+  container.innerHTML = '';
   tiers.forEach((t, i) => {
     const card = document.createElement('div');
-    card.className = 'cost-tier' + (i === 0 ? ' selected' : '');
+    card.className = 'cost-tier' + (i === selectedTier ? ' selected' : '');
     card.innerHTML = `
       <div class="cost-tier-label">${t.label}</div>
       <div class="cost-tier-name">${t.name}</div>
       <div class="cost-tier-req">${t.req}</div>
-      <div class="cost-tier-total">$${t.total}<span>/mo</span></div>
-      <div class="cost-breakdown">${t.breakdown.map(r => `<div class="cost-row"><span>${r.label}</span><span class="cost-val">${r.val}</span></div>`).join('')}</div>`;
+      <div class="cost-tier-total">${fmt(t.total)}<span>/mo</span></div>
+      <div class="cost-breakdown">${t.breakdown.map(r => `<div class="cost-row"><span>${r.label}</span><span class="cost-val">${fmt(r.val)}</span></div>`).join('')}</div>`;
     card.addEventListener('click', () => {
       document.querySelectorAll('.cost-tier').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
