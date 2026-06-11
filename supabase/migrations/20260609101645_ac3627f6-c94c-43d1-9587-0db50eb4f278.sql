@@ -8,9 +8,9 @@ DECLARE
 BEGIN
   INSERT INTO auth.users (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data, is_super_admin, confirmation_token, recovery_token, email_change_token_new, email_change)
   VALUES
-    (h1, '00000000-0000-0000-0000-000000000000','authenticated','authenticated','demo-sasha@dryvon.app', crypt('demo-password-123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}','{"full_name":"Sasha Rivera"}', false,'','','',''),
-    (h2, '00000000-0000-0000-0000-000000000000','authenticated','authenticated','demo-marcus@dryvon.app', crypt('demo-password-123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}','{"full_name":"Marcus Chen"}', false,'','','',''),
-    (h3, '00000000-0000-0000-0000-000000000000','authenticated','authenticated','demo-elena@dryvon.app', crypt('demo-password-123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}','{"full_name":"Elena Park"}', false,'','','','')
+    (h1, '00000000-0000-0000-0000-000000000000','authenticated','authenticated','demo-sasha@pulsatract.app', crypt('demo-password-123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}','{"full_name":"Sasha Rivera"}', false,'','','',''),
+    (h2, '00000000-0000-0000-0000-000000000000','authenticated','authenticated','demo-marcus@pulsatract.app', crypt('demo-password-123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}','{"full_name":"Marcus Chen"}', false,'','','',''),
+    (h3, '00000000-0000-0000-0000-000000000000','authenticated','authenticated','demo-elena@pulsatract.app', crypt('demo-password-123', gen_salt('bf')), now(), now(), now(), '{"provider":"email","providers":["email"]}','{"full_name":"Elena Park"}', false,'','','','')
   ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO public.profiles (id, display_name, bio, city, avatar_url) VALUES

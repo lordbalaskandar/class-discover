@@ -38,7 +38,7 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Dryvon — Book classes and trainers near you" },
+      { title: "Pulsatract — Book classes and trainers near you" },
       { name: "description", content: "Discover fixed-day classes and book personal trainers for your own schedule — pilates, boxing, pickleball, yoga and more." },
     ],
   }),
@@ -263,7 +263,7 @@ function HomePage() {
       {/* How it works */}
       <section className="bg-muted/30 border-y">
         <div className="container mx-auto px-4 py-16">
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-center">How Dryvon works</h2>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-center">How Pulsatract works</h2>
           <p className="text-center text-muted-foreground mt-2">Three simple steps to your next session.</p>
           <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
@@ -291,7 +291,7 @@ function HomePage() {
             <Badge className="bg-background/20 text-primary-foreground border-background/30 mb-3">For hosts</Badge>
             <h2 className="text-2xl md:text-4xl font-bold">Teach what you love.</h2>
             <p className="mt-3 text-primary-foreground/90">
-              List your classes or trainer profile on Dryvon and fill seats faster. Free to get started.
+              List your classes or trainer profile on Pulsatract and fill seats faster. Free to get started.
             </p>
             <Button asChild size="lg" variant="secondary" className="mt-6">
               <Link to="/host">Become a host</Link>
@@ -301,7 +301,7 @@ function HomePage() {
       </section>
 
       <footer className="border-t py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} Dryvon · Move together
+        © {new Date().getFullYear()} Pulsatract · Move together
       </footer>
     </div>
   );

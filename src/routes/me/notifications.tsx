@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/me/notifications")({
-  head: () => ({ meta: [{ title: "Notifications — Dryvon" }] }),
+  head: () => ({ meta: [{ title: "Notifications — Pulsatract" }] }),
   component: NotificationsPage,
 });
 
@@ -48,7 +48,7 @@ function NotificationsPage() {
     <AppShell title="Notifications">
       <div className="mx-auto max-w-3xl px-6 py-8">
         <h1 className="font-display text-3xl font-semibold">Notifications</h1>
-        <p className="text-sm text-muted-foreground mt-1">Choose what you want to hear from Dryvon.</p>
+        <p className="text-sm text-muted-foreground mt-1">Choose what you want to hear from Pulsatract.</p>
 
         <div className="mt-6 space-y-6">
           {sections.map((sec) => (

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { CreditCard, Plus, Lock, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/me/payment")({
-  head: () => ({ meta: [{ title: "Payment methods — Dryvon" }] }),
+  head: () => ({ meta: [{ title: "Payment methods — Pulsatract" }] }),
   component: PaymentPage,
 });
 

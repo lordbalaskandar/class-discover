@@ -29,9 +29,9 @@ export const Route = createFileRoute("/profile/$userId")({
   validateSearch: zodValidator(profileSearchSchema),
   head: () => ({
     meta: [
-      { title: `Profile — Dryvon` },
-      { name: "description", content: `View sessions and notes for this Dryvon member.` },
-      { property: "og:title", content: `Dryvon profile` },
+      { title: `Profile — Pulsatract` },
+      { name: "description", content: `View sessions and notes for this Pulsatract member.` },
+      { property: "og:title", content: `Pulsatract profile` },
     ],
   }),
   component: ProfilePage,
@@ -411,7 +411,7 @@ function ProfilePage() {
       </div>
 
       <footer className="border-t py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} Dryvon · Move together
+        © {new Date().getFullYear()} Pulsatract · Move together
       </footer>
     </div>
   );

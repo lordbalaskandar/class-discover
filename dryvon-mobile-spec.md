@@ -1,4 +1,4 @@
-# Dryvon — Mobile Preview Functional Spec
+# Pulsatract — Mobile Preview Functional Spec
 
 A 1:1 catalog of every screen, action, and data shape in the mobile preview (`/mobile`). Use this to brief Claude on what the web app must implement. Source of truth: `src/routes/mobile.tsx` (~5,400 LOC) + `src/features/app/mock-data.ts` + `src/components/mobile/HostsMap.tsx`.
 
@@ -20,7 +20,7 @@ Navigation: bottom tabs = Sessions (browse), Hosts, Map, Bookings, Profile.
 - Listing-type filter: all / class / trainer.
 - Sort: soonest | price-asc | rating-desc.
 - Card list of `ClassItem` with image, badges, title, host, location, date/time, duration, price, rating, spots left.
-- Heart toggle → persists to `localStorage` key `dryvon.saved.classes`.
+- Heart toggle → persists to `localStorage` key `pulsatract.saved.classes`.
 - Tap card → `class` screen. Tap host name → `host` screen.
 
 ### 1.2 `hosts` — Directory

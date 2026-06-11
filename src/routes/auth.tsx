@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Sign in — Dryvon" }] }),
+  head: () => ({ meta: [{ title: "Sign in — Pulsatract" }] }),
   beforeLoad: () => {
     throw redirect({ to: "/", replace: true });
   },

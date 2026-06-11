@@ -97,7 +97,7 @@ function AuthModalDialog({
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-hero text-primary-foreground shadow-elegant mb-2">
             <Sparkles className="h-5 w-5" />
           </div>
-          <DialogTitle className="text-2xl">Welcome to Dryvon</DialogTitle>
+          <DialogTitle className="text-2xl">Welcome to Pulsatract</DialogTitle>
           <DialogDescription>Book classes, host sessions, all in one place.</DialogDescription>
         </DialogHeader>
 

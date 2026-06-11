@@ -63,7 +63,7 @@ New `src/components/AppShell.tsx`:
 - Host-only routes live under `src/routes/_authenticated/host/…` with role check in the page component (toast + redirect on missing host role).
 - Data: keep current Supabase tables (`classes`, `bookings`, `profiles`, `user_roles`); gym/member data stays in mock until promoted to real tables (out of scope here).
 - Each route defines its own `head()` (title + description).
-- Test accounts from prior turn remain: `member@dryvon.test` and `host@dryvon.test` (password `Dryvon-Demo-7K2x!`).
+- Test accounts from prior turn remain: `member@pulsatract.test` and `host@pulsatract.test` (password `Pulsatract-Demo-7K2x!`).
 
 ## Out of scope
 

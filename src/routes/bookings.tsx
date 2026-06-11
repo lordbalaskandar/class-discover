@@ -14,8 +14,8 @@ import { useAuthModal } from "@/components/AuthModal";
 export const Route = createFileRoute("/bookings")({
   head: () => ({
     meta: [
-      { title: "My bookings — Dryvon" },
-      { name: "description", content: "Upcoming and past class bookings on Dryvon." },
+      { title: "My bookings — Pulsatract" },
+      { name: "description", content: "Upcoming and past class bookings on Pulsatract." },
     ],
   }),
   component: BookingsPage,
