@@ -66,14 +66,14 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-3 leading-none">
+        <Link to="/" className="flex items-center gap-3 leading-none mr-10">
           <PulsatractMark className="h-7 w-14" />
-          <span className="font-display text-base tracking-[0.22em] uppercase">
+          <span className="font-sans font-light text-[15px] tracking-[0.32em] uppercase">
             pulsa<span className="text-primary">t</span>ract
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-6 text-sm">
+        <nav className="hidden md:flex items-center gap-6 text-sm ml-auto mr-auto">
           <Link to="/browse" search={{ q: "", activity: "", location: "", category: "all", type: "all", when: "any", duration: "any", capacity: "any", spots: "any", media: "any", sort: "newest" }} className="text-foreground/80 hover:text-foreground transition-colors">Browse</Link>
           <Link to="/host" className="text-foreground/80 hover:text-foreground transition-colors">For hosts</Link>
           <Link to="/mobile" className="text-foreground/80 hover:text-foreground transition-colors">Mobile preview</Link>
