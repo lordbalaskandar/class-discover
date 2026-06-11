@@ -17,12 +17,12 @@ export function PulsatractMark({
   className,
   gold = "hsl(43 55% 54%)",
   light = "currentColor",
-  strokeWidth = 1.25,
+  strokeWidth = 1.6,
 }: Props) {
   // viewBox 64x32, centre at (32,16). Diamond half-size = 3.2.
-  // Triangles stop short of the diamond; a thin connector bridges tip → diamond.
-  const leftTriTip = 26;          // x where left triangle's right vertex sits
-  const rightTriTip = 38;         // x where right triangle's left vertex sits
+  // Triangles stop well short of the diamond; a thin connector bridges tip → diamond.
+  const leftTriTip = 23;          // x where left triangle's right vertex sits
+  const rightTriTip = 41;         // x where right triangle's left vertex sits
   const diamondLeft = 28.8;       // diamond's left point
   const diamondRight = 35.2;      // diamond's right point
   return (
