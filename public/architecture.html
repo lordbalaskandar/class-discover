@@ -588,6 +588,31 @@
   .calc-label { font-size: 13px; color: var(--text-secondary); min-width: 140px; }
   .calc-row input[type=range] { flex: 1; min-width: 120px; accent-color: var(--purple); }
   .calc-val { font-size: 13px; font-weight: 500; min-width: 60px; text-align: right; font-variant-numeric: tabular-nums; }
+
+  .currency-switcher {
+    display: inline-flex;
+    gap: 4px;
+    margin-bottom: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+  }
+  .currency-btn {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+  }
+  .currency-btn:hover { color: var(--text); }
+  .currency-btn.active { background: var(--purple-dim); color: var(--text); border-color: var(--purple); }
+
 </style>
 </head>
 <body>
@@ -1056,6 +1081,12 @@
       <button class="currency-btn" data-currency="GBP">GBP</button>
     </div>
 
+    <div class="currency-switcher" id="currency-switcher">
+      <button class="currency-btn active" data-currency="USD">USD</button>
+      <button class="currency-btn" data-currency="EUR">EUR</button>
+      <button class="currency-btn" data-currency="GBP">GBP</button>
+    </div>
+
     <div class="cost-tier-grid" id="cost-tiers"></div>
 
     <div class="cost-bar-wrap">
@@ -1119,7 +1150,7 @@ const services = [
     handler:'services/booking/src/handler.invoke', trigger:'Lambda.invoke() from gateway resolvers', memory:'256 MB', timeout:'15s', provisioned:false,
     layers:['pulsatract-db-layer','pulsatract-middy-layer'], events:['booking.created → SQS FIFO','booking.cancelled → SQS FIFO'], deps:['pg (RDS Proxy)','@aws-sdk/client-sqs','middy'],
     endpoints:['createBooking()','cancelBooking()','myBookings(status)'],
-    notes:'Capacity check uses SELECT FOR UPDATE inside an Aurora transaction to prevent overselling. booking_code generated as DRV-XXXXXX (nanoid). On createBooking success, invokes Payment service Lambda synchronously then emits booking.created to SQS FIFO for notification fan-out.'
+    notes:'Capacity check uses SELECT FOR UPDATE inside an Aurora transaction to prevent overselling. booking_code generated as PLS-XXXXXX (nanoid). On createBooking success, invokes Payment service Lambda synchronously then emits booking.created to SQS FIFO for notification fan-out.'
   },
   { id:'payment', badge:'badge-amber', badgeLabel:'Payments', name:'Payment service', desc:'Stripe PaymentIntents · payment methods · payout accounts · webhook handler',
     handler:'services/payment/src/handler.invoke + src/webhook.handler', trigger:'Lambda.invoke() from booking service + API Gateway POST /webhooks/stripe', memory:'256 MB', timeout:'15s', provisioned:false,
@@ -1387,7 +1418,7 @@ resources:
 const flows = [
   { title:'User books a class — full Lambda chain',
     chain:[ {t:'Client',b:'badge-gray'},{a:'→'},{t:'API Gateway',b:'badge-gray'},{a:'→'},{t:'JWT Authorizer Lambda',b:'badge-gray'},{a:'→'},{t:'Gateway Lambda',b:'badge-purple'} ],
-    steps:['Client sends POST /graphql with mutation createBooking(classId, spots, note)','API Gateway triggers JWT Authorizer Lambda → verifies Cognito JWT → queries Aurora for role → injects userId + role','Gateway Lambda (Apollo) resolves createBooking → Lambda.invoke("bookingService", payload)','Booking Lambda: SELECT FOR UPDATE on classes row in Aurora via RDS Proxy → check capacity','Booking Lambda: INSERT into bookings, generate DRV-XXXXXX code','Booking Lambda: Lambda.invoke("paymentService", { userId, classId, spots }) synchronously','Payment Lambda: Stripe PaymentIntent.create() → capture → return success','Booking Lambda: SQS.sendMessage() to BookingQueue.fifo with booking.created event','Notification Lambda (SQS consumer): checks notification_prefs in Aurora → AWS SES email + Expo push','Booking Lambda returns Booking object → Apollo returns to client → confirmation screen shown']
+    steps:['Client sends POST /graphql with mutation createBooking(classId, spots, note)','API Gateway triggers JWT Authorizer Lambda → verifies Cognito JWT → queries Aurora for role → injects userId + role','Gateway Lambda (Apollo) resolves createBooking → Lambda.invoke("bookingService", payload)','Booking Lambda: SELECT FOR UPDATE on classes row in Aurora via RDS Proxy → check capacity','Booking Lambda: INSERT into bookings, generate PLS-XXXXXX code','Booking Lambda: Lambda.invoke("paymentService", { userId, classId, spots }) synchronously','Payment Lambda: Stripe PaymentIntent.create() → capture → return success','Booking Lambda: SQS.sendMessage() to BookingQueue.fifo with booking.created event','Notification Lambda (SQS consumer): checks notification_prefs in Aurora → AWS SES email + Expo push','Booking Lambda returns Booking object → Apollo returns to client → confirmation screen shown']
   },
   { title:'Host creates a class — geocode + cache invalidation',
     chain:[ {t:'Host client',b:'badge-gray'},{a:'→'},{t:'Gateway Lambda',b:'badge-purple'},{a:'→'},{t:'Host Lambda',b:'badge-blue'} ],
@@ -1526,6 +1557,15 @@ function fmt(val) {
   const rate = exchangeRates[selectedCurrency];
   const sym = currencySymbols[selectedCurrency];
   return sym + (val * rate).toFixed(2);
+}
+
+const exchangeRates = { USD: 1, EUR: 0.92, GBP: 0.79 };
+const currencySymbols = { USD: '$', EUR: '€', GBP: '£' };
+let selectedCurrency = 'USD';
+function fmt(val) {
+  const rate = exchangeRates[selectedCurrency];
+  const sym = currencySymbols[selectedCurrency];
+  return sym + (Number(val) * rate).toFixed(2);
 }
 
 const tiers = [
@@ -1742,6 +1782,19 @@ document.querySelectorAll('#currency-switcher .currency-btn').forEach(btn => {
 renderTiers();
 renderBars(0);
 renderCalc();
+
+
+document.querySelectorAll('#currency-switcher .currency-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#currency-switcher .currency-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedCurrency = btn.dataset.currency;
+    document.getElementById('cost-tiers').innerHTML = '';
+    renderTiers();
+    renderBars(selectedTier);
+    calcCost();
+  });
+});
 
 const sections = document.querySelectorAll('.section[id]');
 const navLinks = document.querySelectorAll('.nav-link');
