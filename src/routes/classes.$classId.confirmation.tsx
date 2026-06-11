@@ -8,7 +8,7 @@ import { Calendar, MapPin, CheckCircle2 } from "lucide-react";
 import { Stepper } from "./classes.$classId.book";
 
 export const Route = createFileRoute("/classes/$classId/confirmation")({
-  head: () => ({ meta: [{ title: "Booked — Dryvon" }] }),
+  head: () => ({ meta: [{ title: "Booked — Pulsatract" }] }),
   component: ConfirmationPage,
 });
 

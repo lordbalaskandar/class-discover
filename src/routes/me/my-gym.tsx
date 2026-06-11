@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Building2, Calendar, MapPin, Users, Clock, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/me/my-gym")({
-  head: () => ({ meta: [{ title: "My gym — Dryvon" }] }),
+  head: () => ({ meta: [{ title: "My gym — Pulsatract" }] }),
   component: MyGymPage,
 });
 

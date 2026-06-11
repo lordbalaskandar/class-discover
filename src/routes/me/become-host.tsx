@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { DollarSign, CalendarDays, Users, TrendingUp } from "lucide-react";
 
 export const Route = createFileRoute("/me/become-host")({
-  head: () => ({ meta: [{ title: "Become a host — Dryvon" }] }),
+  head: () => ({ meta: [{ title: "Become a host — Pulsatract" }] }),
   component: BecomeHostPage,
 });
 
@@ -28,7 +28,7 @@ function BecomeHostPage() {
     <AppShell title="Become a host">
       <div className="mx-auto max-w-5xl px-6 py-8">
         <div className="rounded-2xl p-8 md:p-12 text-primary-foreground shadow-elegant" style={{ background: "linear-gradient(135deg,#f4b942,#e07a5f)" }}>
-          <Badge className="bg-background/20 text-primary-foreground border-0 mb-3 hover:bg-background/20">Earn on Dryvon</Badge>
+          <Badge className="bg-background/20 text-primary-foreground border-0 mb-3 hover:bg-background/20">Earn on Pulsatract</Badge>
           <h1 className="font-display text-3xl md:text-4xl font-semibold tracking-tight">Turn your craft into income</h1>
           <p className="mt-2 opacity-90 max-w-xl">Host yoga, BJJ, running clubs, PT sessions and more — entirely on your terms.</p>
           <Button asChild size="lg" className="mt-6 bg-background text-foreground hover:bg-background/90">

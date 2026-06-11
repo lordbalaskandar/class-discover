@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { useAuthModal } from "@/components/AuthModal";
 
 export const Route = createFileRoute("/host")({
-  head: () => ({ meta: [{ title: "Host dashboard — Dryvon" }] }),
+  head: () => ({ meta: [{ title: "Host dashboard — Pulsatract" }] }),
   component: HostPage,
 });
 

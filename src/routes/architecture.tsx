@@ -5,11 +5,11 @@ export const Route = createFileRoute("/architecture")({
   component: ArchitecturePage,
   head: () => ({
     meta: [
-      { title: "Backend Architecture — Dryvon" },
+      { title: "Backend Architecture — Pulsatract" },
       {
         name: "description",
         content:
-          "Dryvon serverless backend architecture: services, database, GraphQL ops, flows, infra and costs.",
+          "Pulsatract serverless backend architecture: services, database, GraphQL ops, flows, infra and costs.",
       },
     ],
   }),
@@ -22,7 +22,7 @@ function ArchitecturePage() {
       <main className="flex-1">
         <iframe
           src="/architecture.html"
-          title="Dryvon Backend Architecture"
+          title="Pulsatract Backend Architecture"
           className="w-full"
           style={{ height: "calc(100vh - 4rem)", border: 0 }}
         />
