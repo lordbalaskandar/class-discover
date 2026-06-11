@@ -76,6 +76,7 @@ export function SiteHeader() {
           <Link to="/browse" search={{ q: "", activity: "", location: "", category: "all", type: "all", when: "any", duration: "any", capacity: "any", spots: "any", media: "any", sort: "newest" }} className="text-foreground/80 hover:text-foreground transition-colors">Browse</Link>
           <Link to="/host" className="text-foreground/80 hover:text-foreground transition-colors">For hosts</Link>
           <Link to="/mobile" className="text-foreground/80 hover:text-foreground transition-colors">Mobile preview</Link>
+          <Link to="/architecture" className="text-foreground/80 hover:text-foreground transition-colors">Architecture</Link>
         </nav>
 
         <div className="flex items-center gap-2">
