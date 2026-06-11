@@ -1636,7 +1636,7 @@ function renderBars(idx) {
     const row = document.createElement('div');
     row.className = 'cost-bar-row';
     row.innerHTML = `
-      <div class="cost-bar-label"><span>${b.label}</span><span>${b.val}</span></div>
+      <div class="cost-bar-label"><span>${b.label}</span><span>${fmt(b.val)}</span></div>
       <div class="cost-bar-track"><div class="cost-bar-fill" style="width:0%;background:${b.color}"></div></div>`;
     container.appendChild(row);
     requestAnimationFrame(() => {
