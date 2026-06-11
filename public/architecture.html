@@ -6,16 +6,16 @@
 <title>Pulsatract — Serverless Lambda Architecture</title>
 <style>
   :root {
-    --bg: #16140f;
-    --surface: #1f1c16;
-    --surface2: #2a261d;
+    --bg: #0d0f12;
+    --surface: #14171c;
+    --surface2: #1c2028;
     --border: rgba(255,255,255,0.08);
     --border-hover: rgba(255,255,255,0.16);
-    --text: #f5f1e8;
-    --text-secondary: #a89e88;
-    --text-tertiary: #75695a;
-    --purple: #C9A24C;
-    --purple-dim: rgba(201,162,76,0.14);
+    --text: #e8eaf0;
+    --text-secondary: #7a8090;
+    --text-tertiary: #4a505c;
+    --purple: #7f77dd;
+    --purple-dim: rgba(127,119,221,0.12);
     --teal: #1d9e75;
     --teal-dim: rgba(29,158,117,0.12);
     --coral: #d85a30;
@@ -431,7 +431,7 @@
   nav {
     position: sticky;
     top: 0;
-    background: rgba(22,20,15,0.88);
+    background: rgba(13,15,18,0.88);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
@@ -529,24 +529,6 @@
     padding: 3px 0;
   }
   .cost-row .cost-val { color: var(--text); font-variant-numeric: tabular-nums; }
-  .currency-switcher {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 20px;
-  }
-  .currency-btn {
-    font-size: 12px;
-    font-weight: 600;
-    padding: 5px 14px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: border-color .15s, color .15s, background .15s;
-  }
-  .currency-btn:hover { border-color: var(--border-hover); color: var(--text); }
-  .currency-btn.active { border-color: var(--purple); background: var(--purple-dim); color: var(--text); }
   .cost-bar-wrap { margin-top: 28px; }
   .cost-bar-title { font-size: 13px; font-weight: 500; margin-bottom: 14px; }
   .cost-bar-row { margin-bottom: 10px; }
@@ -588,6 +570,31 @@
   .calc-label { font-size: 13px; color: var(--text-secondary); min-width: 140px; }
   .calc-row input[type=range] { flex: 1; min-width: 120px; accent-color: var(--purple); }
   .calc-val { font-size: 13px; font-weight: 500; min-width: 60px; text-align: right; font-variant-numeric: tabular-nums; }
+
+  .currency-switcher {
+    display: inline-flex;
+    gap: 4px;
+    margin-bottom: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+  }
+  .currency-btn {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+  }
+  .currency-btn:hover { color: var(--text); }
+  .currency-btn.active { background: var(--purple-dim); color: var(--text); border-color: var(--purple); }
+
 </style>
 </head>
 <body>
@@ -731,10 +738,10 @@
       <svg viewBox="0 0 820 500" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif">
         <defs>
           <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-            <path d="M2 1L8 5L2 9" fill="none" stroke="#75695a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 1L8 5L2 9" fill="none" stroke="#4a505c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </marker>
           <marker id="arr-purple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-            <path d="M2 1L8 5L2 9" fill="none" stroke="#C9A24C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 1L8 5L2 9" fill="none" stroke="#7f77dd" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </marker>
           <marker id="arr-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
             <path d="M2 1L8 5L2 9" fill="none" stroke="#1d9e75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -745,94 +752,94 @@
         </defs>
 
         <!-- Client -->
-        <rect x="10" y="220" width="90" height="44" rx="8" fill="#2a261d" stroke="#75695a" stroke-width="0.8"/>
-        <text x="55" y="238" text-anchor="middle" fill="#a89e88" font-size="10" font-weight="600" letter-spacing=".05em">CLIENT</text>
-        <text x="55" y="253" text-anchor="middle" fill="#f5f1e8" font-size="11">Mobile / Web</text>
+        <rect x="10" y="220" width="90" height="44" rx="8" fill="#1c2028" stroke="#4a505c" stroke-width="0.8"/>
+        <text x="55" y="238" text-anchor="middle" fill="#7a8090" font-size="10" font-weight="600" letter-spacing=".05em">CLIENT</text>
+        <text x="55" y="253" text-anchor="middle" fill="#e8eaf0" font-size="11">Mobile / Web</text>
 
         <!-- API Gateway -->
-        <rect x="145" y="210" width="110" height="64" rx="8" fill="#2a261d" stroke="#75695a" stroke-width="0.8"/>
-        <text x="200" y="230" text-anchor="middle" fill="#a89e88" font-size="10" font-weight="600" letter-spacing=".05em">AWS</text>
-        <text x="200" y="245" text-anchor="middle" fill="#f5f1e8" font-size="11" font-weight="500">API Gateway</text>
-        <text x="200" y="261" text-anchor="middle" fill="#75695a" font-size="10">HTTP API</text>
+        <rect x="145" y="210" width="110" height="64" rx="8" fill="#1c2028" stroke="#4a505c" stroke-width="0.8"/>
+        <text x="200" y="230" text-anchor="middle" fill="#7a8090" font-size="10" font-weight="600" letter-spacing=".05em">AWS</text>
+        <text x="200" y="245" text-anchor="middle" fill="#e8eaf0" font-size="11" font-weight="500">API Gateway</text>
+        <text x="200" y="261" text-anchor="middle" fill="#4a505c" font-size="10">HTTP API</text>
 
         <!-- JWT Authorizer -->
-        <rect x="145" y="140" width="110" height="44" rx="8" fill="#2a261d" stroke="#75695a" stroke-width="0.8"/>
-        <text x="200" y="158" text-anchor="middle" fill="#a89e88" font-size="10" font-weight="600" letter-spacing=".05em">LAMBDA</text>
-        <text x="200" y="173" text-anchor="middle" fill="#f5f1e8" font-size="11">JWT Authorizer</text>
+        <rect x="145" y="140" width="110" height="44" rx="8" fill="#1c2028" stroke="#4a505c" stroke-width="0.8"/>
+        <text x="200" y="158" text-anchor="middle" fill="#7a8090" font-size="10" font-weight="600" letter-spacing=".05em">LAMBDA</text>
+        <text x="200" y="173" text-anchor="middle" fill="#e8eaf0" font-size="11">JWT Authorizer</text>
 
         <!-- GraphQL Gateway Lambda -->
-        <rect x="305" y="210" width="120" height="64" rx="8" fill="rgba(201,162,76,0.14)" stroke="#C9A24C" stroke-width="1"/>
+        <rect x="305" y="210" width="120" height="64" rx="8" fill="rgba(127,119,221,0.12)" stroke="#7f77dd" stroke-width="1"/>
         <text x="365" y="230" text-anchor="middle" fill="#9d96e8" font-size="10" font-weight="600" letter-spacing=".05em">LAMBDA</text>
-        <text x="365" y="245" text-anchor="middle" fill="#f5f1e8" font-size="11" font-weight="500">GraphQL Gateway</text>
-        <text x="365" y="261" text-anchor="middle" fill="#C9A24C" font-size="10">Apollo Server 4</text>
+        <text x="365" y="245" text-anchor="middle" fill="#e8eaf0" font-size="11" font-weight="500">GraphQL Gateway</text>
+        <text x="365" y="261" text-anchor="middle" fill="#7f77dd" font-size="10">Apollo Server 4</text>
 
         <!-- Domain Lambdas box -->
         <rect x="480" y="60" width="220" height="340" rx="10" fill="none" stroke="#2a2f3a" stroke-width="1" stroke-dasharray="5 4"/>
-        <text x="590" y="82" text-anchor="middle" fill="#75695a" font-size="10" font-weight="600" letter-spacing=".06em">DOMAIN LAMBDAS</text>
+        <text x="590" y="82" text-anchor="middle" fill="#4a505c" font-size="10" font-weight="600" letter-spacing=".06em">DOMAIN LAMBDAS</text>
 
         <!-- Individual domain lambdas -->
-        <rect x="496" y="93" width="90" height="34" rx="6" fill="#2a261d" stroke="#378add" stroke-width="0.8"/>
+        <rect x="496" y="93" width="90" height="34" rx="6" fill="#1c2028" stroke="#378add" stroke-width="0.8"/>
         <text x="541" y="115" text-anchor="middle" fill="#87b9e8" font-size="11">Discovery</text>
 
-        <rect x="594" y="93" width="90" height="34" rx="6" fill="#2a261d" stroke="#d85a30" stroke-width="0.8"/>
+        <rect x="594" y="93" width="90" height="34" rx="6" fill="#1c2028" stroke="#d85a30" stroke-width="0.8"/>
         <text x="639" y="115" text-anchor="middle" fill="#e8997b" font-size="11">Booking</text>
 
-        <rect x="496" y="141" width="90" height="34" rx="6" fill="#2a261d" stroke="#ba7517" stroke-width="0.8"/>
+        <rect x="496" y="141" width="90" height="34" rx="6" fill="#1c2028" stroke="#ba7517" stroke-width="0.8"/>
         <text x="541" y="163" text-anchor="middle" fill="#e8c275" font-size="11">Payment</text>
 
-        <rect x="594" y="141" width="90" height="34" rx="6" fill="#2a261d" stroke="#378add" stroke-width="0.8"/>
+        <rect x="594" y="141" width="90" height="34" rx="6" fill="#1c2028" stroke="#378add" stroke-width="0.8"/>
         <text x="639" y="163" text-anchor="middle" fill="#87b9e8" font-size="11">Host</text>
 
-        <rect x="496" y="189" width="90" height="34" rx="6" fill="#2a261d" stroke="#639922" stroke-width="0.8"/>
+        <rect x="496" y="189" width="90" height="34" rx="6" fill="#1c2028" stroke="#639922" stroke-width="0.8"/>
         <text x="541" y="211" text-anchor="middle" fill="#a8cc6e" font-size="11">Gym</text>
 
-        <rect x="594" y="189" width="90" height="34" rx="6" fill="#2a261d" stroke="#d4537e" stroke-width="0.8"/>
+        <rect x="594" y="189" width="90" height="34" rx="6" fill="#1c2028" stroke="#d4537e" stroke-width="0.8"/>
         <text x="639" y="211" text-anchor="middle" fill="#e89bb8" font-size="11">Profile</text>
 
-        <rect x="496" y="237" width="90" height="34" rx="6" fill="#2a261d" stroke="#75695a" stroke-width="0.8"/>
-        <text x="541" y="259" text-anchor="middle" fill="#a89e88" font-size="11">Analytics</text>
+        <rect x="496" y="237" width="90" height="34" rx="6" fill="#1c2028" stroke="#4a505c" stroke-width="0.8"/>
+        <text x="541" y="259" text-anchor="middle" fill="#7a8090" font-size="11">Analytics</text>
 
-        <rect x="594" y="237" width="90" height="34" rx="6" fill="#2a261d" stroke="#1d9e75" stroke-width="0.8"/>
+        <rect x="594" y="237" width="90" height="34" rx="6" fill="#1c2028" stroke="#1d9e75" stroke-width="0.8"/>
         <text x="639" y="259" text-anchor="middle" fill="#6ecfae" font-size="11">Review</text>
 
-        <rect x="496" y="285" width="90" height="34" rx="6" fill="#2a261d" stroke="#75695a" stroke-width="0.8"/>
-        <text x="541" y="307" text-anchor="middle" fill="#a89e88" font-size="11">Identity</text>
+        <rect x="496" y="285" width="90" height="34" rx="6" fill="#1c2028" stroke="#4a505c" stroke-width="0.8"/>
+        <text x="541" y="307" text-anchor="middle" fill="#7a8090" font-size="11">Identity</text>
 
-        <rect x="594" y="285" width="90" height="34" rx="6" fill="#2a261d" stroke="#C9A24C" stroke-width="0.8"/>
+        <rect x="594" y="285" width="90" height="34" rx="6" fill="#1c2028" stroke="#7f77dd" stroke-width="0.8"/>
         <text x="639" y="307" text-anchor="middle" fill="#b0aaee" font-size="11">Notification</text>
 
-        <rect x="496" y="333" width="188" height="34" rx="6" fill="#2a261d" stroke="#ba7517" stroke-width="0.8" stroke-dasharray="4 3"/>
+        <rect x="496" y="333" width="188" height="34" rx="6" fill="#1c2028" stroke="#ba7517" stroke-width="0.8" stroke-dasharray="4 3"/>
         <text x="590" y="355" text-anchor="middle" fill="#e8c275" font-size="11">Stripe Webhook (dedicated)</text>
 
         <!-- Data stores -->
-        <rect x="730" y="110" width="78" height="50" rx="8" fill="#2a261d" stroke="#1d9e75" stroke-width="0.8"/>
-        <text x="769" y="131" text-anchor="middle" fill="#a89e88" font-size="10" font-weight="600">AURORA</text>
+        <rect x="730" y="110" width="78" height="50" rx="8" fill="#1c2028" stroke="#1d9e75" stroke-width="0.8"/>
+        <text x="769" y="131" text-anchor="middle" fill="#7a8090" font-size="10" font-weight="600">AURORA</text>
         <text x="769" y="147" text-anchor="middle" fill="#6ecfae" font-size="11">PostgreSQL</text>
 
-        <rect x="730" y="180" width="78" height="44" rx="8" fill="#2a261d" stroke="#d85a30" stroke-width="0.8"/>
-        <text x="769" y="198" text-anchor="middle" fill="#a89e88" font-size="10" font-weight="600">ELASTICACHE</text>
+        <rect x="730" y="180" width="78" height="44" rx="8" fill="#1c2028" stroke="#d85a30" stroke-width="0.8"/>
+        <text x="769" y="198" text-anchor="middle" fill="#7a8090" font-size="10" font-weight="600">ELASTICACHE</text>
         <text x="769" y="213" text-anchor="middle" fill="#e8997b" font-size="11">Redis OSS</text>
 
-        <rect x="730" y="244" width="78" height="44" rx="8" fill="#2a261d" stroke="#75695a" stroke-width="0.8"/>
-        <text x="769" y="262" text-anchor="middle" fill="#a89e88" font-size="10" font-weight="600">AWS SQS</text>
-        <text x="769" y="277" text-anchor="middle" fill="#a89e88" font-size="11">FIFO Queue</text>
+        <rect x="730" y="244" width="78" height="44" rx="8" fill="#1c2028" stroke="#4a505c" stroke-width="0.8"/>
+        <text x="769" y="262" text-anchor="middle" fill="#7a8090" font-size="10" font-weight="600">AWS SQS</text>
+        <text x="769" y="277" text-anchor="middle" fill="#7a8090" font-size="11">FIFO Queue</text>
 
-        <rect x="730" y="308" width="78" height="44" rx="8" fill="#2a261d" stroke="#75695a" stroke-width="0.8"/>
-        <text x="769" y="326" text-anchor="middle" fill="#a89e88" font-size="10" font-weight="600">AWS SSM</text>
-        <text x="769" y="341" text-anchor="middle" fill="#a89e88" font-size="11">Secrets</text>
+        <rect x="730" y="308" width="78" height="44" rx="8" fill="#1c2028" stroke="#4a505c" stroke-width="0.8"/>
+        <text x="769" y="326" text-anchor="middle" fill="#7a8090" font-size="10" font-weight="600">AWS SSM</text>
+        <text x="769" y="341" text-anchor="middle" fill="#7a8090" font-size="11">Secrets</text>
 
         <!-- Arrows: Client → API Gateway -->
-        <line x1="100" y1="242" x2="144" y2="242" stroke="#75695a" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="100" y1="242" x2="144" y2="242" stroke="#4a505c" stroke-width="1" marker-end="url(#arr)"/>
 
         <!-- API Gateway → JWT Authorizer -->
-        <line x1="200" y1="210" x2="200" y2="185" stroke="#75695a" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="200" y1="210" x2="200" y2="185" stroke="#4a505c" stroke-width="1" marker-end="url(#arr)"/>
 
         <!-- API Gateway → Gateway Lambda -->
-        <line x1="255" y1="242" x2="304" y2="242" stroke="#C9A24C" stroke-width="1.2" marker-end="url(#arr-purple)"/>
+        <line x1="255" y1="242" x2="304" y2="242" stroke="#7f77dd" stroke-width="1.2" marker-end="url(#arr-purple)"/>
 
         <!-- Gateway Lambda → Domain box (invoke) -->
-        <line x1="425" y1="242" x2="479" y2="242" stroke="#C9A24C" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arr-purple)"/>
-        <text x="450" y="237" text-anchor="middle" fill="#C9A24C" font-size="9">invoke()</text>
+        <line x1="425" y1="242" x2="479" y2="242" stroke="#7f77dd" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arr-purple)"/>
+        <text x="450" y="237" text-anchor="middle" fill="#7f77dd" font-size="9">invoke()</text>
 
         <!-- Domain Lambdas → Postgres -->
         <line x1="686" y1="180" x2="729" y2="155" stroke="#1d9e75" stroke-width="1" marker-end="url(#arr-teal)"/>
@@ -841,26 +848,26 @@
         <line x1="686" y1="206" x2="729" y2="200" stroke="#d85a30" stroke-width="1" marker-end="url(#arr-amber)"/>
 
         <!-- Booking → SQS -->
-        <line x1="686" y1="240" x2="729" y2="258" stroke="#75695a" stroke-width="1" marker-end="url(#arr)"/>
+        <line x1="686" y1="240" x2="729" y2="258" stroke="#4a505c" stroke-width="1" marker-end="url(#arr)"/>
 
         <!-- All → SSM -->
-        <line x1="686" y1="310" x2="729" y2="328" stroke="#75695a" stroke-width="0.8" stroke-dasharray="3 3" marker-end="url(#arr)"/>
+        <line x1="686" y1="310" x2="729" y2="328" stroke="#4a505c" stroke-width="0.8" stroke-dasharray="3 3" marker-end="url(#arr)"/>
 
         <!-- Stripe webhook label -->
         <text x="200" y="300" text-anchor="middle" fill="#ba7517" font-size="10">Stripe →</text>
         <path d="M230 300 L300 300 L300 350 L479 350" fill="none" stroke="#ba7517" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arr-amber)"/>
 
         <!-- Legend -->
-        <rect x="10" y="430" width="400" height="58" rx="6" fill="#2a261d" stroke="#2a2f3a" stroke-width="0.8"/>
-        <text x="22" y="447" fill="#75695a" font-size="10" font-weight="600" letter-spacing=".06em">LEGEND</text>
-        <line x1="22" y1="460" x2="48" y2="460" stroke="#C9A24C" stroke-width="1.2" marker-end="url(#arr-purple)"/>
-        <text x="54" y="463" fill="#a89e88" font-size="10">GraphQL / Lambda.invoke()</text>
-        <line x1="170" y1="460" x2="196" y2="460" stroke="#C9A24C" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arr-purple)"/>
-        <text x="202" y="463" fill="#a89e88" font-size="10">Internal invoke (no HTTP)</text>
-        <line x1="22" y1="476" x2="48" y2="476" stroke="#75695a" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#arr)"/>
-        <text x="54" y="479" fill="#a89e88" font-size="10">SSM secret read (cold start)</text>
+        <rect x="10" y="430" width="400" height="58" rx="6" fill="#1c2028" stroke="#2a2f3a" stroke-width="0.8"/>
+        <text x="22" y="447" fill="#4a505c" font-size="10" font-weight="600" letter-spacing=".06em">LEGEND</text>
+        <line x1="22" y1="460" x2="48" y2="460" stroke="#7f77dd" stroke-width="1.2" marker-end="url(#arr-purple)"/>
+        <text x="54" y="463" fill="#7a8090" font-size="10">GraphQL / Lambda.invoke()</text>
+        <line x1="170" y1="460" x2="196" y2="460" stroke="#7f77dd" stroke-width="1.2" stroke-dasharray="5 3" marker-end="url(#arr-purple)"/>
+        <text x="202" y="463" fill="#7a8090" font-size="10">Internal invoke (no HTTP)</text>
+        <line x1="22" y1="476" x2="48" y2="476" stroke="#4a505c" stroke-width="1" stroke-dasharray="3 3" marker-end="url(#arr)"/>
+        <text x="54" y="479" fill="#7a8090" font-size="10">SSM secret read (cold start)</text>
         <line x1="170" y1="476" x2="196" y2="476" stroke="#ba7517" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arr-amber)"/>
-        <text x="202" y="479" fill="#a89e88" font-size="10">Stripe webhook (no auth)</text>
+        <text x="202" y="479" fill="#7a8090" font-size="10">Stripe webhook (no auth)</text>
       </svg>
     </div>
 
@@ -869,10 +876,10 @@
       <svg viewBox="0 0 820 210" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif">
         <defs>
           <marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-            <path d="M2 1L8 5L2 9" fill="none" stroke="#75695a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 1L8 5L2 9" fill="none" stroke="#4a505c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </marker>
           <marker id="a2p" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-            <path d="M2 1L8 5L2 9" fill="none" stroke="#C9A24C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 1L8 5L2 9" fill="none" stroke="#7f77dd" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </marker>
           <marker id="a2t" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
             <path d="M2 1L8 5L2 9" fill="none" stroke="#1d9e75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -884,63 +891,63 @@
 
         <!-- step boxes: y=40, height=50 -->
         <!-- 1. Client -->
-        <rect x="10" y="40" width="80" height="50" rx="7" fill="#2a261d" stroke="#75695a" stroke-width="0.8"/>
-        <text x="50" y="62" text-anchor="middle" fill="#a89e88" font-size="9" font-weight="600">CLIENT</text>
-        <text x="50" y="77" text-anchor="middle" fill="#f5f1e8" font-size="10">POST</text>
-        <text x="50" y="89" text-anchor="middle" fill="#f5f1e8" font-size="10">/graphql</text>
+        <rect x="10" y="40" width="80" height="50" rx="7" fill="#1c2028" stroke="#4a505c" stroke-width="0.8"/>
+        <text x="50" y="62" text-anchor="middle" fill="#7a8090" font-size="9" font-weight="600">CLIENT</text>
+        <text x="50" y="77" text-anchor="middle" fill="#e8eaf0" font-size="10">POST</text>
+        <text x="50" y="89" text-anchor="middle" fill="#e8eaf0" font-size="10">/graphql</text>
 
         <!-- 2. JWT Authorizer -->
-        <rect x="110" y="40" width="90" height="50" rx="7" fill="#2a261d" stroke="#75695a" stroke-width="0.8"/>
-        <text x="155" y="62" text-anchor="middle" fill="#a89e88" font-size="9" font-weight="600">LAMBDA</text>
-        <text x="155" y="77" text-anchor="middle" fill="#f5f1e8" font-size="10">JWT</text>
-        <text x="155" y="89" text-anchor="middle" fill="#f5f1e8" font-size="10">Authorizer</text>
+        <rect x="110" y="40" width="90" height="50" rx="7" fill="#1c2028" stroke="#4a505c" stroke-width="0.8"/>
+        <text x="155" y="62" text-anchor="middle" fill="#7a8090" font-size="9" font-weight="600">LAMBDA</text>
+        <text x="155" y="77" text-anchor="middle" fill="#e8eaf0" font-size="10">JWT</text>
+        <text x="155" y="89" text-anchor="middle" fill="#e8eaf0" font-size="10">Authorizer</text>
 
         <!-- 3. Gateway -->
-        <rect x="220" y="40" width="90" height="50" rx="7" fill="rgba(201,162,76,0.14)" stroke="#C9A24C" stroke-width="1"/>
+        <rect x="220" y="40" width="90" height="50" rx="7" fill="rgba(127,119,221,0.12)" stroke="#7f77dd" stroke-width="1"/>
         <text x="265" y="62" text-anchor="middle" fill="#9d96e8" font-size="9" font-weight="600">LAMBDA</text>
-        <text x="265" y="77" text-anchor="middle" fill="#f5f1e8" font-size="10">GraphQL</text>
-        <text x="265" y="89" text-anchor="middle" fill="#f5f1e8" font-size="10">Gateway</text>
+        <text x="265" y="77" text-anchor="middle" fill="#e8eaf0" font-size="10">GraphQL</text>
+        <text x="265" y="89" text-anchor="middle" fill="#e8eaf0" font-size="10">Gateway</text>
 
         <!-- 4. Booking -->
         <rect x="330" y="40" width="90" height="50" rx="7" fill="rgba(216,90,48,0.1)" stroke="#d85a30" stroke-width="1"/>
         <text x="375" y="62" text-anchor="middle" fill="#e8997b" font-size="9" font-weight="600">LAMBDA</text>
-        <text x="375" y="77" text-anchor="middle" fill="#f5f1e8" font-size="10">Booking</text>
+        <text x="375" y="77" text-anchor="middle" fill="#e8eaf0" font-size="10">Booking</text>
         <text x="375" y="89" text-anchor="middle" fill="#d85a30" font-size="9">SELECT FOR UPDATE</text>
 
         <!-- 5. Payment -->
         <rect x="440" y="40" width="90" height="50" rx="7" fill="rgba(186,117,23,0.1)" stroke="#ba7517" stroke-width="1"/>
         <text x="485" y="62" text-anchor="middle" fill="#e8c275" font-size="9" font-weight="600">LAMBDA</text>
-        <text x="485" y="77" text-anchor="middle" fill="#f5f1e8" font-size="10">Payment</text>
+        <text x="485" y="77" text-anchor="middle" fill="#e8eaf0" font-size="10">Payment</text>
         <text x="485" y="89" text-anchor="middle" fill="#ba7517" font-size="9">Stripe charge</text>
 
         <!-- 6. SQS -->
-        <rect x="550" y="40" width="80" height="50" rx="7" fill="#2a261d" stroke="#75695a" stroke-width="0.8"/>
-        <text x="590" y="62" text-anchor="middle" fill="#a89e88" font-size="9" font-weight="600">AWS SQS</text>
-        <text x="590" y="77" text-anchor="middle" fill="#f5f1e8" font-size="10">FIFO</text>
-        <text x="590" y="89" text-anchor="middle" fill="#a89e88" font-size="9">booking.created</text>
+        <rect x="550" y="40" width="80" height="50" rx="7" fill="#1c2028" stroke="#4a505c" stroke-width="0.8"/>
+        <text x="590" y="62" text-anchor="middle" fill="#7a8090" font-size="9" font-weight="600">AWS SQS</text>
+        <text x="590" y="77" text-anchor="middle" fill="#e8eaf0" font-size="10">FIFO</text>
+        <text x="590" y="89" text-anchor="middle" fill="#7a8090" font-size="9">booking.created</text>
 
         <!-- 7. Notification -->
-        <rect x="650" y="40" width="90" height="50" rx="7" fill="rgba(127,119,221,0.1)" stroke="#C9A24C" stroke-width="1"/>
+        <rect x="650" y="40" width="90" height="50" rx="7" fill="rgba(127,119,221,0.1)" stroke="#7f77dd" stroke-width="1"/>
         <text x="695" y="62" text-anchor="middle" fill="#9d96e8" font-size="9" font-weight="600">LAMBDA</text>
-        <text x="695" y="77" text-anchor="middle" fill="#f5f1e8" font-size="10">Notification</text>
-        <text x="695" y="89" text-anchor="middle" fill="#C9A24C" font-size="9">Email + Push</text>
+        <text x="695" y="77" text-anchor="middle" fill="#e8eaf0" font-size="10">Notification</text>
+        <text x="695" y="89" text-anchor="middle" fill="#7f77dd" font-size="9">Email + Push</text>
 
         <!-- Arrows -->
-        <line x1="90" y1="65" x2="109" y2="65" stroke="#75695a" stroke-width="1" marker-end="url(#a2)"/>
-        <line x1="200" y1="65" x2="219" y2="65" stroke="#75695a" stroke-width="1" marker-end="url(#a2)"/>
-        <line x1="310" y1="65" x2="329" y2="65" stroke="#C9A24C" stroke-width="1.2" marker-end="url(#a2p)"/>
-        <line x1="420" y1="65" x2="439" y2="65" stroke="#C9A24C" stroke-width="1.2" marker-end="url(#a2p)"/>
+        <line x1="90" y1="65" x2="109" y2="65" stroke="#4a505c" stroke-width="1" marker-end="url(#a2)"/>
+        <line x1="200" y1="65" x2="219" y2="65" stroke="#4a505c" stroke-width="1" marker-end="url(#a2)"/>
+        <line x1="310" y1="65" x2="329" y2="65" stroke="#7f77dd" stroke-width="1.2" marker-end="url(#a2p)"/>
+        <line x1="420" y1="65" x2="439" y2="65" stroke="#7f77dd" stroke-width="1.2" marker-end="url(#a2p)"/>
         <line x1="530" y1="65" x2="549" y2="65" stroke="#ba7517" stroke-width="1.2" marker-end="url(#a2a)"/>
-        <line x1="630" y1="65" x2="649" y2="65" stroke="#75695a" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+        <line x1="630" y1="65" x2="649" y2="65" stroke="#4a505c" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#a2)"/>
 
         <!-- Step labels below -->
-        <text x="50" y="110" text-anchor="middle" fill="#75695a" font-size="9">① request</text>
-        <text x="155" y="110" text-anchor="middle" fill="#75695a" font-size="9">② verify JWT</text>
-        <text x="265" y="110" text-anchor="middle" fill="#75695a" font-size="9">③ resolve</text>
-        <text x="375" y="110" text-anchor="middle" fill="#75695a" font-size="9">④ capacity lock</text>
-        <text x="485" y="110" text-anchor="middle" fill="#75695a" font-size="9">⑤ charge</text>
-        <text x="590" y="110" text-anchor="middle" fill="#75695a" font-size="9">⑥ enqueue</text>
-        <text x="695" y="110" text-anchor="middle" fill="#75695a" font-size="9">⑦ async notify</text>
+        <text x="50" y="110" text-anchor="middle" fill="#4a505c" font-size="9">① request</text>
+        <text x="155" y="110" text-anchor="middle" fill="#4a505c" font-size="9">② verify JWT</text>
+        <text x="265" y="110" text-anchor="middle" fill="#4a505c" font-size="9">③ resolve</text>
+        <text x="375" y="110" text-anchor="middle" fill="#4a505c" font-size="9">④ capacity lock</text>
+        <text x="485" y="110" text-anchor="middle" fill="#4a505c" font-size="9">⑤ charge</text>
+        <text x="590" y="110" text-anchor="middle" fill="#4a505c" font-size="9">⑥ enqueue</text>
+        <text x="695" y="110" text-anchor="middle" fill="#4a505c" font-size="9">⑦ async notify</text>
 
         <!-- Return path -->
         <path d="M740 65 L770 65 L770 145 L50 145 L50 130" fill="none" stroke="#1d9e75" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#a2t)"/>
@@ -953,71 +960,73 @@
       <svg viewBox="0 0 820 260" xmlns="http://www.w3.org/2000/svg" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif">
         <defs>
           <marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-            <path d="M2 1L8 5L2 9" fill="none" stroke="#75695a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 1L8 5L2 9" fill="none" stroke="#4a505c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </marker>
           <marker id="a3t" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
             <path d="M2 1L8 5L2 9" fill="none" stroke="#1d9e75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </marker>
           <marker id="a3p" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-            <path d="M2 1L8 5L2 9" fill="none" stroke="#C9A24C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 1L8 5L2 9" fill="none" stroke="#7f77dd" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </marker>
         </defs>
 
         <!-- Emitters (left) -->
-        <text x="20" y="28" fill="#75695a" font-size="10" font-weight="600" letter-spacing=".06em">EVENT EMITTERS</text>
-        <rect x="10" y="38" width="100" height="34" rx="6" fill="#2a261d" stroke="#d85a30" stroke-width="0.8"/>
+        <text x="20" y="28" fill="#4a505c" font-size="10" font-weight="600" letter-spacing=".06em">EVENT EMITTERS</text>
+        <rect x="10" y="38" width="100" height="34" rx="6" fill="#1c2028" stroke="#d85a30" stroke-width="0.8"/>
         <text x="60" y="60" text-anchor="middle" fill="#e8997b" font-size="11">Booking svc</text>
-        <rect x="10" y="82" width="100" height="34" rx="6" fill="#2a261d" stroke="#378add" stroke-width="0.8"/>
+        <rect x="10" y="82" width="100" height="34" rx="6" fill="#1c2028" stroke="#378add" stroke-width="0.8"/>
         <text x="60" y="104" text-anchor="middle" fill="#87b9e8" font-size="11">Host svc</text>
-        <rect x="10" y="126" width="100" height="34" rx="6" fill="#2a261d" stroke="#ba7517" stroke-width="0.8"/>
+        <rect x="10" y="126" width="100" height="34" rx="6" fill="#1c2028" stroke="#ba7517" stroke-width="0.8"/>
         <text x="60" y="148" text-anchor="middle" fill="#e8c275" font-size="11">Payment svc</text>
-        <rect x="10" y="170" width="100" height="34" rx="6" fill="#2a261d" stroke="#75695a" stroke-width="0.8"/>
-        <text x="60" y="188" text-anchor="middle" fill="#a89e88" font-size="10">EventBridge</text>
-        <text x="60" y="200" text-anchor="middle" fill="#a89e88" font-size="9">cron schedules</text>
+        <rect x="10" y="170" width="100" height="34" rx="6" fill="#1c2028" stroke="#4a505c" stroke-width="0.8"/>
+        <text x="60" y="188" text-anchor="middle" fill="#7a8090" font-size="10">EventBridge</text>
+        <text x="60" y="200" text-anchor="middle" fill="#7a8090" font-size="9">cron schedules</text>
 
         <!-- SQS queue (centre) -->
-        <rect x="200" y="60" width="110" height="50" rx="8" fill="#2a261d" stroke="#75695a" stroke-width="0.8"/>
-        <text x="255" y="80" text-anchor="middle" fill="#a89e88" font-size="10" font-weight="600">AWS SQS FIFO</text>
-        <text x="255" y="96" text-anchor="middle" fill="#f5f1e8" font-size="10">BookingQueue</text>
-        <text x="255" y="108" text-anchor="middle" fill="#75695a" font-size="9">+ DLQ (3 retries)</text>
+        <rect x="200" y="60" width="110" height="50" rx="8" fill="#1c2028" stroke="#4a505c" stroke-width="0.8"/>
+        <text x="255" y="80" text-anchor="middle" fill="#7a8090" font-size="10" font-weight="600">AWS SQS FIFO</text>
+        <text x="255" y="96" text-anchor="middle" fill="#e8eaf0" font-size="10">BookingQueue</text>
+        <text x="255" y="108" text-anchor="middle" fill="#4a505c" font-size="9">+ DLQ (3 retries)</text>
 
         <!-- DLQ -->
-        <rect x="200" y="130" width="110" height="40" rx="7" fill="#2a261d" stroke="#d85a30" stroke-width="0.8" stroke-dasharray="4 3"/>
-        <text x="255" y="147" text-anchor="middle" fill="#a89e88" font-size="9" font-weight="600">DEAD LETTER Q</text>
+        <rect x="200" y="130" width="110" height="40" rx="7" fill="#1c2028" stroke="#d85a30" stroke-width="0.8" stroke-dasharray="4 3"/>
+        <text x="255" y="147" text-anchor="middle" fill="#7a8090" font-size="9" font-weight="600">DEAD LETTER Q</text>
         <text x="255" y="160" text-anchor="middle" fill="#e8997b" font-size="10">alarm on depth &gt; 0</text>
 
         <!-- Notification Lambda (centre-right) -->
-        <rect x="380" y="55" width="110" height="60" rx="8" fill="rgba(127,119,221,0.1)" stroke="#C9A24C" stroke-width="1"/>
+        <rect x="380" y="55" width="110" height="60" rx="8" fill="rgba(127,119,221,0.1)" stroke="#7f77dd" stroke-width="1"/>
         <text x="435" y="75" text-anchor="middle" fill="#9d96e8" font-size="10" font-weight="600">LAMBDA</text>
-        <text x="435" y="90" text-anchor="middle" fill="#f5f1e8" font-size="11" font-weight="500">Notification</text>
-        <text x="435" y="104" text-anchor="middle" fill="#C9A24C" font-size="9">batch: 10 msgs</text>
+        <text x="435" y="90" text-anchor="middle" fill="#e8eaf0" font-size="11" font-weight="500">Notification</text>
+        <text x="435" y="104" text-anchor="middle" fill="#7f77dd" font-size="9">batch: 10 msgs</text>
 
         <!-- Discovery Lambda (cache invalidation) -->
         <rect x="380" y="130" width="110" height="44" rx="8" fill="rgba(29,158,117,0.1)" stroke="#1d9e75" stroke-width="1"/>
         <text x="435" y="149" text-anchor="middle" fill="#6ecfae" font-size="10" font-weight="600">LAMBDA</text>
-        <text x="435" y="163" text-anchor="middle" fill="#f5f1e8" font-size="11">Discovery</text>
+        <text x="435" y="163" text-anchor="middle" fill="#e8eaf0" font-size="11">Discovery</text>
 
         <!-- Outputs (right) -->
-        <text x="570" y="28" fill="#75695a" font-size="10" font-weight="600" letter-spacing=".06em">OUTPUTS</text>
-        <rect x="560" y="38" width="90" height="34" rx="6" fill="#2a261d" stroke="#1d9e75" stroke-width="0.8"/>
-        <text x="605" y="60" text-anchor="middle" fill="#6ecfae" font-size="11">Amazon SES</text>
-        <rect x="560" y="82" width="90" height="34" rx="6" fill="#2a261d" stroke="#1d9e75" stroke-width="0.8"/>
-        <text x="605" y="104" text-anchor="middle" fill="#6ecfae" font-size="11">Expo push</text>
-        <rect x="560" y="126" width="90" height="34" rx="6" fill="#2a261d" stroke="#75695a" stroke-width="0.8"/>
-        <text x="605" y="143" text-anchor="middle" fill="#a89e88" font-size="10">Redis cache</text>
-        <text x="605" y="155" text-anchor="middle" fill="#a89e88" font-size="9">invalidated</text>
-        <rect x="560" y="170" width="90" height="34" rx="6" fill="#2a261d" stroke="#75695a" stroke-width="0.8"/>
-        <text x="605" y="188" text-anchor="middle" fill="#a89e88" font-size="10">CW Alarm</text>
-        <text x="605" y="200" text-anchor="middle" fill="#a89e88" font-size="9">on DLQ depth</text>
+        <text x="570" y="28" fill="#4a505c" font-size="10" font-weight="600" letter-spacing=".06em">OUTPUTS</text>
+        <rect x="560" y="38" width="90" height="34" rx="6" fill="#1c2028" stroke="#1d9e75" stroke-width="0.8"/>
+        <text x="605" y="55" text-anchor="middle" fill="#6ecfae" font-size="10" font-weight="600">ONESIGNAL</text>
+        <text x="605" y="67" text-anchor="middle" fill="#6ecfae" font-size="10">push + email</text>
+        <rect x="560" y="82" width="90" height="34" rx="6" fill="#1c2028" stroke="#1d9e75" stroke-width="0.8"/>
+        <text x="605" y="99" text-anchor="middle" fill="#6ecfae" font-size="10" font-weight="600">ONESIGNAL</text>
+        <text x="605" y="111" text-anchor="middle" fill="#6ecfae" font-size="10">SMS + OTP</text>
+        <rect x="560" y="126" width="90" height="34" rx="6" fill="#1c2028" stroke="#4a505c" stroke-width="0.8"/>
+        <text x="605" y="143" text-anchor="middle" fill="#7a8090" font-size="10">Redis cache</text>
+        <text x="605" y="155" text-anchor="middle" fill="#7a8090" font-size="9">invalidated</text>
+        <rect x="560" y="170" width="90" height="34" rx="6" fill="#1c2028" stroke="#4a505c" stroke-width="0.8"/>
+        <text x="605" y="188" text-anchor="middle" fill="#7a8090" font-size="10">CW Alarm</text>
+        <text x="605" y="200" text-anchor="middle" fill="#7a8090" font-size="9">on DLQ depth</text>
 
         <!-- Arrows emitters → queues/lambdas -->
-        <line x1="110" y1="55" x2="199" y2="82" stroke="#75695a" stroke-width="0.8" marker-end="url(#a3)"/>
-        <line x1="110" y1="99" x2="199" y2="155" stroke="#75695a" stroke-width="0.8" marker-end="url(#a3)"/>
-        <line x1="110" y1="143" x2="199" y2="143" stroke="#75695a" stroke-width="0.8" marker-end="url(#a3)"/>
-        <line x1="110" y1="187" x2="379" y2="100" stroke="#75695a" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#a3)"/>
+        <line x1="110" y1="55" x2="199" y2="82" stroke="#4a505c" stroke-width="0.8" marker-end="url(#a3)"/>
+        <line x1="110" y1="99" x2="199" y2="155" stroke="#4a505c" stroke-width="0.8" marker-end="url(#a3)"/>
+        <line x1="110" y1="143" x2="199" y2="143" stroke="#4a505c" stroke-width="0.8" marker-end="url(#a3)"/>
+        <line x1="110" y1="187" x2="379" y2="100" stroke="#4a505c" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#a3)"/>
 
         <!-- SQS → Notification Lambda -->
-        <line x1="310" y1="85" x2="379" y2="85" stroke="#C9A24C" stroke-width="1.2" marker-end="url(#a3p)"/>
+        <line x1="310" y1="85" x2="379" y2="85" stroke="#7f77dd" stroke-width="1.2" marker-end="url(#a3p)"/>
 
         <!-- SQS → DLQ (fail path) -->
         <line x1="255" y1="110" x2="255" y2="129" stroke="#d85a30" stroke-width="0.8" stroke-dasharray="3 3" marker-end="url(#a3)"/>
@@ -1036,8 +1045,8 @@
         <line x1="310" y1="148" x2="559" y2="185" stroke="#d85a30" stroke-width="0.8" stroke-dasharray="3 3" marker-end="url(#a3)"/>
 
         <!-- Event labels -->
-        <text x="238" y="74" fill="#75695a" font-size="8">booking.created</text>
-        <text x="338" y="80" fill="#C9A24C" font-size="8">ESM batch</text>
+        <text x="238" y="74" fill="#4a505c" font-size="8">booking.created</text>
+        <text x="338" y="80" fill="#7f77dd" font-size="8">ESM batch</text>
       </svg>
     </div>
   </div>
@@ -1048,7 +1057,7 @@
       <span class="section-num">08</span>
       <span class="section-title">Cost estimates</span>
     </div>
-    <p class="section-sub">Monthly AWS costs across three traffic tiers. All services on the AWS stack: Aurora PostgreSQL Serverless v2, ElastiCache, Cognito, SES, S3. Lambda pricing uses arm64 (Graviton2). Figures are estimates — actual costs vary with traffic shape.</p>
+    <p class="section-sub">Monthly costs across three traffic tiers. Full AWS stack: Aurora PostgreSQL Serverless v2, ElastiCache, Cognito, S3. OneSignal for push, email, and OTP SMS. Lambda pricing uses arm64 (Graviton2). Figures are estimates — actual costs vary with traffic shape.</p>
 
     <div class="currency-switcher" id="currency-switcher">
       <button class="currency-btn active" data-currency="USD">USD</button>
@@ -1075,12 +1084,12 @@
     </div>
 
     <div class="cost-notes" style="margin-top:20px">
-      <strong>Notes &amp; assumptions — 100% AWS stack</strong><br>
+      <strong>Notes &amp; assumptions — 100% AWS stack + OneSignal</strong><br>
       Lambda arm64: $0.0000000133/GB-s + $0.20/1M requests. Free tier: 400K GB-s + 1M req/month (first 12 months).<br>
-      Aurora Serverless v2: $0.12/ACU-hour (us-east-1). Minimum 0.5 ACU. RDS Proxy: $0.015/vCPU-hour. Both are the dominant cost line — at scale consider switching to Aurora Provisioned (db.t4g.medium ≈ $50/mo) once traffic is predictable.<br>
-      ElastiCache Serverless: ~$0.0065/GB-hour + $0.008/1M requests. No cluster to size. Amazon SES: first 62K emails/month free, then $0.10/1K.<br>
-      Cognito: free up to 50K MAUs/month, $0.0055/MAU after. API Gateway HTTP API: $1.00/1M requests. SQS: $0.40/1M messages (first 1M free).<br>
-      <strong>Cost optimisation levers:</strong> arm64 saves ~20% vs x86; Aurora auto-pause on dev/staging (zero ACU cost at idle); ElastiCache cuts Aurora read load by ~60% at scale; RDS Proxy prevents connection storms from Lambda concurrency spikes; SQS batching (batchSize: 10) reduces Lambda invocations 10×.
+      Aurora Serverless v2: $0.12/ACU-hour (us-east-1). Minimum 0.5 ACU. RDS Proxy: $0.015/vCPU-hour. Both are the dominant cost — consider Aurora Provisioned (db.t4g.medium ≈ $50/mo) once traffic is predictable.<br>
+      ElastiCache Serverless: ~$0.0065/GB-hour + $0.008/1M requests. Cognito: free up to 50K MAUs, $0.0055/MAU after. API Gateway HTTP API: $1.00/1M requests.<br>
+      <strong>OneSignal:</strong> Free plan — unlimited push (iOS + Android) + 10K emails/mo. Growth ($9/mo) — 100K emails + SMS credits included. Business ($99/mo) — 500K+ emails + higher SMS volume. OTP SMS delivery via OneSignal: ~$0.0075/message (UK/US).<br>
+      <strong>Cost optimisation levers:</strong> arm64 saves ~20% vs x86; Aurora auto-pause on dev/staging; ElastiCache cuts Aurora read load ~60% at scale; SQS batching (batchSize: 10) reduces Lambda invocations 10×; OneSignal Free covers the entire early stage for push notifications.
     </div>
   </div>
 
@@ -1103,11 +1112,11 @@ const services = [
     endpoints:['(infra only — not invokable directly)'],
     notes:'Verifies Cognito User Pool JWT using aws-jwt-verify (fetches JWKS from Cognito endpoint, cached in-memory). Extracts sub (userId) and queries user_roles table in Aurora via RDS Proxy for the role. Returns IAM policy Allow + context: { userId, role }. API Gateway caches result for 300s per token.'
   },
-  { id:'identity', badge:'badge-purple', badgeLabel:'Auth', name:'Identity service', desc:'Cognito User Pool wrapper · role grants · Google OAuth via Cognito IdP',
+  { id:'identity', badge:'badge-purple', badgeLabel:'Auth', name:'Identity service', desc:'Cognito User Pool · OTP registration · role grants · Google OAuth via Cognito IdP',
     handler:'services/identity/src/handler.invoke', trigger:'Lambda.invoke() from gateway resolvers', memory:'256 MB', timeout:'10s', provisioned:false,
-    layers:['pulsatract-db-layer','pulsatract-middy-layer'], events:['user.registered → SQS','host.role.granted → SQS'], deps:['@aws-sdk/client-cognito-identity-provider','pg','middy'],
-    endpoints:['becomeHost(intake)','getMe()','signOut()'],
-    notes:'Wraps Cognito User Pool for user management. becomeHost() inserts into user_roles in Aurora and emits host.role.granted to SQS. Google OAuth configured as a Cognito Identity Provider in the User Pool — no separate OAuth server needed. No direct HTTP trigger — only invoked by gateway resolvers.'
+    layers:['pulsatract-db-layer','pulsatract-middy-layer'], events:['user.registered → SQS','host.role.granted → SQS'], deps:['@aws-sdk/client-cognito-identity-provider','onesignal-node-api-sdk','pg','middy'],
+    endpoints:['register(email, phone) → triggers OTP','verifyOtp(session, code) → confirms account','becomeHost(intake)','getMe()','signOut()'],
+    notes:'New user registration uses a Cognito CUSTOM_AUTH flow: register() calls InitiateAuth, a Define/Create/Verify Auth Challenge Lambda trigger generates a 6-digit OTP and dispatches it via OneSignal (SMS or email channel). verifyOtp() calls RespondToAuthChallenge — Cognito confirms the code and issues tokens. Google OAuth users (Cognito IdP) skip OTP entirely. OTP expires after 10 minutes; max 3 attempts before the session is invalidated. becomeHost() inserts into user_roles and emits host.role.granted to SQS.'
   },
   { id:'discovery', badge:'badge-teal', badgeLabel:'Public', name:'Discovery service', desc:'Search classes, hosts & gyms · geo filtering · ElastiCache Redis · pg_trgm',
     handler:'services/discovery/src/handler.invoke', trigger:'Lambda.invoke() from gateway resolvers', memory:'256 MB', timeout:'10s', provisioned:false,
@@ -1119,7 +1128,7 @@ const services = [
     handler:'services/booking/src/handler.invoke', trigger:'Lambda.invoke() from gateway resolvers', memory:'256 MB', timeout:'15s', provisioned:false,
     layers:['pulsatract-db-layer','pulsatract-middy-layer'], events:['booking.created → SQS FIFO','booking.cancelled → SQS FIFO'], deps:['pg (RDS Proxy)','@aws-sdk/client-sqs','middy'],
     endpoints:['createBooking()','cancelBooking()','myBookings(status)'],
-    notes:'Capacity check uses SELECT FOR UPDATE inside an Aurora transaction to prevent overselling. booking_code generated as DRV-XXXXXX (nanoid). On createBooking success, invokes Payment service Lambda synchronously then emits booking.created to SQS FIFO for notification fan-out.'
+    notes:'Capacity check uses SELECT FOR UPDATE inside an Aurora transaction to prevent overselling. booking_code generated as PLS-XXXXXX (nanoid). On createBooking success, invokes Payment service Lambda synchronously then emits booking.created to SQS FIFO for notification fan-out.'
   },
   { id:'payment', badge:'badge-amber', badgeLabel:'Payments', name:'Payment service', desc:'Stripe PaymentIntents · payment methods · payout accounts · webhook handler',
     handler:'services/payment/src/handler.invoke + src/webhook.handler', trigger:'Lambda.invoke() from booking service + API Gateway POST /webhooks/stripe', memory:'256 MB', timeout:'15s', provisioned:false,
@@ -1157,11 +1166,11 @@ const services = [
     endpoints:['submitReview()','listReviews(classId|hostId)','replyToReview(id, body)'],
     notes:'Review submission gated: booking must exist with status=confirmed and class start_at in the past. One review per booking_id enforced by Aurora UNIQUE constraint. Rating rollup to classes.rating handled by a PostgreSQL trigger on INSERT/UPDATE of reviews.'
   },
-  { id:'notification', badge:'badge-purple', badgeLabel:'Async', name:'Notification service', desc:'SQS consumer + EventBridge cron · AWS SES email · Expo push · prefs check',
+  { id:'notification', badge:'badge-purple', badgeLabel:'Async', name:'Notification service', desc:'SQS consumer + EventBridge cron · OneSignal push, email & SMS · prefs check',
     handler:'services/notification/src/sqs.handler + src/cron.handler', trigger:'SQS event source mapping (batch: 10) + EventBridge cron rules', memory:'256 MB', timeout:'60s SQS / 900s cron', provisioned:false,
-    layers:['pulsatract-db-layer','pulsatract-middy-layer'], events:[], deps:['@aws-sdk/client-ses','expo-server-sdk','pg (RDS Proxy)','middy'],
+    layers:['pulsatract-db-layer','pulsatract-middy-layer'], events:[], deps:['onesignal-node-api-sdk','pg (RDS Proxy)','middy'],
     endpoints:['(no HTTP — event-driven only)','SQS: booking.created, class.cancelled, gym.member.invited','Cron: daily T-24h reminder, Monday digest'],
-    notes:'Two Lambda functions: sqs.ts handles SQS events (booking confirmations, cancellations); cron.ts runs on EventBridge schedules. Both check notification_prefs in Aurora before sending. Email via Amazon SES (replaces Resend — stays on AWS stack); push via Expo Push API. SNS fan-out for host broadcast. DLQ with 3 retries + CloudWatch alarm.'
+    notes:'Two Lambda functions: sqs.ts handles SQS events; cron.ts runs on EventBridge schedules. Both check notification_prefs in Aurora before sending. All push notifications, transactional emails, and SMS (including OTP delivery from Identity service) go through OneSignal — one SDK, one dashboard, one delivery report. OneSignal app_id and REST API key stored in SSM. SNS fan-out used for broadcast when a host messages all attendees (one SNS publish → N SQS messages). DLQ with 3 retries + CloudWatch alarm on depth > 0.'
   }
 ];
 
@@ -1268,6 +1277,8 @@ provider:
     COGNITO_USER_POOL_ID: \${ssm:/pulsatract/\${self:provider.stage}/COGNITO_USER_POOL_ID}
     ELASTICACHE_ENDPOINT: \${ssm:/pulsatract/\${self:provider.stage}/ELASTICACHE_ENDPOINT}
     S3_MEDIA_BUCKET: pulsatract-media-\${self:provider.stage}
+    ONESIGNAL_APP_ID: \${ssm:/pulsatract/\${self:provider.stage}/ONESIGNAL_APP_ID}
+    ONESIGNAL_REST_API_KEY: \${ssm:/pulsatract/\${self:provider.stage}/ONESIGNAL_REST_API_KEY}
   iam:
     role:
       statements:
@@ -1317,6 +1328,35 @@ layers:
     timeout: 5
     layers:
       - !Ref MiddyLayerLambdaLayer`},
+  { badge:'badge-purple', label:'Cognito OTP trigger Lambdas', code:`  # Three Lambdas wired as Cognito User Pool triggers for CUSTOM_AUTH OTP flow
+  cognitoDefineAuthChallenge:
+    handler: services/identity/src/otp/define.handler
+    memorySize: 128
+    timeout: 5
+    layers:
+      - !Ref MiddyLayerLambdaLayer
+
+  cognitoCreateAuthChallenge:
+    handler: services/identity/src/otp/create.handler
+    memorySize: 128
+    timeout: 5
+    layers:
+      - !Ref MiddyLayerLambdaLayer
+    environment:
+      ONESIGNAL_APP_ID: \${self:provider.environment.ONESIGNAL_APP_ID}
+      ONESIGNAL_REST_API_KEY: \${self:provider.environment.ONESIGNAL_REST_API_KEY}
+
+  cognitoVerifyAuthChallenge:
+    handler: services/identity/src/otp/verify.handler
+    memorySize: 128
+    timeout: 5
+    layers:
+      - !Ref MiddyLayerLambdaLayer
+
+  # Wire all three to the Cognito User Pool in CDK / cfn resources:
+  # UserPool.addTrigger(UserPoolOperation.DEFINE_AUTH_CHALLENGE, cognitoDefineAuthChallenge)
+  # UserPool.addTrigger(UserPoolOperation.CREATE_AUTH_CHALLENGE, cognitoCreateAuthChallenge)
+  # UserPool.addTrigger(UserPoolOperation.VERIFY_AUTH_CHALLENGE_RESPONSE, cognitoVerifyAuthChallenge)`},
   { badge:'badge-coral', label:'Booking + Notification Lambdas', code:`  bookingService:
     handler: services/booking/src/handler.invoke
     timeout: 15
@@ -1385,9 +1425,13 @@ resources:
 ];
 
 const flows = [
+  { title:'New user registration — OTP flow',
+    chain:[ {t:'Client',b:'badge-gray'},{a:'→'},{t:'API Gateway',b:'badge-gray'},{a:'→'},{t:'Gateway Lambda',b:'badge-purple'},{a:'→'},{t:'Identity Lambda',b:'badge-purple'} ],
+    steps:['Client calls register(email, phone) mutation','Gateway Lambda → Lambda.invoke("identityService", { email, phone })','Identity Lambda: Cognito InitiateAuth with CUSTOM_AUTH flow — returns session token','Cognito fires Define Auth Challenge trigger → signals "send OTP"','Cognito fires Create Auth Challenge trigger → Identity Lambda generates 6-digit code, calls OneSignal REST API to send SMS or email','Client receives session token + prompt to enter OTP code','Client calls verifyOtp(session, code)','Identity Lambda: Cognito RespondToAuthChallenge with the code','Cognito fires Verify Auth Challenge trigger → checks code, marks correct/incorrect','On success: Cognito issues access + refresh tokens → client stores tokens → user is logged in','OTP expires after 10 min; max 3 attempts before session is invalidated']
+  },
   { title:'User books a class — full Lambda chain',
     chain:[ {t:'Client',b:'badge-gray'},{a:'→'},{t:'API Gateway',b:'badge-gray'},{a:'→'},{t:'JWT Authorizer Lambda',b:'badge-gray'},{a:'→'},{t:'Gateway Lambda',b:'badge-purple'} ],
-    steps:['Client sends POST /graphql with mutation createBooking(classId, spots, note)','API Gateway triggers JWT Authorizer Lambda → verifies Cognito JWT → queries Aurora for role → injects userId + role','Gateway Lambda (Apollo) resolves createBooking → Lambda.invoke("bookingService", payload)','Booking Lambda: SELECT FOR UPDATE on classes row in Aurora via RDS Proxy → check capacity','Booking Lambda: INSERT into bookings, generate DRV-XXXXXX code','Booking Lambda: Lambda.invoke("paymentService", { userId, classId, spots }) synchronously','Payment Lambda: Stripe PaymentIntent.create() → capture → return success','Booking Lambda: SQS.sendMessage() to BookingQueue.fifo with booking.created event','Notification Lambda (SQS consumer): checks notification_prefs in Aurora → AWS SES email + Expo push','Booking Lambda returns Booking object → Apollo returns to client → confirmation screen shown']
+    steps:['Client sends POST /graphql with mutation createBooking(classId, spots, note)','API Gateway triggers JWT Authorizer Lambda → verifies Cognito JWT → queries Aurora for role → injects userId + role','Gateway Lambda (Apollo) resolves createBooking → Lambda.invoke("bookingService", payload)','Booking Lambda: SELECT FOR UPDATE on classes row in Aurora via RDS Proxy → check capacity','Booking Lambda: INSERT into bookings, generate PLS-XXXXXX code','Booking Lambda: Lambda.invoke("paymentService", { userId, classId, spots }) synchronously','Payment Lambda: Stripe PaymentIntent.create() → capture → return success','Booking Lambda: SQS.sendMessage() to BookingQueue.fifo with booking.created event','Notification Lambda (SQS consumer): checks notification_prefs in Aurora → OneSignal push notification + email','Booking Lambda returns Booking object → Apollo returns to client → confirmation screen shown']
   },
   { title:'Host creates a class — geocode + cache invalidation',
     chain:[ {t:'Host client',b:'badge-gray'},{a:'→'},{t:'Gateway Lambda',b:'badge-purple'},{a:'→'},{t:'Host Lambda',b:'badge-blue'} ],
@@ -1406,12 +1450,12 @@ const flows = [
 const infraItems = [
   { label:'Lambda config (all services)', text:'Runtime: nodejs20.x\nArchitecture: arm64 (Graviton2 — ~20% cheaper)\nMemory: 256 MB (512 MB for gateway + analytics)\nTimeout: 29s (API GW max) / 900s for cron jobs\nProvisioned concurrency: gateway only (min: 2)\nVPC: private subnets in us-east-1 — same VPC as Aurora + ElastiCache' },
   { label:'API Gateway', text:'HTTP API (not REST API — lower latency, cheaper)\nSingle stage: $default with auto-deploy\nCognito JWT Authorizer Lambda — shared across all routes\nCORS origins configured per env via SSM param\nThrottling: 1000 rps burst / 500 rps steady' },
-  { label:'Auth — Amazon Cognito', text:'Cognito User Pool — JWT issuance + refresh tokens\nGoogle OAuth as a Cognito Identity Provider (no Auth0)\nLambda Authorizer: aws-jwt-verify library (fast, no network call after first JWKS fetch)\nuser_roles table in Aurora for host/admin elevation\nPre-sign-up Lambda trigger for custom validation' },
+  { label:'Auth — Amazon Cognito + OTP', text:'Cognito User Pool — JWT issuance + refresh tokens\nNew user registration: CUSTOM_AUTH flow with 3 Lambda triggers\n  Define Auth Challenge → signals OTP required\n  Create Auth Challenge → generates code, calls OneSignal\n  Verify Auth Challenge → checks code, max 3 attempts\nGoogle OAuth as a Cognito Identity Provider (skips OTP)\nOTP expires after 10 minutes; session invalidated on 3 failures\nLambda Authorizer: aws-jwt-verify (fast, cached JWKS)' },
   { label:'Database — Aurora PostgreSQL Serverless v2', text:'Aurora PostgreSQL Serverless v2 — scales 0.5 to 16 ACUs\nRDS Proxy for Lambda connection pooling (IAM auth, no password in code)\nPostGIS extension for geo radius search (ST_DWithin)\npg_trgm + GIN index for fuzzy text search on classes/hosts\nFlyway for schema migrations in CI/CD pipeline' },
   { label:'Cache — ElastiCache Serverless', text:'ElastiCache Serverless (Redis OSS) — no cluster sizing needed\nSame VPC as Lambda functions and Aurora\nSearch cache: 60s TTL, keyed by query param hash\nAnalytics cache: 5min TTL, keyed by host_id + range\nSession-level invalidation on class.created SQS event' },
   { label:'Storage — S3 + CloudFront', text:'S3 bucket: pulsatract-media-{stage} for avatars, class images, gym gallery\nPre-signed PUT URLs (5min TTL) issued by Profile/Host Lambdas\nClients upload directly to S3 — no Lambda proxy\nCloudFront distribution in front of S3 for CDN reads\nS3 lifecycle rules: transition to IA after 90 days' },
   { label:'Async layer', text:'SQS FIFO — booking.created, class.cancelled events\nSNS → SQS fan-out for broadcast (message all attendees)\nDead-letter queue: 3 retries, then alarm + DLQ inspection\nEventBridge rules: daily reminder cron, Monday digest\nNotification Lambda: SQS event source mapping (batch 10)' },
-  { label:'Email — Amazon SES', text:'Amazon SES (us-east-1) for transactional email\nBooking confirmations, reminders, host invites\nSES Templates for consistent HTML emails\nDomain + DKIM verified in SES console\nSES sending quota: 50K/day on production; request increase as needed' },
+  { label:'Notifications — OneSignal', text:'OneSignal handles push, email, and SMS from one SDK\nPush notifications: iOS (APNs) + Android (FCM) via OneSignal\nTransactional email: booking confirmations, reminders, invites\nSMS: OTP delivery during registration + optional booking SMS\nOneSignal app_id + REST API key stored in SSM\nOne delivery dashboard for all channels — open rates, failures\nFree plan: unlimited push + 10K emails/mo; Growth: $9/mo for 100K emails + SMS credits' },
   { label:'Secrets & config', text:'AWS SSM Parameter Store for all secrets\nLoaded at cold start via @middy/ssm middleware\nPer-env params: /pulsatract/{env}/DB_PROXY_ENDPOINT etc.\nCognito User Pool ID + Client ID stored in SSM\nStripe + Google Maps API keys in SSM with rotation enabled' },
   { label:'Lambda Layers', text:'pulsatract-db-layer: pg driver + RDS Proxy helpers\npulsatract-stripe-layer: stripe SDK\npulsatract-middy-layer: middy + aws-jwt-verify + powertools\nShared across all Lambdas — reduces cold start + bundle size\nLayers versioned independently in serverless.yml' },
   { label:'Observability', text:'AWS X-Ray active tracing on all Lambdas\nCloudWatch structured JSON logs (powertools-lambda)\nSentry SDK in gateway + payment service handlers\nCloudWatch alarms: error rate, DLQ depth, p99 duration, RDS Proxy connection errors\nGrafana Cloud dashboard via CloudWatch data source' },
@@ -1521,48 +1565,47 @@ infraItems.forEach(item => {
 const exchangeRates = { USD: 1, EUR: 0.92, GBP: 0.79 };
 const currencySymbols = { USD: '$', EUR: '€', GBP: '£' };
 let selectedCurrency = 'USD';
-
 function fmt(val) {
   const rate = exchangeRates[selectedCurrency];
   const sym = currencySymbols[selectedCurrency];
-  return sym + (val * rate).toFixed(2);
+  return sym + (Number(val) * rate).toFixed(2);
 }
 
 const tiers = [
   {
     id: 'early', name: 'Early stage', label: 'TIER 1', req: '~5K req/day · 50 bookings/mo',
-    total: 42,
+    total: 45,
     breakdown: [
       { label: 'Lambda compute + requests', val: 1.00 },
       { label: 'API Gateway HTTP API', val: 0.15 },
       { label: 'Aurora Serverless v2 (0.5 ACU min)', val: 22.00 },
       { label: 'RDS Proxy', val: 9.00 },
       { label: 'ElastiCache Serverless', val: 0.50 },
-      { label: 'Amazon SES', val: 0.10 },
+      { label: 'OneSignal Growth (push + email)', val: 9.00 },
       { label: 'SQS FIFO', val: 0.05 },
-      { label: 'Amazon Cognito (MAUs)', val: 0.00 },
+      { label: 'Amazon Cognito (MAUs < 50K)', val: 0.00 },
       { label: 'S3 + CloudFront', val: 0.50 },
       { label: 'CloudWatch + X-Ray', val: 2.00 },
       { label: 'SSM Parameter Store', val: 0.00 },
     ],
     bars: [
-      { label: 'Aurora Serverless v2', pct: 52, val: 22.00, color: '#1d9e75' },
-      { label: 'RDS Proxy', pct: 21, val: 9.00, color: '#378add' },
-      { label: 'Lambda + API GW', pct: 3, val: 1.15, color: '#C9A24C' },
-      { label: 'Observability', pct: 5, val: 2.00, color: '#d85a30' },
-      { label: 'ElastiCache + S3 + other', pct: 3, val: 1.30, color: '#75695a' },
+      { label: 'Aurora Serverless v2', pct: 49, val: 22.00, color: '#1d9e75' },
+      { label: 'RDS Proxy', pct: 20, val: 9.00, color: '#378add' },
+      { label: 'OneSignal', pct: 20, val: 9.00, color: '#7f77dd' },
+      { label: 'Observability', pct: 4, val: 2.00, color: '#d85a30' },
+      { label: 'Lambda + API GW + other', pct: 5, val: 2.20, color: '#4a505c' },
     ]
   },
   {
     id: 'growth', name: 'Growth', label: 'TIER 2', req: '~50K req/day · 1K bookings/mo',
-    total: 145,
+    total: 155,
     breakdown: [
       { label: 'Lambda compute + requests', val: 9.50 },
       { label: 'API Gateway HTTP API', val: 1.50 },
       { label: 'Aurora Serverless v2 (~2 ACU avg)', val: 65.00 },
       { label: 'RDS Proxy', val: 18.00 },
       { label: 'ElastiCache Serverless', val: 8.00 },
-      { label: 'Amazon SES (50K emails)', val: 5.00 },
+      { label: 'OneSignal Growth (100K emails + SMS)', val: 25.00 },
       { label: 'SQS FIFO', val: 0.50 },
       { label: 'Amazon Cognito (10K MAUs)', val: 0.00 },
       { label: 'S3 + CloudFront', val: 3.00 },
@@ -1570,23 +1613,23 @@ const tiers = [
       { label: 'SSM + misc', val: 2.00 },
     ],
     bars: [
-      { label: 'Aurora Serverless v2', pct: 45, val: 65.00, color: '#1d9e75' },
+      { label: 'Aurora Serverless v2', pct: 42, val: 65.00, color: '#1d9e75' },
       { label: 'RDS Proxy', pct: 12, val: 18.00, color: '#378add' },
-      { label: 'Lambda + API GW', pct: 8, val: 11.00, color: '#C9A24C' },
+      { label: 'OneSignal', pct: 16, val: 25.00, color: '#7f77dd' },
       { label: 'Observability', pct: 10, val: 15.00, color: '#d85a30' },
-      { label: 'ElastiCache + SES + other', pct: 11, val: 16.00, color: '#75695a' },
+      { label: 'Lambda + API GW + other', pct: 10, val: 16.00, color: '#4a505c' },
     ]
   },
   {
     id: 'scale', name: 'Scale', label: 'TIER 3', req: '~500K req/day · 15K bookings/mo',
-    total: 870,
+    total: 930,
     breakdown: [
       { label: 'Lambda compute + requests', val: 75.00 },
       { label: 'API Gateway HTTP API', val: 15.00 },
       { label: 'Aurora Serverless v2 (~8 ACU avg)', val: 430.00 },
       { label: 'RDS Proxy', val: 90.00 },
       { label: 'ElastiCache Serverless', val: 45.00 },
-      { label: 'Amazon SES (500K emails)', val: 50.00 },
+      { label: 'OneSignal Business (500K+ emails + SMS)', val: 99.00 },
       { label: 'SQS FIFO', val: 5.00 },
       { label: 'Amazon Cognito (100K+ MAUs)', val: 55.00 },
       { label: 'S3 + CloudFront', val: 25.00 },
@@ -1594,11 +1637,11 @@ const tiers = [
       { label: 'SSM + misc', val: 8.00 },
     ],
     bars: [
-      { label: 'Aurora Serverless v2', pct: 49, val: 430.00, color: '#1d9e75' },
+      { label: 'Aurora Serverless v2', pct: 46, val: 430.00, color: '#1d9e75' },
       { label: 'RDS Proxy', pct: 10, val: 90.00, color: '#378add' },
-      { label: 'Lambda + API GW', pct: 10, val: 90.00, color: '#C9A24C' },
-      { label: 'Observability', pct: 7, val: 60.00, color: '#d85a30' },
-      { label: 'ElastiCache + SES + Cognito + other', pct: 21, val: 183.00, color: '#75695a' },
+      { label: 'Lambda + API GW', pct: 10, val: 90.00, color: '#7f77dd' },
+      { label: 'Observability', pct: 6, val: 60.00, color: '#d85a30' },
+      { label: 'OneSignal + Cognito + other', pct: 17, val: 162.00, color: '#4a505c' },
     ]
   }
 ];
@@ -1607,10 +1650,9 @@ let selectedTier = 0;
 
 function renderTiers() {
   const container = document.getElementById('cost-tiers');
-  container.innerHTML = '';
   tiers.forEach((t, i) => {
     const card = document.createElement('div');
-    card.className = 'cost-tier' + (i === selectedTier ? ' selected' : '');
+    card.className = 'cost-tier' + (i === 0 ? ' selected' : '');
     card.innerHTML = `
       <div class="cost-tier-label">${t.label}</div>
       <div class="cost-tier-name">${t.name}</div>
@@ -1651,44 +1693,35 @@ const calcInputs = [
   { label: 'Requests per day (K)', key: 'reqK', min: 1, max: 1000, step: 10, val: 10, unit: 'K' },
   { label: 'Bookings per month', key: 'bookings', min: 0, max: 20000, step: 100, val: 200, unit: '' },
   { label: 'Avg Lambda duration (ms)', key: 'durMs', min: 50, max: 2000, step: 50, val: 300, unit: 'ms' },
-  { label: 'Emails per month (K)', key: 'emailK', min: 0, max: 500, step: 5, val: 2, unit: 'K' },
+  { label: 'New registrations / mo (OTP SMS)', key: 'regs', min: 0, max: 10000, step: 50, val: 100, unit: '' },
   { label: 'Aurora avg ACUs', key: 'acus', min: 0.5, max: 16, step: 0.5, val: 1, unit: ' ACU' },
 ];
+
+const osPlanLabels = ['Free ($0)', 'Growth ($9)', 'Business ($99)'];
+const osPlanCosts = [0, 9, 99];
+let selectedOsPlan = 0;
 
 const calcState = {};
 calcInputs.forEach(i => { calcState[i.key] = i.val; });
 
 function calcCost() {
-  const { reqK, bookings, durMs, emailK, acus } = calcState;
+  const { reqK, bookings, durMs, regs, acus } = calcState;
   const reqPerMonth = reqK * 1000 * 30;
-  // Lambda arm64: $0.0000000133/GB-s, 256MB avg
   const gbSec = reqPerMonth * (durMs / 1000) * 0.256;
   const lambdaCompute = Math.max(0, gbSec * 0.0000000133 * 100 - 0.53);
   const lambdaReqs = Math.max(0, (reqPerMonth / 1e6) * 0.20 - 0.20);
-  // API GW HTTP $1/1M
   const apigw = (reqPerMonth / 1e6) * 1.0;
-  // Aurora Serverless v2: $0.12/ACU-hour
   const aurora = acus * 0.12 * 24 * 30;
-  // RDS Proxy: $0.015/vCPU-hour (proxy for 2 vCPU equiv)
   const rdsProxy = 2 * 0.015 * 24 * 30;
-  // ElastiCache Serverless: ~$0.0065/GB-hour, assume 1GB avg
   const elasticache = 1 * 0.0065 * 24 * 30;
-  // SES: $0.10/1K emails after 62K/mo free
-  const sesFree = 62000;
-  const sesEmails = emailK * 1000;
-  const ses = sesEmails <= sesFree ? 0 : ((sesEmails - sesFree) / 1000) * 0.10;
-  // SQS: $0.40/1M msgs, bookings*5 + misc
+  const osCost = osPlanCosts[selectedOsPlan] + (regs * 0.0075);
   const sqsMsgs = (bookings * 5 + reqK * 30 * 0.05) * 1000;
   const sqs = Math.max(0, (sqsMsgs / 1e6) * 0.40 - 0.40);
-  // Cognito: free up to 50K MAUs, $0.0055/MAU after
   const maus = Math.round(reqK * 2);
   const cognito = maus <= 50000 ? 0 : (maus - 50000) * 0.0055;
-  // S3+CF: ~$0.023/GB storage + $0.085/GB transfer, rough $0.50 base
   const s3cf = 0.50 + (reqK * 30 * 0.001);
-  // Observability: $2 base + scale
   const obs = 2 + (reqK / 30) * 1.2;
-  const total = lambdaCompute + lambdaReqs + apigw + aurora + rdsProxy + elasticache + ses + sqs + cognito + s3cf + obs;
-
+  const total = lambdaCompute + lambdaReqs + apigw + aurora + rdsProxy + elasticache + osCost + sqs + cognito + s3cf + obs;
   document.getElementById('calc-total').textContent = fmt(total);
   document.getElementById('calc-notes').innerHTML = `
     <strong>Breakdown</strong><br>
@@ -1698,12 +1731,12 @@ function calcCost() {
     Aurora Serverless v2 (${acus} ACU avg): ${fmt(aurora)} &nbsp;·&nbsp;
     RDS Proxy: ${fmt(rdsProxy)} &nbsp;·&nbsp;
     ElastiCache: ${fmt(elasticache)}<br>
-    SES email: ${fmt(ses)} &nbsp;·&nbsp;
+    OneSignal (${osPlanLabels[selectedOsPlan]}) + ${regs} OTP SMS @ $0.0075: ${fmt(osCost)} &nbsp;·&nbsp;
     SQS: ${fmt(sqs)} &nbsp;·&nbsp;
-    Cognito: ${fmt(cognito)} &nbsp;·&nbsp;
+    Cognito: ${fmt(cognito)}<br>
     S3+CF: ${fmt(s3cf)} &nbsp;·&nbsp;
     Observability: ${fmt(obs)}<br>
-    <span style="color:var(--text-tertiary);font-size:11px;margin-top:4px;display:block">Stripe fees (1.5% + 20p/transaction) not included. Aurora is the dominant cost at scale — consider Aurora Provisioned (db.t4g.medium ~$50/mo) once traffic is predictable.</span>`;
+    <span style="color:var(--text-tertiary);font-size:11px;margin-top:4px;display:block">Stripe fees not included. OTP SMS ~$0.0075/msg (UK/US). OneSignal Free covers unlimited push + 10K emails/mo — fine for early stage. Aurora is the dominant cost at scale.</span>`;
 }
 
 function renderCalc() {
@@ -1715,33 +1748,60 @@ function renderCalc() {
     row.innerHTML = `
       <span class="calc-label">${inp.label}</span>
       <input type="range" min="${inp.min}" max="${inp.max}" step="${inp.step}" value="${inp.val}" id="ci-${inp.key}">
-      <span class="calc-val" id="${valId}">${inp.prefix ? '$' : ''}${inp.val}${inp.prefix ? '' : inp.unit}</span>`;
+      <span class="calc-val" id="${valId}">${inp.val}${inp.unit}</span>`;
     const slider = row.querySelector('input');
     slider.addEventListener('input', () => {
       const v = Number(slider.value);
       calcState[inp.key] = v;
-      document.getElementById(valId).textContent = (inp.prefix ? '$' : '') + v + (inp.prefix ? '' : inp.unit);
+      document.getElementById(valId).textContent = v + inp.unit;
       calcCost();
     });
     container.appendChild(row);
   });
+
+  // OneSignal plan toggle buttons
+  const planRow = document.createElement('div');
+  planRow.className = 'calc-row';
+  planRow.style.cssText = 'align-items:center;flex-wrap:wrap;gap:8px';
+  planRow.innerHTML = '<span class="calc-label">OneSignal plan</span>';
+  const btnWrap = document.createElement('div');
+  btnWrap.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
+  osPlanLabels.forEach((lbl, i) => {
+    const btn = document.createElement('button');
+    btn.textContent = lbl;
+    btn.style.cssText = `font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid var(--border${i===0?'-primary':''});background:${i===0?'var(--surface2)':'transparent'};color:var(--color-text-primary, var(--text));cursor:pointer;font-family:inherit`;
+    btn.id = 'os-plan-' + i;
+    btn.addEventListener('click', () => {
+      selectedOsPlan = i;
+      document.querySelectorAll('[id^=os-plan-]').forEach((b, j) => {
+        b.style.background = j === i ? 'var(--surface2)' : 'transparent';
+        b.style.borderColor = j === i ? 'var(--border-primary, rgba(255,255,255,0.4))' : 'var(--border, rgba(255,255,255,0.08))';
+      });
+      calcCost();
+    });
+    btnWrap.appendChild(btn);
+  });
+  planRow.appendChild(btnWrap);
+  container.appendChild(planRow);
   calcCost();
 }
+
+renderTiers();
+renderBars(0);
+renderCalc();
+
 
 document.querySelectorAll('#currency-switcher .currency-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('#currency-switcher .currency-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     selectedCurrency = btn.dataset.currency;
+    document.getElementById('cost-tiers').innerHTML = '';
     renderTiers();
     renderBars(selectedTier);
     calcCost();
   });
 });
-
-renderTiers();
-renderBars(0);
-renderCalc();
 
 const sections = document.querySelectorAll('.section[id]');
 const navLinks = document.querySelectorAll('.nav-link');
