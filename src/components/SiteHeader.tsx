@@ -69,7 +69,7 @@ export function SiteHeader() {
         <Link to="/" className="flex items-center gap-3 leading-none mr-10">
           <PulstractMark className="h-9 w-[72px]" />
           <span className="font-sans font-light text-[15px] tracking-[0.32em] uppercase">
-            pulsa<span className="text-primary">t</span>ract
+            puls<span className="text-primary">t</span>ract
           </span>
         </Link>
 
