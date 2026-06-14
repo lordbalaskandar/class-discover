@@ -23,13 +23,11 @@ const ACTIVITIES = [
   "Cardio", "Aerial", "Polo", "Cricket", "Baseball", "Hockey", "Lacrosse",
 ];
 
-const COLS = 6;
-const ROWS = 8;
-const CELLS = COLS * ROWS;
+const ROWS = 9;
+const ITEMS_PER_ROW = 10; // words per row (logos interleaved between)
 
-function pickWords(count: number) {
-  const shuffled = [...ACTIVITIES].sort(() => Math.random() - 0.5);
-  return Array.from({ length: count }, (_, i) => shuffled[i % shuffled.length]);
+function shuffle<T>(arr: readonly T[]) {
+  return [...arr].sort(() => Math.random() - 0.5);
 }
 
 function AppStoreBadge() {
@@ -71,78 +69,85 @@ function GooglePlayBadge() {
   );
 }
 
-function ComingSoonPage() {
-  const words = useMemo(() => pickWords(CELLS), []);
+function MarqueeRow({ words, reverse, duration }: { words: string[]; reverse: boolean; duration: number }) {
+  // Build a sequence of alternating logo / word items, then duplicate for seamless loop.
+  const items = words.flatMap((w, i) => [
+    { kind: "logo" as const, key: `l-${i}` },
+    { kind: "word" as const, key: `w-${i}`, value: w },
+  ]);
+  const loop = [...items, ...items];
 
-  // Mask the center so the background never competes with the hero content.
+  return (
+    <div className="overflow-hidden w-full">
+      <div
+        className="flex items-center gap-12 whitespace-nowrap will-change-transform"
+        style={{
+          animation: `${reverse ? "marqueeRight" : "marqueeLeft"} ${duration}s linear infinite`,
+        }}
+      >
+        {loop.map((it, i) =>
+          it.kind === "logo" ? (
+            <PulstractMark
+              key={`${it.key}-${i}`}
+              className="h-8 w-16 md:h-10 md:w-20 shrink-0 opacity-[0.32]"
+              gold="hsl(43 55% 54%)"
+              light="white"
+            />
+          ) : (
+            <span
+              key={`${it.key}-${i}`}
+              className="font-display text-sm md:text-base font-semibold tracking-[0.18em] uppercase text-white/[0.32] shrink-0"
+            >
+              {it.value}
+            </span>
+          ),
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ComingSoonPage() {
+  const rows = useMemo(
+    () =>
+      Array.from({ length: ROWS }, () => shuffle(ACTIVITIES).slice(0, ITEMS_PER_ROW)),
+    [],
+  );
+
   const centerMask =
     "radial-gradient(ellipse 520px 360px at center, transparent 0%, transparent 40%, black 75%)";
 
   return (
     <div className="min-h-screen flex flex-col bg-black text-white relative overflow-hidden">
-      {/* Checkerboard background: strict logo / word / logo / word pattern.
-          Each cell crossfades between its logo and its word. */}
+      {/* Marquee rows background — alternating direction per row. */}
       <div
-        className="absolute inset-0 z-0 pointer-events-none select-none"
+        className="absolute inset-0 z-0 pointer-events-none select-none flex flex-col justify-between py-6"
         style={{
           WebkitMaskImage: centerMask,
           maskImage: centerMask,
         }}
         aria-hidden="true"
       >
-        <div
-          className="grid h-full w-full"
-          style={{
-            gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`,
-            gridTemplateRows: `repeat(${ROWS}, minmax(0, 1fr))`,
-          }}
-        >
-          {words.map((word, i) => {
-            const row = Math.floor(i / COLS);
-            const col = i % COLS;
-            // Strict checkerboard: even cells start as logo, odd cells start as word.
-            // All cells share the same timing so the entire board flips in unison —
-            // logos become words, words become logos, with a clean crossfade.
-            const startsWithLogo = (row + col) % 2 === 0;
-            const logoAnim = `cellSwap 5s ease-in-out 0s infinite ${startsWithLogo ? "normal" : "reverse"}`;
-            const wordAnim = `cellSwap 5s ease-in-out 0s infinite ${startsWithLogo ? "reverse" : "normal"}`;
-            return (
-              <div
-                key={i}
-                className="relative flex items-center justify-center overflow-hidden"
-              >
-                <div
-                  className="absolute inset-0 flex items-center justify-center"
-                  style={{ animation: logoAnim }}
-                >
-                  <PulstractMark
-                    className="h-7 w-14 md:h-9 md:w-[72px] opacity-[0.32]"
-                    gold="hsl(43 55% 54%)"
-                    light="white"
-                  />
-                </div>
-                <div
-                  className="absolute inset-0 flex items-center justify-center px-1"
-                  style={{ animation: wordAnim }}
-                >
-                  <span className="font-display text-[11px] md:text-sm font-semibold tracking-[0.18em] uppercase text-white/[0.32] whitespace-nowrap">
-                    {word}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {rows.map((words, i) => (
+          <MarqueeRow
+            key={i}
+            words={words}
+            reverse={i % 2 === 1}
+            duration={55 + (i % 3) * 10}
+          />
+        ))}
       </div>
 
-      {/* Crossfade: long hold on each state, quick swap between them. */}
       <style>{`
-        @keyframes cellSwap {
-          0%, 45%   { opacity: 1; }
-          55%, 100% { opacity: 0; }
+        @keyframes marqueeLeft {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        @keyframes marqueeRight {
+          0%   { transform: translateX(-50%); }
+          100% { transform: translateX(0); }
         }
       `}</style>
-
 
       <SiteHeader />
 
