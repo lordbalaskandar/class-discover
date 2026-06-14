@@ -100,32 +100,32 @@ function ComingSoonPage() {
           {words.map((word, i) => {
             const row = Math.floor(i / COLS);
             const col = i % COLS;
-            // Strict checkerboard starting state: even cells show the logo,
-            // odd cells show the word. The crossfade then swaps them.
+            // Strict checkerboard: even cells start as logo, odd cells start as word.
+            // All cells share the same timing so the entire board flips in unison —
+            // logos become words, words become logos, with a clean crossfade.
             const startsWithLogo = (row + col) % 2 === 0;
-            const delay = ((i * 0.18) % 4).toFixed(2);
-            const logoAnim = `cellSwap 4s ease-in-out ${delay}s infinite ${startsWithLogo ? "normal" : "reverse"}`;
-            const wordAnim = `cellSwap 4s ease-in-out ${delay}s infinite ${startsWithLogo ? "reverse" : "normal"}`;
+            const logoAnim = `cellSwap 5s ease-in-out 0s infinite ${startsWithLogo ? "normal" : "reverse"}`;
+            const wordAnim = `cellSwap 5s ease-in-out 0s infinite ${startsWithLogo ? "reverse" : "normal"}`;
             return (
               <div
                 key={i}
-                className="relative flex items-center justify-center overflow-hidden px-2"
+                className="relative flex items-center justify-center overflow-hidden"
               >
                 <div
                   className="absolute inset-0 flex items-center justify-center"
                   style={{ animation: logoAnim }}
                 >
                   <PulstractMark
-                    className="h-8 w-16 md:h-10 md:w-20 opacity-[0.28]"
+                    className="h-7 w-14 md:h-9 md:w-[72px] opacity-[0.32]"
                     gold="hsl(43 55% 54%)"
                     light="white"
                   />
                 </div>
                 <div
-                  className="absolute inset-0 flex items-center justify-center"
+                  className="absolute inset-0 flex items-center justify-center px-1"
                   style={{ animation: wordAnim }}
                 >
-                  <span className="font-display text-base md:text-xl font-semibold tracking-[0.2em] uppercase text-white/[0.28] whitespace-nowrap">
+                  <span className="font-display text-[11px] md:text-sm font-semibold tracking-[0.18em] uppercase text-white/[0.32] whitespace-nowrap">
                     {word}
                   </span>
                 </div>
@@ -135,11 +135,11 @@ function ComingSoonPage() {
         </div>
       </div>
 
-      {/* Crossfade: each cell holds, fades out, the other layer fades in. */}
+      {/* Crossfade: long hold on each state, quick swap between them. */}
       <style>{`
         @keyframes cellSwap {
-          0%, 40%   { opacity: 1; }
-          60%, 100% { opacity: 0; }
+          0%, 45%   { opacity: 1; }
+          55%, 100% { opacity: 0; }
         }
       `}</style>
 
