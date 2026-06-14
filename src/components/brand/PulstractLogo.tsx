@@ -97,7 +97,7 @@ export function PulstractLockup({
     >
       <PulstractMark className="h-6 w-12" />
       <span className="font-display text-lg tracking-[0.18em] uppercase leading-none">
-        pulsa<span style={{ color: "hsl(43 55% 54%)" }}>t</span>ract
+        puls<span style={{ color: "hsl(43 55% 54%)" }}>t</span>ract
       </span>
     </span>
   );
