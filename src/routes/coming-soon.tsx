@@ -173,7 +173,7 @@ function ComingSoonPage() {
         </div>
       </main>
 
-      <footer className="border-t border-white/10 py-6 text-center text-sm text-white/40 relative z-10">
+      <footer className="py-6 text-center text-sm text-white/40 relative z-10">
         © {new Date().getFullYear()} Pulstract · Move together
       </footer>
     </div>
