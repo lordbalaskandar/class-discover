@@ -78,6 +78,7 @@ export function SiteHeader() {
           <Link to="/host" className="text-foreground/80 hover:text-foreground transition-colors">For hosts</Link>
           <Link to="/mobile" className="text-foreground/80 hover:text-foreground transition-colors">Mobile preview</Link>
           <Link to="/architecture" className="text-foreground/80 hover:text-foreground transition-colors">Architecture</Link>
+          <Link to="/coming-soon" className="text-foreground/80 hover:text-foreground transition-colors">Coming soon</Link>
         </nav>
 
         <div className="flex items-center gap-2">
