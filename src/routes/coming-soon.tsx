@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { PulstractMark } from "@/components/brand/PulstractLogo";
 
@@ -13,29 +14,23 @@ export const Route = createFileRoute("/coming-soon")({
 });
 
 const ACTIVITIES = [
-  { label: "Pickleball", src: "https://images.unsplash.com/photo-1554068865-24cecd4e34b8?auto=format&fit=crop&w=900&q=70" },
-  { label: "Boxing", src: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=900&q=70" },
-  { label: "Yoga", src: "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=900&q=70" },
-  { label: "Pilates", src: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=900&q=70" },
-  { label: "Tennis", src: "https://images.unsplash.com/photo-1542144582-1ba00456b5e3?auto=format&fit=crop&w=900&q=70" },
-  { label: "HIIT", src: "https://images.unsplash.com/photo-1599058917212-d750089bc07e?auto=format&fit=crop&w=900&q=70" },
-  { label: "Rock Climbing", src: "https://images.unsplash.com/photo-1522163182402-834f871fd851?auto=format&fit=crop&w=900&q=70" },
-  { label: "Spin", src: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=900&q=70" },
-  { label: "Running", src: "https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=900&q=70" },
-  { label: "Swimming", src: "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=900&q=70" },
-  { label: "Crossfit", src: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=900&q=70" },
-  { label: "Barre", src: "https://images.unsplash.com/photo-1518310383802-640c2de311b2?auto=format&fit=crop&w=900&q=70" },
-  { label: "Surfing", src: "https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=900&q=70" },
-  { label: "Dance", src: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&w=900&q=70" },
-  { label: "Martial Arts", src: "https://images.unsplash.com/photo-1555597673-b21d5c935865?auto=format&fit=crop&w=900&q=70" },
-  { label: "Golf", src: "https://images.unsplash.com/photo-1535131749006-b7f58c99034b?auto=format&fit=crop&w=900&q=70" },
-  { label: "Cycling", src: "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=900&q=70" },
-  { label: "Basketball", src: "https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=900&q=70" },
-  { label: "Soccer", src: "https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=900&q=70" },
-  { label: "Skateboarding", src: "https://images.unsplash.com/photo-1531565637446-32307b194362?auto=format&fit=crop&w=900&q=70" },
+  "Pickleball", "Boxing", "Yoga", "Pilates", "Tennis", "HIIT", "Climbing",
+  "Spin", "Running", "Swimming", "Crossfit", "Barre", "Surfing", "Dance",
+  "Karate", "Judo", "Golf", "Cycling", "Basketball", "Soccer", "Skating",
+  "Rowing", "Kickboxing", "Muay Thai", "Squash", "Badminton", "Volleyball",
+  "Padel", "Fencing", "Archery", "Hiking", "Bouldering", "Sailing", "Rugby",
+  "Capoeira", "Zumba", "Stretch", "Mobility", "Sprint", "Lift", "Strength",
+  "Cardio", "Aerial", "Polo", "Cricket", "Baseball", "Hockey", "Lacrosse",
 ];
 
-const BG_WORDS = Array.from({ length: 64 }, (_, i) => i);
+const COLS = 6;
+const ROWS = 8;
+const CELLS = COLS * ROWS;
+
+function pickWords() {
+  const shuffled = [...ACTIVITIES].sort(() => Math.random() - 0.5);
+  return Array.from({ length: CELLS }, (_, i) => shuffled[i % shuffled.length]);
+}
 
 function AppStoreBadge() {
   return (
@@ -77,29 +72,59 @@ function GooglePlayBadge() {
 }
 
 function ComingSoonPage() {
-  const loop = [...ACTIVITIES, ...ACTIVITIES];
+  const [words, setWords] = useState<string[]>(() => pickWords());
+
+  useEffect(() => {
+    const id = setInterval(() => setWords(pickWords()), 2500);
+    return () => clearInterval(id);
+  }, []);
+
+  // Mask the center so the background never competes with the hero content.
+  const centerMask =
+    "radial-gradient(ellipse 520px 360px at center, transparent 0%, transparent 40%, black 75%)";
+
   return (
     <div className="min-h-screen flex flex-col bg-black text-white relative overflow-hidden">
-      {/* Repeated PULSTRACT background text */}
-      <div className="absolute inset-0 z-0 pointer-events-none flex flex-wrap justify-around content-around gap-x-6 gap-y-10 p-6 overflow-hidden opacity-[0.07]">
-        {BG_WORDS.map((i) => (
-          <span
-            key={i}
-            className="font-display text-3xl md:text-4xl font-bold tracking-[0.3em] uppercase whitespace-nowrap select-none"
-            style={{ transform: `rotate(${((i % 5) - 2) * 3}deg)` }}
-          >
-            PULSTRACT
-          </span>
-        ))}
-      </div>
-
-      {/* Vignette overlay */}
+      {/* Checkerboard background: activity word / logo / activity word / logo ... */}
       <div
-        className="absolute inset-0 z-0 pointer-events-none"
+        className="absolute inset-0 z-0 pointer-events-none select-none"
         style={{
-          background: "radial-gradient(ellipse at center, transparent 0%, transparent 50%, rgba(0,0,0,0.6) 100%)",
+          WebkitMaskImage: centerMask,
+          maskImage: centerMask,
         }}
-      />
+        aria-hidden="true"
+      >
+        <div
+          className="grid h-full w-full"
+          style={{
+            gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`,
+            gridTemplateRows: `repeat(${ROWS}, minmax(0, 1fr))`,
+          }}
+        >
+          {words.map((word, i) => {
+            const row = Math.floor(i / COLS);
+            const isLogo = (row + i) % 2 === 0;
+            return (
+              <div
+                key={i}
+                className="flex items-center justify-center overflow-hidden px-2 transition-opacity duration-700"
+              >
+                {isLogo ? (
+                  <PulstractMark
+                    className="h-8 w-16 md:h-10 md:w-20 opacity-[0.14]"
+                    gold="hsl(43 55% 54%)"
+                    light="white"
+                  />
+                ) : (
+                  <span className="font-display text-base md:text-xl font-semibold tracking-[0.2em] uppercase text-white/[0.14] whitespace-nowrap">
+                    {word}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       <SiteHeader />
 
@@ -124,24 +149,6 @@ function ComingSoonPage() {
           </div>
         </div>
       </main>
-
-      {/* Activity carousel */}
-      <section className="relative overflow-hidden border-t border-white/10 bg-white/[0.03] py-10 z-10">
-        <div className="flex w-max animate-netflix-scroll gap-4 px-4" style={{ willChange: "transform" }}>
-          {loop.map((a, i) => (
-            <div
-              key={`${a.label}-${i}`}
-              className="relative h-40 w-64 flex-shrink-0 overflow-hidden rounded-xl shadow-card"
-            >
-              <img src={a.src} alt={a.label} className="h-full w-full object-cover" loading="lazy" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-              <span className="absolute bottom-3 left-3 text-white font-display text-lg tracking-wide">
-                {a.label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
 
       <footer className="border-t border-white/10 py-6 text-center text-sm text-white/40 relative z-10">
         © {new Date().getFullYear()} Pulstract · Move together
