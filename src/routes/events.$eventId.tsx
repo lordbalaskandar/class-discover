@@ -12,7 +12,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/events/$eventId")({
   head: () => ({
     meta: [
-      { title: "Event — Pulsatract" },
+      { title: "Event — Pulstract" },
       { name: "description", content: "Sign up for special events at gyms near you." },
     ],
   }),
@@ -226,7 +226,7 @@ function EventPage() {
         )}
       </div>
       <footer className="border-t py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} Pulsatract · Move together
+        © {new Date().getFullYear()} Pulstract · Move together
       </footer>
     </div>
   );

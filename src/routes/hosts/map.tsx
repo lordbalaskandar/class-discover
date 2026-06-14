@@ -8,7 +8,7 @@ import { MapPin, Star, Building2, User as UserIcon, List } from "lucide-react";
 import { HOSTS, type HostItem } from "@/features/app/mock-data";
 
 export const Route = createFileRoute("/hosts/map")({
-  head: () => ({ meta: [{ title: "Hosts map — Pulsatract" }] }),
+  head: () => ({ meta: [{ title: "Hosts map — Pulstract" }] }),
   component: MapPage,
 });
 

@@ -56,7 +56,7 @@ export const CLASSES: ClassItem[] = [
 ];
 
 /** Local-only "saved class ids" stored in localStorage so heart toggles persist across the desktop app. */
-const SAVED_KEY = "pulsatract.saved.classes";
+const SAVED_KEY = "pulstract.saved.classes";
 export function loadSavedIds(): Set<string> {
   if (typeof window === "undefined") return new Set();
   try {

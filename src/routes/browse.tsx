@@ -42,7 +42,7 @@ export const Route = createFileRoute("/browse")({
   validateSearch: zodValidator(browseSearchSchema),
   head: () => ({
     meta: [
-      { title: "Browse classes — Pulsatract" },
+      { title: "Browse classes — Pulstract" },
       { name: "description", content: "Search and filter local fitness classes — pilates, boxing, pickleball and more." },
     ],
   }),
@@ -403,7 +403,7 @@ function BrowsePage() {
       </div>
 
       <footer className="border-t py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} Pulsatract · Move together
+        © {new Date().getFullYear()} Pulstract · Move together
       </footer>
     </div>
   );

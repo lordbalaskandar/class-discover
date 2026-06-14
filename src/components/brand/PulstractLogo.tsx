@@ -9,11 +9,11 @@ type Props = {
 };
 
 /**
- * Pulsatract mark — two outward-facing triangles meeting at a small
+ * Pulstract mark — two outward-facing triangles meeting at a small
  * rotated square ("two forces · one centre"). Left triangle = gold,
  * right triangle = light/ink, centre diamond = gold filled.
  */
-export function PulsatractMark({
+export function PulstractMark({
   className,
   gold = "hsl(43 55% 54%)",
   light = "currentColor",
@@ -80,7 +80,7 @@ export function PulsatractMark({
 }
 
 /** Full lockup: mark + wordmark with the "T" highlighted in gold. */
-export function PulsatractLockup({
+export function PulstractLockup({
   className,
   stacked = false,
 }: {
@@ -95,9 +95,9 @@ export function PulsatractLockup({
         className,
       )}
     >
-      <PulsatractMark className="h-6 w-12" />
+      <PulstractMark className="h-6 w-12" />
       <span className="font-display text-lg tracking-[0.18em] uppercase leading-none">
-        pulsa<span style={{ color: "hsl(43 55% 54%)" }}>t</span>ract
+        puls<span style={{ color: "hsl(43 55% 54%)" }}>t</span>ract
       </span>
     </span>
   );

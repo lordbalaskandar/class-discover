@@ -5,7 +5,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { MessageSquare, Bell, Sparkles, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/me/help")({
-  head: () => ({ meta: [{ title: "Help & support — Pulsatract" }] }),
+  head: () => ({ meta: [{ title: "Help & support — Pulstract" }] }),
   component: HelpPage,
 });
 
@@ -19,7 +19,7 @@ const faqs = [
 const links = [
   { icon: MessageSquare, label: "Chat with support", sub: "Replies in ~5 min" },
   { icon: Bell, label: "Report an issue", sub: "Booking, payment or host" },
-  { icon: Sparkles, label: "Suggest a feature", sub: "Help shape Pulsatract" },
+  { icon: Sparkles, label: "Suggest a feature", sub: "Help shape Pulstract" },
 ];
 
 function HelpPage() {
@@ -60,7 +60,7 @@ function HelpPage() {
               </Accordion>
             </CardContent>
           </Card>
-          <p className="text-xs text-muted-foreground text-center mt-6">Pulsatract · v1.0.0</p>
+          <p className="text-xs text-muted-foreground text-center mt-6">Pulstract · v1.0.0</p>
         </div>
       </div>
     </AppShell>

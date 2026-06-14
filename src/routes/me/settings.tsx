@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/me/settings")({
-  head: () => ({ meta: [{ title: "Settings — Pulsatract" }] }),
+  head: () => ({ meta: [{ title: "Settings — Pulstract" }] }),
   component: SettingsPage,
 });
 

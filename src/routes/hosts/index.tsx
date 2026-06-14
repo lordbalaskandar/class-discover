@@ -12,7 +12,7 @@ import { HOSTS, HOST_ACTIVITIES } from "@/features/app/mock-data";
 export const Route = createFileRoute("/hosts/")({
   head: () => ({
     meta: [
-      { title: "Find a host — Pulsatract" },
+      { title: "Find a host — Pulstract" },
       { name: "description", content: "Browse trainers and gyms near you. Filter by activity, distance, rating and price." },
     ],
   }),

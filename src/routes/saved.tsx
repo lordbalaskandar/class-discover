@@ -11,8 +11,8 @@ import { CLASSES, loadSavedIds, persistSavedIds } from "@/features/app/mock-data
 export const Route = createFileRoute("/saved")({
   head: () => ({
     meta: [
-      { title: "Saved classes — Pulsatract" },
-      { name: "description", content: "Your saved Pulsatract classes, all in one place." },
+      { title: "Saved classes — Pulstract" },
+      { name: "description", content: "Your saved Pulstract classes, all in one place." },
     ],
   }),
   component: SavedPage,
