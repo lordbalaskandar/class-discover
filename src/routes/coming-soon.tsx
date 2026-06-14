@@ -73,9 +73,6 @@ function GooglePlayBadge() {
 
 function ComingSoonPage() {
   const words = useMemo(() => pickWords(CELLS), []);
-  const [logoMap] = useState(() =>
-    Array.from({ length: CELLS }, () => Math.random() > 0.5)
-  );
 
   // Mask the center so the background never competes with the hero content.
   const centerMask =
@@ -83,7 +80,8 @@ function ComingSoonPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-black text-white relative overflow-hidden">
-      {/* Checkerboard background: activity word / logo / activity word / logo ... */}
+      {/* Checkerboard background: strict logo / word / logo / word pattern.
+          Each cell crossfades between its logo and its word. */}
       <div
         className="absolute inset-0 z-0 pointer-events-none select-none"
         style={{
@@ -100,40 +98,51 @@ function ComingSoonPage() {
           }}
         >
           {words.map((word, i) => {
-            const isLogo = logoMap[i];
-            const delay = (i * 0.15) % 3; // staggered fade
+            const row = Math.floor(i / COLS);
+            const col = i % COLS;
+            // Strict checkerboard starting state: even cells show the logo,
+            // odd cells show the word. The crossfade then swaps them.
+            const startsWithLogo = (row + col) % 2 === 0;
+            const delay = ((i * 0.18) % 4).toFixed(2);
+            const logoAnim = `cellSwap 4s ease-in-out ${delay}s infinite ${startsWithLogo ? "normal" : "reverse"}`;
+            const wordAnim = `cellSwap 4s ease-in-out ${delay}s infinite ${startsWithLogo ? "reverse" : "normal"}`;
             return (
               <div
                 key={i}
-                className="flex items-center justify-center overflow-hidden px-2"
-                style={{
-                  animation: `cellFade 3s ease-in-out ${delay}s infinite alternate`,
-                }}
+                className="relative flex items-center justify-center overflow-hidden px-2"
               >
-                {isLogo ? (
+                <div
+                  className="absolute inset-0 flex items-center justify-center"
+                  style={{ animation: logoAnim }}
+                >
                   <PulstractMark
-                    className="h-8 w-16 md:h-10 md:w-20 opacity-[0.22]"
+                    className="h-8 w-16 md:h-10 md:w-20 opacity-[0.28]"
                     gold="hsl(43 55% 54%)"
                     light="white"
                   />
-                ) : (
-                  <span className="font-display text-base md:text-xl font-semibold tracking-[0.2em] uppercase text-white/[0.22] whitespace-nowrap">
+                </div>
+                <div
+                  className="absolute inset-0 flex items-center justify-center"
+                  style={{ animation: wordAnim }}
+                >
+                  <span className="font-display text-base md:text-xl font-semibold tracking-[0.2em] uppercase text-white/[0.28] whitespace-nowrap">
                     {word}
                   </span>
-                )}
+                </div>
               </div>
             );
           })}
         </div>
       </div>
 
-      {/* Fade animation keyframes */}
+      {/* Crossfade: each cell holds, fades out, the other layer fades in. */}
       <style>{`
-        @keyframes cellFade {
-          0%   { opacity: 1; }
-          100% { opacity: 0.4; }
+        @keyframes cellSwap {
+          0%, 40%   { opacity: 1; }
+          60%, 100% { opacity: 0; }
         }
       `}</style>
+
 
       <SiteHeader />
 
