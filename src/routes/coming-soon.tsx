@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { PulstractMark } from "@/components/brand/PulstractLogo";
 
