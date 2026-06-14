@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { PulstractMark } from "@/components/brand/PulstractLogo";
 
@@ -27,9 +27,9 @@ const COLS = 6;
 const ROWS = 8;
 const CELLS = COLS * ROWS;
 
-function pickWords() {
+function pickWords(count: number) {
   const shuffled = [...ACTIVITIES].sort(() => Math.random() - 0.5);
-  return Array.from({ length: CELLS }, (_, i) => shuffled[i % shuffled.length]);
+  return Array.from({ length: count }, (_, i) => shuffled[i % shuffled.length]);
 }
 
 function AppStoreBadge() {
@@ -72,12 +72,10 @@ function GooglePlayBadge() {
 }
 
 function ComingSoonPage() {
-  const [words, setWords] = useState<string[]>(() => pickWords());
-
-  useEffect(() => {
-    const id = setInterval(() => setWords(pickWords()), 2500);
-    return () => clearInterval(id);
-  }, []);
+  const words = useMemo(() => pickWords(CELLS), []);
+  const [logoMap] = useState(() =>
+    Array.from({ length: CELLS }, () => Math.random() > 0.5)
+  );
 
   // Mask the center so the background never competes with the hero content.
   const centerMask =
@@ -102,21 +100,24 @@ function ComingSoonPage() {
           }}
         >
           {words.map((word, i) => {
-            const row = Math.floor(i / COLS);
-            const isLogo = (row + i) % 2 === 0;
+            const isLogo = logoMap[i];
+            const delay = (i * 0.15) % 3; // staggered fade
             return (
               <div
                 key={i}
-                className="flex items-center justify-center overflow-hidden px-2 transition-opacity duration-700"
+                className="flex items-center justify-center overflow-hidden px-2"
+                style={{
+                  animation: `cellFade 3s ease-in-out ${delay}s infinite alternate`,
+                }}
               >
                 {isLogo ? (
                   <PulstractMark
-                    className="h-8 w-16 md:h-10 md:w-20 opacity-[0.14]"
+                    className="h-8 w-16 md:h-10 md:w-20 opacity-[0.22]"
                     gold="hsl(43 55% 54%)"
                     light="white"
                   />
                 ) : (
-                  <span className="font-display text-base md:text-xl font-semibold tracking-[0.2em] uppercase text-white/[0.14] whitespace-nowrap">
+                  <span className="font-display text-base md:text-xl font-semibold tracking-[0.2em] uppercase text-white/[0.22] whitespace-nowrap">
                     {word}
                   </span>
                 )}
@@ -125,6 +126,14 @@ function ComingSoonPage() {
           })}
         </div>
       </div>
+
+      {/* Fade animation keyframes */}
+      <style>{`
+        @keyframes cellFade {
+          0%   { opacity: 1; }
+          100% { opacity: 0.4; }
+        }
+      `}</style>
 
       <SiteHeader />
 
