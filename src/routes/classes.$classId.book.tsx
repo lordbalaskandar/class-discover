@@ -13,11 +13,11 @@ import { useAuthModal } from "@/components/AuthModal";
 import { mockPriceForClass, SERVICE_FEE } from "@/lib/pricing";
 
 export const Route = createFileRoute("/classes/$classId/book")({
-  head: () => ({ meta: [{ title: "Book session — Pulsatract" }] }),
+  head: () => ({ meta: [{ title: "Book session — Pulstract" }] }),
   component: BookPage,
 });
 
-const BOOK_KEY = "pulsatract.book.draft";
+const BOOK_KEY = "pulstract.book.draft";
 type Draft = { classId: string; spots: number; note: string; preferredAt?: string };
 
 export function saveDraft(d: Draft) {

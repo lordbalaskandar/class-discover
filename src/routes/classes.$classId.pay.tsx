@@ -14,7 +14,7 @@ import { loadDraft, clearDraft, Stepper } from "./classes.$classId.book";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/classes/$classId/pay")({
-  head: () => ({ meta: [{ title: "Payment — Pulsatract" }] }),
+  head: () => ({ meta: [{ title: "Payment — Pulstract" }] }),
   component: PayPage,
 });
 

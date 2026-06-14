@@ -15,25 +15,25 @@ export type MapHost = {
 declare global {
   interface Window {
     google?: any;
-    __pulsatractInitMap?: () => void;
-    __pulsatractMapReady?: boolean;
+    __pulstractInitMap?: () => void;
+    __pulstractMapReady?: boolean;
   }
 }
 
-const SCRIPT_ID = "pulsatract-gmaps-js";
+const SCRIPT_ID = "pulstract-gmaps-js";
 
 function loadGoogleMaps(): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
-  if (window.__pulsatractMapReady && window.google?.maps) return Promise.resolve();
+  if (window.__pulstractMapReady && window.google?.maps) return Promise.resolve();
   return new Promise((resolve, reject) => {
     if (document.getElementById(SCRIPT_ID)) {
       const check = () =>
-        window.__pulsatractMapReady ? resolve() : setTimeout(check, 80);
+        window.__pulstractMapReady ? resolve() : setTimeout(check, 80);
       check();
       return;
     }
-    window.__pulsatractInitMap = () => {
-      window.__pulsatractMapReady = true;
+    window.__pulstractInitMap = () => {
+      window.__pulstractMapReady = true;
       resolve();
     };
     const key = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY;
@@ -46,7 +46,7 @@ function loadGoogleMaps(): Promise<void> {
     s.id = SCRIPT_ID;
     s.async = true;
     s.defer = true;
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&loading=async&callback=__pulsatractInitMap${channel ? `&channel=${channel}` : ""}`;
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&loading=async&callback=__pulstractInitMap${channel ? `&channel=${channel}` : ""}`;
     s.onerror = () => reject(new Error("Failed to load Google Maps"));
     document.head.appendChild(s);
   });

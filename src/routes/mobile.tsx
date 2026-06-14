@@ -59,8 +59,8 @@ export const Route = createFileRoute("/mobile")({
   }),
   head: () => ({
     meta: [
-      { title: "Mobile preview — Pulsatract" },
-      { name: "description", content: "Interactive mobile prototype of the Pulsatract booking flow." },
+      { title: "Mobile preview — Pulstract" },
+      { name: "description", content: "Interactive mobile prototype of the Pulstract booking flow." },
     ],
   }),
   component: MobileShowcase,
@@ -287,7 +287,7 @@ function MobileShowcase() {
         <div className="text-center mb-10">
           <Badge variant="secondary" className="mb-3">Mobile preview</Badge>
           <h1 className="font-display text-4xl md:text-5xl font-semibold tracking-tight">
-            The Pulsatract app, end to end
+            The Pulstract app, end to end
           </h1>
           <p className="mt-3 text-muted-foreground max-w-2xl mx-auto">
             Two interactive prototypes — the user flow for booking a class, and
@@ -2708,7 +2708,7 @@ function ProfileScreen({
       onClick: onSaved,
     },
     { label: "Notifications", sub: "Push & email", onClick: () => onOpenSection("pNotifications") },
-    { label: "Become a host", sub: "Share your craft on Pulsatract", onClick: () => onOpenSection("pBecomeHost") },
+    { label: "Become a host", sub: "Share your craft on Pulstract", onClick: () => onOpenSection("pBecomeHost") },
     { label: "Help & support", sub: "FAQ, contact us", onClick: () => onOpenSection("pHelp") },
   ];
 
@@ -2719,7 +2719,7 @@ function ProfileScreen({
           AM
         </div>
         <h2 className="font-display text-xl font-semibold mt-3">Alex Morgan</h2>
-        <p className="text-xs text-muted-foreground">alex@pulsatract.com</p>
+        <p className="text-xs text-muted-foreground">alex@pulstract.com</p>
         <Badge variant="secondary" className="mt-2 text-[10px]">
           <Sparkles className="h-3 w-3 mr-1" />
           Member since 2024
@@ -2910,7 +2910,7 @@ function ProfileBecomeHostScreen({ onBack }: { onBack: () => void }) {
           style={{ background: "linear-gradient(135deg,#f4b942,#e07a5f)" }}
         >
           <Badge className="bg-background/20 text-primary-foreground hover:bg-background/20 border-0 mb-2">
-            Earn on Pulsatract
+            Earn on Pulstract
           </Badge>
           <h3 className="font-display text-xl font-semibold leading-tight">
             Turn your craft into income
@@ -2986,7 +2986,7 @@ function ProfileHelpScreen({ onBack }: { onBack: () => void }) {
   const links: { icon: typeof MessageSquare; label: string; sub: string }[] = [
     { icon: MessageSquare, label: "Chat with support", sub: "Replies in ~5 min" },
     { icon: Bell, label: "Report an issue", sub: "Booking, payment or host" },
-    { icon: Sparkles, label: "Suggest a feature", sub: "Help shape Pulsatract" },
+    { icon: Sparkles, label: "Suggest a feature", sub: "Help shape Pulstract" },
   ];
   return (
     <div className="h-full flex flex-col">
@@ -3042,7 +3042,7 @@ function ProfileHelpScreen({ onBack }: { onBack: () => void }) {
             })}
           </Card>
           <p className="text-[10px] text-muted-foreground text-center mt-4">
-            Pulsatract · v1.0.0
+            Pulstract · v1.0.0
           </p>
         </div>
       </ScreenScroll>
@@ -3168,7 +3168,7 @@ const DEFAULT_GYM: GymInfo = {
 };
 
 const DEFAULT_MEMBERS: GymMember[] = [
-  { id: "m1", name: "Alex Morgan", initials: "AM", email: "alex@pulsatract.com", plan: "Monthly", role: "Member", joined: "Mar 2025", status: "Active" },
+  { id: "m1", name: "Alex Morgan", initials: "AM", email: "alex@pulstract.com", plan: "Monthly", role: "Member", joined: "Mar 2025", status: "Active" },
   { id: "m2", name: "Priya Shah", initials: "PS", email: "priya.s@mail.com", plan: "Annual", role: "Member", joined: "Jan 2025", status: "Active" },
   { id: "m3", name: "Devon Walsh", initials: "DW", email: "devon@walsh.io", plan: "Monthly", role: "Coach", joined: "Nov 2024", status: "Active" },
   { id: "m4", name: "Mika Chen", initials: "MC", email: "mika.c@mail.com", plan: "Day pass", role: "Member", joined: "Today", status: "Pending" },
@@ -4165,7 +4165,7 @@ function HostSupportScreen({ onBack }: { onBack: () => void }) {
           <Card className="p-3 space-y-2 text-sm">
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Email</span>
-              <span className="font-medium">hosts@pulsatract.app</span>
+              <span className="font-medium">hosts@pulstract.app</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Response time</span>
@@ -4655,7 +4655,7 @@ function HostGymScreen({
               { icon: Users, label: "Manage members", sub: "Invite, suspend, set roles" },
               { icon: CreditCard, label: "Recurring plans", sub: "Monthly, annual, day passes" },
               { icon: BarChart3, label: "Track activity", sub: "Check-ins, retention, growth" },
-              { icon: Building2, label: "Your branded page", sub: "A public profile on Pulsatract" },
+              { icon: Building2, label: "Your branded page", sub: "A public profile on Pulstract" },
             ].map((b) => (
               <Card key={b.label} className="p-3 flex items-center gap-3">
                 <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
