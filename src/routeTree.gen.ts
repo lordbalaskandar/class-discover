@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as MobileRouteImport } from './routes/mobile'
 import { Route as HostRouteImport } from './routes/host'
+import { Route as ComingSoonRouteImport } from './routes/coming-soon'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as BookingsRouteImport } from './routes/bookings'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -47,6 +48,11 @@ const MobileRoute = MobileRouteImport.update({
 const HostRoute = HostRouteImport.update({
   id: '/host',
   path: '/host',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComingSoonRoute = ComingSoonRouteImport.update({
+  id: '/coming-soon',
+  path: '/coming-soon',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BrowseRoute = BrowseRouteImport.update({
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/bookings': typeof BookingsRoute
   '/browse': typeof BrowseRoute
+  '/coming-soon': typeof ComingSoonRoute
   '/host': typeof HostRouteWithChildren
   '/mobile': typeof MobileRoute
   '/saved': typeof SavedRoute
@@ -188,6 +195,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/bookings': typeof BookingsRoute
   '/browse': typeof BrowseRoute
+  '/coming-soon': typeof ComingSoonRoute
   '/host': typeof HostRouteWithChildren
   '/mobile': typeof MobileRoute
   '/saved': typeof SavedRoute
@@ -215,6 +223,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/bookings': typeof BookingsRoute
   '/browse': typeof BrowseRoute
+  '/coming-soon': typeof ComingSoonRoute
   '/host': typeof HostRouteWithChildren
   '/mobile': typeof MobileRoute
   '/saved': typeof SavedRoute
@@ -243,6 +252,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/bookings'
     | '/browse'
+    | '/coming-soon'
     | '/host'
     | '/mobile'
     | '/saved'
@@ -269,6 +279,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/bookings'
     | '/browse'
+    | '/coming-soon'
     | '/host'
     | '/mobile'
     | '/saved'
@@ -295,6 +306,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/bookings'
     | '/browse'
+    | '/coming-soon'
     | '/host'
     | '/mobile'
     | '/saved'
@@ -322,6 +334,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BookingsRoute: typeof BookingsRoute
   BrowseRoute: typeof BrowseRoute
+  ComingSoonRoute: typeof ComingSoonRoute
   HostRoute: typeof HostRouteWithChildren
   MobileRoute: typeof MobileRoute
   SavedRoute: typeof SavedRoute
@@ -360,6 +373,13 @@ declare module '@tanstack/react-router' {
       path: '/host'
       fullPath: '/host'
       preLoaderRoute: typeof HostRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coming-soon': {
+      id: '/coming-soon'
+      path: '/coming-soon'
+      fullPath: '/coming-soon'
+      preLoaderRoute: typeof ComingSoonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/browse': {
@@ -544,6 +564,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BookingsRoute: BookingsRoute,
   BrowseRoute: BrowseRoute,
+  ComingSoonRoute: ComingSoonRoute,
   HostRoute: HostRouteWithChildren,
   MobileRoute: MobileRoute,
   SavedRoute: SavedRoute,
