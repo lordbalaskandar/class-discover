@@ -15,6 +15,7 @@ import { Route as HostRouteImport } from './routes/host'
 import { Route as ComingSoonRouteImport } from './routes/coming-soon'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as BookingsRouteImport } from './routes/bookings'
+import { Route as BackendTestRouteImport } from './routes/backend-test'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ArchitectureRouteImport } from './routes/architecture'
 import { Route as IndexRouteImport } from './routes/index'
@@ -63,6 +64,11 @@ const BrowseRoute = BrowseRouteImport.update({
 const BookingsRoute = BookingsRouteImport.update({
   id: '/bookings',
   path: '/bookings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BackendTestRoute = BackendTestRouteImport.update({
+  id: '/backend-test',
+  path: '/backend-test',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/architecture': typeof ArchitectureRoute
   '/auth': typeof AuthRoute
+  '/backend-test': typeof BackendTestRoute
   '/bookings': typeof BookingsRoute
   '/browse': typeof BrowseRoute
   '/coming-soon': typeof ComingSoonRoute
@@ -193,6 +200,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/architecture': typeof ArchitectureRoute
   '/auth': typeof AuthRoute
+  '/backend-test': typeof BackendTestRoute
   '/bookings': typeof BookingsRoute
   '/browse': typeof BrowseRoute
   '/coming-soon': typeof ComingSoonRoute
@@ -221,6 +229,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/architecture': typeof ArchitectureRoute
   '/auth': typeof AuthRoute
+  '/backend-test': typeof BackendTestRoute
   '/bookings': typeof BookingsRoute
   '/browse': typeof BrowseRoute
   '/coming-soon': typeof ComingSoonRoute
@@ -250,6 +259,7 @@ export interface FileRouteTypes {
     | '/'
     | '/architecture'
     | '/auth'
+    | '/backend-test'
     | '/bookings'
     | '/browse'
     | '/coming-soon'
@@ -277,6 +287,7 @@ export interface FileRouteTypes {
     | '/'
     | '/architecture'
     | '/auth'
+    | '/backend-test'
     | '/bookings'
     | '/browse'
     | '/coming-soon'
@@ -304,6 +315,7 @@ export interface FileRouteTypes {
     | '/'
     | '/architecture'
     | '/auth'
+    | '/backend-test'
     | '/bookings'
     | '/browse'
     | '/coming-soon'
@@ -332,6 +344,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ArchitectureRoute: typeof ArchitectureRoute
   AuthRoute: typeof AuthRoute
+  BackendTestRoute: typeof BackendTestRoute
   BookingsRoute: typeof BookingsRoute
   BrowseRoute: typeof BrowseRoute
   ComingSoonRoute: typeof ComingSoonRoute
@@ -394,6 +407,13 @@ declare module '@tanstack/react-router' {
       path: '/bookings'
       fullPath: '/bookings'
       preLoaderRoute: typeof BookingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/backend-test': {
+      id: '/backend-test'
+      path: '/backend-test'
+      fullPath: '/backend-test'
+      preLoaderRoute: typeof BackendTestRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -562,6 +582,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ArchitectureRoute: ArchitectureRoute,
   AuthRoute: AuthRoute,
+  BackendTestRoute: BackendTestRoute,
   BookingsRoute: BookingsRoute,
   BrowseRoute: BrowseRoute,
   ComingSoonRoute: ComingSoonRoute,
