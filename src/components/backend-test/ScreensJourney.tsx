@@ -589,9 +589,10 @@ const SCREENS: Screen[] = [
     endpoint: "Query · paymentByBooking",
     description: "Most recent processed payment — proxy for payout history until a dedicated endpoint exists.",
     nextHint: "Tap Next for availability.",
-    fetch: async (ctx) => {
-      if (!ctx.bookingId) return null;
-      const d = await gql<{ paymentByBooking: any }>(Q_PAYMENT_BY_BOOKING, { id: ctx.bookingId }, ctx.accessToken!);
+    fetch: async (ctx, cache) => {
+      const id = await resolveBookingId(ctx, cache);
+      if (!id) return null;
+      const d = await gql<{ paymentByBooking: any }>(Q_PAYMENT_BY_BOOKING, { id }, ctx.accessToken!);
       return d.paymentByBooking;
     },
     render: (p) => <PayoutsScreen payment={p} />,
