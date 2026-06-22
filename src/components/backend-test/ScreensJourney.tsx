@@ -2074,14 +2074,82 @@ function BioEditor({ initial, ctx }: { initial: string; ctx: JourneyCtx }) {
   );
 }
 
-function TemplatesScreen({ items }: { items: any[] }) {
+function TemplatesScreen({ items, ctx }: { items: any[]; ctx: JourneyCtx }) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const [created, setCreated] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const newFromBlank = async () => {
+    if (!ctx.accessToken) return setErr("Sign in first.");
+    setBusy("blank");
+    setErr(null);
+    try {
+      const startAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 2).toISOString();
+      const d = await gql<{ createClass: any }>(
+        M_CREATE_CLASS,
+        { i: { title: "New template", description: "Created from templates screen", activityType: "yoga", startAt, durationMinutes: 60, capacity: 12, priceCents: 1500 } },
+        ctx.accessToken,
+      );
+      setCreated(`Template "${d.createClass.title}" created.`);
+    } catch (e: any) {
+      setErr(e?.message ?? "Failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const duplicate = async (c: any) => {
+    if (!ctx.accessToken) return setErr("Sign in first.");
+    setBusy(c.id);
+    setErr(null);
+    try {
+      const startAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString();
+      const d = await gql<{ createClass: any }>(
+        M_CREATE_CLASS,
+        {
+          i: {
+            title: `${c.title} (copy)`,
+            description: "Duplicated from template.",
+            activityType: (c.activityType ?? "yoga").toLowerCase(),
+            startAt,
+            durationMinutes: c.durationMinutes ?? 60,
+            capacity: c.capacity ?? 12,
+            priceCents: c.priceCents ?? 1500,
+          },
+        },
+        ctx.accessToken,
+      );
+      setCreated(`Class "${d.createClass.title}" scheduled in 7 days.`);
+    } catch (e: any) {
+      setErr(e?.message ?? "Failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   return (
     <Section title={`Templates (${items.length})`}>
+      <Button size="sm" className="w-full mb-2" onClick={newFromBlank} disabled={busy === "blank"}>
+        <Plus className="h-3 w-3 mr-1" />
+        {busy === "blank" ? "Creating…" : "Create template"}
+      </Button>
+      {created && <div className="text-[10px] text-emerald-600 mb-2">✓ {created}</div>}
+      {err && <div className="text-[10px] text-destructive mb-2">{err}</div>}
       <div className="space-y-2">
+        {items.length === 0 && (
+          <div className="text-[11px] text-muted-foreground rounded-md border bg-muted/30 p-2">
+            No templates yet — tap Create template above.
+          </div>
+        )}
         {items.map((c) => (
-          <div key={c.id} className="rounded-md border p-2">
-            <div className="text-[11px] font-medium">{c.title}</div>
-            <div className="text-[10px] text-muted-foreground">{c.activityType} · {c.durationMinutes}m · {money(c.priceCents)}</div>
+          <div key={c.id} className="rounded-md border p-2 flex items-center gap-2">
+            <div className="flex-1 min-w-0">
+              <div className="text-[11px] font-medium truncate">{c.title}</div>
+              <div className="text-[10px] text-muted-foreground">{c.activityType} · {c.durationMinutes}m · {money(c.priceCents)}</div>
+            </div>
+            <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => duplicate(c)} disabled={busy === c.id}>
+              {busy === c.id ? "…" : "Use"}
+            </Button>
           </div>
         ))}
       </div>
@@ -2089,21 +2157,49 @@ function TemplatesScreen({ items }: { items: any[] }) {
   );
 }
 
-function PayoutsScreen({ payment }: { payment: any }) {
+function PayoutsScreen({ rows }: { rows: { cls: any; bookings: any[] }[] }) {
+  const completed = rows.flatMap((r) =>
+    r.bookings.filter((b) => b.status === "CONFIRMED" || b.status === "COMPLETED").map(() => r.cls.priceCents ?? 0),
+  );
+  const pending = rows.flatMap((r) =>
+    r.bookings.filter((b) => b.status === "PENDING").map(() => r.cls.priceCents ?? 0),
+  );
+  const total = completed.reduce((a, n) => a + n, 0);
+  const pendingTotal = pending.reduce((a, n) => a + n, 0);
+  const totalBookings = rows.reduce((a, r) => a + r.bookings.length, 0);
+  const fmt = (cents: number) => `£${(cents / 100).toFixed(2)}`;
   return (
     <>
       <Section title="Next payout">
         <div className="rounded-lg border p-3">
           <div className="text-xs">Scheduled weekly</div>
-          <div className="text-2xl font-semibold mt-1">
-            {payment ? `${payment.currency} ${(payment.amount / 100).toFixed(2)}` : "—"}
+          <div className="text-2xl font-semibold mt-1">{fmt(total)}</div>
+          <div className="text-[10px] text-muted-foreground mt-1">
+            {completed.length} confirmed bookings across {rows.length} classes
           </div>
-          <div className="text-[10px] text-muted-foreground mt-1">From last booking</div>
+        </div>
+      </Section>
+      <Section title="Breakdown">
+        <Row label="Confirmed earnings" value={fmt(total)} />
+        <Row label="Pending" value={fmt(pendingTotal)} />
+        <Row label="Total bookings" value={String(totalBookings)} />
+      </Section>
+      <Section title="Per class">
+        <div className="space-y-1">
+          {rows.length === 0 && (
+            <div className="text-[11px] text-muted-foreground">No classes yet.</div>
+          )}
+          {rows.slice(0, 6).map((r) => (
+            <div key={r.cls.id} className="border rounded-md p-2 text-[11px] flex justify-between">
+              <span className="truncate flex-1">{r.cls.title}</span>
+              <span className="text-muted-foreground">{r.bookings.length} × {money(r.cls.priceCents)}</span>
+            </div>
+          ))}
         </div>
       </Section>
       <Section title="Account">
         <Row label="Bank" value="Stripe · ••2345" />
-        <Row label="Currency" value={payment?.currency ?? "GBP"} />
+        <Row label="Currency" value="GBP" />
       </Section>
     </>
   );
