@@ -326,31 +326,47 @@ const SCREENS: Screen[] = [
     render: (c) => <ClassDetail cls={c} />,
   },
   {
-    id: "booking",
-    flow: "user",
-    tab: "sessions",
-    title: "Booking step",
-    endpoint: "Local — uses class detail",
-    description: "Step 1 of checkout. We compose the booking from the real class loaded above.",
-    nextHint: "Tap Next to fetch the payment intent for an existing booking.",
-    fetch: async (_ctx, cache) => cache.classDetail,
-    render: (c) => <BookingStep cls={c} />,
-  },
-  {
     id: "payment",
     flow: "user",
     tab: "sessions",
     title: "Payment",
     endpoint: "Query · paymentByBooking",
-    description: "Fetches the real payment record for the booking created in the upper integration walkthrough.",
-    nextHint: "Tap Next for the confirmation screen.",
+    description: "Step 1 of checkout — collect payment for the chosen class. Real payment record loaded from the booking service when available.",
+    nextHint: "Tap Next to create the booking after payment succeeds.",
     fetch: async (ctx, cache) => {
+      const cls = cache.classDetail ?? null;
       const id = await resolveBookingId(ctx, cache);
-      if (!id) throw new Error("No bookings on this account. Run Create booking in the upper walkthrough first.");
-      const d = await gql<{ paymentByBooking: any }>(Q_PAYMENT_BY_BOOKING, { id }, ctx.accessToken!);
-      return d.paymentByBooking;
+      let payment: any = null;
+      if (id) {
+        try {
+          const d = await gql<{ paymentByBooking: any }>(Q_PAYMENT_BY_BOOKING, { id }, ctx.accessToken!);
+          payment = d.paymentByBooking;
+        } catch {}
+      }
+      return { payment, cls };
     },
-    render: (p) => <PaymentScreen payment={p} />,
+    render: (d) => <PaymentScreen payment={d.payment} cls={d.cls} />,
+  },
+  {
+    id: "booking",
+    flow: "user",
+    tab: "sessions",
+    title: "Create booking",
+    endpoint: "Mutation · createBooking",
+    description: "Step 2 — payment succeeded, now reserve the spot via the booking service.",
+    nextHint: "Tap Next to see the confirmation screen.",
+    fetch: async (ctx, cache) => {
+      const cls = cache.classDetail;
+      if (!cls) throw new Error("Open Class detail first.");
+      const d = await gql<{ createBooking: any }>(
+        M_CREATE_BOOKING,
+        { i: { classId: cls.id } },
+        ctx.accessToken!,
+      );
+      cache.resolvedBookingId = d.createBooking?.id ?? cache.resolvedBookingId;
+      return { booking: d.createBooking, cls };
+    },
+    render: (d) => <BookingStep cls={d.cls} booking={d.booking} />,
   },
   {
     id: "confirmation",
@@ -362,11 +378,12 @@ const SCREENS: Screen[] = [
     nextHint: "Tap Next to open My bookings.",
     fetch: async (ctx, cache) => {
       const id = await resolveBookingId(ctx, cache);
-      if (!id) throw new Error("No bookings on this account. Run Create booking in the upper walkthrough first.");
+      if (!id) throw new Error("No bookings on this account. Run Create booking first.");
       const d = await gql<{ booking: any }>(Q_BOOKING, { id }, ctx.accessToken!);
-      return d.booking;
+      const cls = cache.classDetail;
+      return { booking: d.booking, className: cls?.id === d.booking?.classId ? cls.title : null };
     },
-    render: (b) => <ConfirmationScreen booking={b} />,
+    render: (d) => <ConfirmationScreen booking={d.booking} className={d.className} />,
   },
   {
     id: "bookings",
@@ -378,9 +395,10 @@ const SCREENS: Screen[] = [
     nextHint: "Tap Next to view past bookings.",
     fetch: async (ctx) => {
       const d = await gql<{ bookings: any }>(Q_MY_BOOKINGS, { f: null, p: { limit: 20 } }, ctx.accessToken!);
-      return d.bookings.items;
+      const names = await hydrateClassNames(d.bookings.items ?? [], ctx.accessToken!);
+      return { items: d.bookings.items, names };
     },
-    render: (items) => <BookingsList items={items} tab="upcoming" />,
+    render: (d) => <BookingsList items={d.items} names={d.names} tab="upcoming" />,
   },
   {
     id: "bookingsCancelled",
