@@ -1336,31 +1336,62 @@ function HostsList({ items }: { items: any[] }) {
 }
 
 function HostsMap({ items }: { items: any[] }) {
-  // Schematic map: normalize lat/lng into 0..100 inside a viewport
-  const lats = items.map((i) => i.address.lat);
-  const lngs = items.map((i) => i.address.lng);
-  const minLat = Math.min(...lats), maxLat = Math.max(...lats);
-  const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+  const withCoords = items.filter(
+    (i) => i.address && typeof i.address.lat === "number" && typeof i.address.lng === "number",
+  );
+  const lats = withCoords.map((i) => i.address.lat);
+  const lngs = withCoords.map((i) => i.address.lng);
+  const minLat = lats.length ? Math.min(...lats) : 0;
+  const maxLat = lats.length ? Math.max(...lats) : 0;
+  const minLng = lngs.length ? Math.min(...lngs) : 0;
+  const maxLng = lngs.length ? Math.max(...lngs) : 0;
   const norm = (v: number, mn: number, mx: number) =>
     mx === mn ? 50 : ((v - mn) / (mx - mn)) * 90 + 5;
+
+  // Fallback: hash gym ids into a deterministic position so the map is never empty
+  const fakePos = (id: string) => {
+    let h = 0;
+    for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+    return { left: 8 + (h % 84), top: 10 + ((h >> 7) % 80) };
+  };
+
+  const plotted = items.slice(0, 24);
   return (
     <div className="relative h-[460px] m-3 rounded-lg overflow-hidden border bg-[linear-gradient(135deg,hsl(var(--muted))_25%,hsl(var(--background))_25%,hsl(var(--background))_50%,hsl(var(--muted))_50%,hsl(var(--muted))_75%,hsl(var(--background))_75%)] bg-[length:24px_24px]">
-      {items.slice(0, 20).map((g) => (
-        <div
-          key={g.id}
-          className="absolute -translate-x-1/2 -translate-y-full"
-          style={{
-            left: `${norm(g.address.lng, minLng, maxLng)}%`,
-            top: `${100 - norm(g.address.lat, minLat, maxLat)}%`,
-          }}
-          title={g.name}
-        >
-          <MapPin className="h-5 w-5 text-primary fill-primary" />
-        </div>
-      ))}
+      {plotted.map((g) => {
+        const hasCoords =
+          g.address && typeof g.address.lat === "number" && typeof g.address.lng === "number";
+        const pos = hasCoords
+          ? {
+              left: norm(g.address.lng, minLng, maxLng),
+              top: 100 - norm(g.address.lat, minLat, maxLat),
+            }
+          : fakePos(g.id);
+        return (
+          <div
+            key={g.id}
+            className="absolute -translate-x-1/2 -translate-y-full group"
+            style={{ left: `${pos.left}%`, top: `${pos.top}%` }}
+            title={g.name}
+          >
+            <MapPin
+              className={cn(
+                "h-5 w-5",
+                hasCoords ? "text-primary fill-primary" : "text-muted-foreground fill-muted",
+              )}
+            />
+          </div>
+        );
+      })}
       <div className="absolute bottom-2 left-2 right-2 bg-card/95 backdrop-blur rounded-md border p-2 text-[10px]">
-        <div className="font-semibold">{items.length} hosts plotted</div>
-        <div className="text-muted-foreground">Live coords from gyms()</div>
+        <div className="font-semibold">
+          {plotted.length} hosts · {withCoords.length} with live coordinates
+        </div>
+        <div className="text-muted-foreground">
+          {withCoords.length === 0
+            ? "Backend has no lat/lng yet — pins placed deterministically by id."
+            : "Live coords from gyms(); greyed pins lack address.lat/lng."}
+        </div>
       </div>
     </div>
   );
