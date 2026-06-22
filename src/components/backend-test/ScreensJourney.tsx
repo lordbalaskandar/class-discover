@@ -87,6 +87,9 @@ const Q_COACH_TIP = `query CT{ coachTip{ hostId tip generatedAt } }`;
 const M_CREATE_BOOKING = `mutation CB($i:CreateBookingInput!){ createBooking(input:$i){ id classId gymId scheduledAt status createdAt } }`;
 const M_UPDATE_PROFILE = `mutation UP($i:UpdateProfileInput!){ updateProfile(input:$i){ userId bio avatarUrl updatedAt } }`;
 const M_CREATE_CLASS = `mutation CC($i:CreateClassInput!){ createClass(input:$i){ id title activityType startAt durationMinutes capacity priceCents status } }`;
+const M_CREATE_GYM = `mutation CG($i:CreateGymInput!){ createGym(input:$i){ id name description address{ street city country postcode } } }`;
+const M_UPDATE_GYM = `mutation UG($id:ID!,$i:UpdateGymInput!){ updateGym(id:$id,input:$i){ id name description address{ street city country postcode } } }`;
+const M_SUBMIT_REVIEW = `mutation SR($i:SubmitReviewInput!){ submitReview(input:$i){ id gymId rating comment createdAt } }`;
 
 async function hydrateClassNames(items: any[], token: string): Promise<Record<string, string>> {
   const ids = Array.from(new Set(items.map((i) => i.classId).filter(Boolean)));
