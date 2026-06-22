@@ -84,6 +84,8 @@ const Q_MY_GYM = `query MG{ myGym{ id name description address{ street city coun
 const Q_MY_CLASSES = `query MC{ myClasses{ id title activityType startAt durationMinutes capacity priceCents status } }`;
 const Q_BOOKINGS_BY_CLASS = `query BBC($id:ID!){ bookingsByClass(classId:$id){ id userId scheduledAt status } }`;
 const Q_COACH_TIP = `query CT{ coachTip{ hostId tip generatedAt } }`;
+const M_CREATE_BOOKING = `mutation CB($i:CreateBookingInput!){ createBooking(input:$i){ id classId gymId scheduledAt status createdAt } }`;
+const M_UPDATE_PROFILE = `mutation UP($i:UpdateProfileInput!){ updateProfile(input:$i){ userId bio avatarUrl updatedAt } }`;
 
 /* ============================================================ */
 /* Shared context — populated by upper section                  */
@@ -119,6 +121,7 @@ type Screen = {
 async function resolveBookingId(ctx: JourneyCtx, cache: Cache): Promise<string | null> {
   if (ctx.bookingId) return ctx.bookingId;
   if (cache.resolvedBookingId) return cache.resolvedBookingId as string;
+  // Try existing bookings
   try {
     const d = await gql<{ bookings: any }>(
       Q_MY_BOOKINGS,
@@ -126,6 +129,32 @@ async function resolveBookingId(ctx: JourneyCtx, cache: Cache): Promise<string |
       ctx.accessToken!,
     );
     const id = d.bookings.items?.[0]?.id ?? null;
+    if (id) {
+      cache.resolvedBookingId = id;
+      return id;
+    }
+  } catch {}
+  // Auto-create one so the journey can continue without dependency on the upper section
+  let classId: string | undefined =
+    cache.classDetail?.id ?? cache.classes?.[0]?.id ?? ctx.classId ?? undefined;
+  if (!classId) {
+    try {
+      const d = await gql<{ classes: any }>(
+        Q_CLASSES,
+        { f: null, p: { limit: 1 } },
+        ctx.accessToken!,
+      );
+      classId = d.classes.items?.[0]?.id;
+    } catch {}
+  }
+  if (!classId) return null;
+  try {
+    const d = await gql<{ createBooking: any }>(
+      M_CREATE_BOOKING,
+      { i: { classId } },
+      ctx.accessToken!,
+    );
+    const id = d.createBooking?.id ?? null;
     if (id) cache.resolvedBookingId = id;
     return id;
   } catch {
@@ -167,7 +196,7 @@ const SCREENS: Screen[] = [
       );
       return d.smartSearchFilters;
     },
-    render: (f) => <FiltersSheet filters={f} />,
+    render: (f, ctx) => <FiltersSheet filters={f} ctx={ctx} />,
   },
   {
     id: "browseFiltered",
@@ -368,7 +397,7 @@ const SCREENS: Screen[] = [
       const p = await gql<{ profile: any }>(Q_PROFILE, { id: me.me.id }, ctx.accessToken!);
       return { me: me.me, profile: p.profile };
     },
-    render: (d) => <ProfileScreen me={d.me} profile={d.profile} />,
+    render: (d, ctx) => <ProfileScreen me={d.me} profile={d.profile} ctx={ctx} />,
   },
   {
     id: "saved",
@@ -582,7 +611,7 @@ const SCREENS: Screen[] = [
       const p = await gql<{ profile: any }>(Q_PROFILE, { id: me.me.id }, ctx.accessToken!);
       return { me: me.me, profile: p.profile };
     },
-    render: (d) => <HostProfileEditor me={d.me} profile={d.profile} />,
+    render: (d, ctx) => <HostProfileEditor me={d.me} profile={d.profile} ctx={ctx} />,
   },
   {
     id: "hpTemplates",
@@ -1110,18 +1139,59 @@ function money(c?: number) {
 /* ============================================================ */
 
 function ClassFeed({ items }: { items: any[] }) {
+  const [q, setQ] = useState("");
+  const [activity, setActivity] = useState<string | null>(null);
   if (!items?.length)
     return <div className="p-4 text-xs text-muted-foreground">No classes returned.</div>;
+  const activities = [...new Set(items.map((i) => i.activityType))].filter(Boolean);
+  const filtered = items.filter((c) => {
+    const matchQ =
+      !q ||
+      c.title?.toLowerCase().includes(q.toLowerCase()) ||
+      c.gymName?.toLowerCase().includes(q.toLowerCase()) ||
+      c.city?.toLowerCase().includes(q.toLowerCase());
+    const matchA = !activity || c.activityType === activity;
+    return matchQ && matchA;
+  });
   return (
     <>
       <div className="px-4 pt-4 pb-2 text-sm font-semibold">Find your next session</div>
-      <div className="px-4 pb-4 flex gap-2 overflow-x-auto">
-        {[...new Set(items.map((i) => i.activityType))].slice(0, 6).map((a) => (
-          <Badge key={a as string} variant="secondary" className="text-[10px] whitespace-nowrap">{a as string}</Badge>
+      <div className="px-4 pb-2">
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search title, gym, city…"
+            className="h-8 text-xs pl-7"
+          />
+        </div>
+      </div>
+      <div className="px-4 pb-3 flex gap-2 overflow-x-auto">
+        <button onClick={() => setActivity(null)}>
+          <Badge
+            variant={activity === null ? "default" : "secondary"}
+            className="text-[10px] whitespace-nowrap cursor-pointer"
+          >
+            All
+          </Badge>
+        </button>
+        {activities.slice(0, 8).map((a) => (
+          <button key={a as string} onClick={() => setActivity(a as string)}>
+            <Badge
+              variant={activity === a ? "default" : "secondary"}
+              className="text-[10px] whitespace-nowrap cursor-pointer"
+            >
+              {a as string}
+            </Badge>
+          </button>
         ))}
       </div>
+      <div className="px-4 pb-1 text-[10px] text-muted-foreground">
+        {filtered.length} of {items.length}
+      </div>
       <div className="px-4 space-y-3 pb-4">
-        {items.map((c) => (
+        {filtered.map((c) => (
           <div key={c.id} className="rounded-lg border overflow-hidden">
             <div className="h-20 bg-gradient-to-br from-primary/30 to-primary/5 flex items-end p-2">
               <Badge className="text-[9px]">{c.activityType}</Badge>
@@ -1144,28 +1214,74 @@ function ClassFeed({ items }: { items: any[] }) {
   );
 }
 
-function FiltersSheet({ filters }: { filters: any }) {
+function FiltersSheet({ filters, ctx }: { filters: any; ctx: JourneyCtx }) {
+  const [q, setQ] = useState("evening pilates classes near London at least 4 stars");
+  const [current, setCurrent] = useState<any>(filters);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const apply = async () => {
+    if (!ctx.accessToken) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const d = await gql<{ smartSearchFilters: any }>(Q_SMART, { q }, ctx.accessToken);
+      setCurrent(d.smartSearchFilters);
+    } catch (e: any) {
+      setErr(e?.message ?? String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
-    <Section title="AI-parsed filters">
-      <div className="rounded-lg border p-3 space-y-2">
-        <Row label="activityType" value={filters?.activityType ?? "—"} />
-        <Row label="city" value={filters?.city ?? "—"} />
-        <Row label="minRating" value={String(filters?.minRating ?? "—")} />
-        <Row label="radiusKm" value={String(filters?.radiusKm ?? "—")} />
-      </div>
-      <div className="mt-4">
-        <Button size="sm" className="w-full">Apply</Button>
+    <Section title="Tell AI what you want">
+      <textarea
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        className="w-full rounded-md border text-[11px] p-2 h-16 bg-background"
+      />
+      <Button size="sm" className="w-full mt-2" onClick={apply} disabled={busy}>
+        {busy ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
+        Apply
+      </Button>
+      {err && <div className="mt-2 text-[10px] text-destructive">{err}</div>}
+      <div className="rounded-lg border p-3 space-y-2 mt-4">
+        <div className="text-[10px] text-muted-foreground">AI parsed →</div>
+        <Row label="activityType" value={current?.activityType ?? "—"} />
+        <Row label="city" value={current?.city ?? "—"} />
+        <Row label="minRating" value={String(current?.minRating ?? "—")} />
+        <Row label="radiusKm" value={String(current?.radiusKm ?? "—")} />
       </div>
     </Section>
   );
 }
 
 function HostsList({ items }: { items: any[] }) {
+  const [q, setQ] = useState("");
+  const filtered = items.filter(
+    (g) =>
+      !q ||
+      g.name?.toLowerCase().includes(q.toLowerCase()) ||
+      g.address?.city?.toLowerCase().includes(q.toLowerCase()),
+  );
   return (
     <>
       <div className="px-4 pt-4 pb-2 text-sm font-semibold">Hosts near you</div>
+      <div className="px-4 pb-3">
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search name or city…"
+            className="h-8 text-xs pl-7"
+          />
+        </div>
+      </div>
+      <div className="px-4 pb-1 text-[10px] text-muted-foreground">
+        {filtered.length} of {items.length}
+      </div>
       <div className="px-4 space-y-2 pb-4">
-        {items.map((g) => (
+        {filtered.map((g) => (
           <div key={g.id} className="rounded-lg border p-3 flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/40 to-primary/10 flex items-center justify-center text-xs font-semibold">
               {g.name?.[0] ?? "?"}
@@ -1302,19 +1418,36 @@ function Stat({ icon: Icon, label, value }: { icon: any; label: string; value: s
 }
 
 function BookingStep({ cls }: { cls: any }) {
+  const [spots, setSpots] = useState(1);
+  const [note, setNote] = useState("");
   if (!cls) return <div className="p-4 text-xs text-muted-foreground">Load class detail first.</div>;
   const fee = 250;
+  const max = cls.capacity ?? 8;
+  const subtotal = (cls.priceCents ?? 0) * spots;
   return (
     <Section title="Review your booking">
       <div className="rounded-lg border p-3 space-y-1">
         <div className="text-xs font-semibold">{cls.title}</div>
         <div className="text-[10px] text-muted-foreground">{fmtDate(cls.startAt)} · {cls.durationMinutes}m</div>
       </div>
+      <div className="mt-3 flex items-center justify-between rounded-md border p-2">
+        <span className="text-[11px]">Spots</span>
+        <div className="flex items-center gap-2">
+          <Button size="icon" variant="outline" className="h-6 w-6 p-0" onClick={() => setSpots((s) => Math.max(1, s - 1))}>−</Button>
+          <span className="text-xs font-semibold w-6 text-center">{spots}</span>
+          <Button size="icon" variant="outline" className="h-6 w-6 p-0" onClick={() => setSpots((s) => Math.min(max, s + 1))}>+</Button>
+        </div>
+      </div>
+      <textarea
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        placeholder="Note to host (optional)"
+        className="w-full mt-2 rounded-md border text-[11px] p-2 h-14 bg-background"
+      />
       <div className="mt-3 space-y-1">
-        <Row label="Spots" value="1" />
-        <Row label="Subtotal" value={money(cls.priceCents)} />
+        <Row label="Subtotal" value={money(subtotal)} />
         <Row label="Service fee" value={money(fee)} />
-        <Row label="Total" value={money((cls.priceCents ?? 0) + fee)} />
+        <Row label="Total" value={money(subtotal + fee)} />
       </div>
       <div className="mt-4"><Button className="w-full" size="sm">Continue to payment</Button></div>
     </Section>
@@ -1388,7 +1521,7 @@ function BookingsList({ items, tab }: { items: any[]; tab: string }) {
   );
 }
 
-function ProfileScreen({ me, profile }: { me: any; profile: any }) {
+function ProfileScreen({ me, profile, ctx }: { me: any; profile: any; ctx: JourneyCtx }) {
   return (
     <>
       <div className="h-24 bg-gradient-to-br from-primary/30 to-primary/5" />
@@ -1399,9 +1532,7 @@ function ProfileScreen({ me, profile }: { me: any; profile: any }) {
         <div className="mt-2 text-sm font-semibold">{me?.name ?? me?.email}</div>
         <div className="text-[10px] text-muted-foreground">{me?.email}</div>
       </div>
-      <Section title="Bio">
-        <p className="text-[11px]">{profile?.bio ?? "—"}</p>
-      </Section>
+      <BioEditor initial={profile?.bio ?? ""} ctx={ctx} />
       <Section title="Account">
         <Row label="Member since" value={fmtDate(me?.createdAt)} />
         <Row label="Profile updated" value={fmtDate(profile?.updatedAt)} />
@@ -1741,7 +1872,7 @@ function MetricsScreen({ items }: { items: any[] }) {
   );
 }
 
-function HostProfileEditor({ me, profile }: { me: any; profile: any }) {
+function HostProfileEditor({ me, profile, ctx }: { me: any; profile: any; ctx: JourneyCtx }) {
   return (
     <>
       <div className="h-20 bg-gradient-to-br from-primary/30 to-primary/5" />
@@ -1754,12 +1885,7 @@ function HostProfileEditor({ me, profile }: { me: any; profile: any }) {
           <div className="text-[10px] text-muted-foreground">{me?.email}</div>
         </div>
       </div>
-      <Section title="Bio">
-        <textarea
-          className="w-full rounded-md border text-[11px] p-2 h-20 bg-background"
-          defaultValue={profile?.bio ?? ""}
-        />
-      </Section>
+      <BioEditor initial={profile?.bio ?? ""} ctx={ctx} />
       <Section title="Sections">
         {[
           { icon: FileText, label: "Templates" },
@@ -1777,6 +1903,42 @@ function HostProfileEditor({ me, profile }: { me: any; profile: any }) {
         ))}
       </Section>
     </>
+  );
+}
+
+function BioEditor({ initial, ctx }: { initial: string; ctx: JourneyCtx }) {
+  const [bio, setBio] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const save = async () => {
+    if (!ctx.accessToken) return;
+    setBusy(true);
+    setErr(null);
+    setSaved(null);
+    try {
+      const d = await gql<{ updateProfile: any }>(M_UPDATE_PROFILE, { i: { bio } }, ctx.accessToken);
+      setSaved(`Saved at ${fmtTime(d.updateProfile?.updatedAt)}`);
+    } catch (e: any) {
+      setErr(e?.message ?? String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Section title="Bio (live save → updateProfile)">
+      <textarea
+        value={bio}
+        onChange={(e) => setBio(e.target.value)}
+        className="w-full rounded-md border text-[11px] p-2 h-20 bg-background"
+      />
+      <Button size="sm" className="w-full mt-2" onClick={save} disabled={busy}>
+        {busy ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
+        Save bio
+      </Button>
+      {saved && <div className="mt-2 text-[10px] text-emerald-600">✓ {saved}</div>}
+      {err && <div className="mt-2 text-[10px] text-destructive">{err}</div>}
+    </Section>
   );
 }
 
