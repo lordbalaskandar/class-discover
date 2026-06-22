@@ -1521,7 +1521,7 @@ function BookingsList({ items, tab }: { items: any[]; tab: string }) {
   );
 }
 
-function ProfileScreen({ me, profile }: { me: any; profile: any }) {
+function ProfileScreen({ me, profile, ctx }: { me: any; profile: any; ctx: JourneyCtx }) {
   return (
     <>
       <div className="h-24 bg-gradient-to-br from-primary/30 to-primary/5" />
@@ -1532,9 +1532,7 @@ function ProfileScreen({ me, profile }: { me: any; profile: any }) {
         <div className="mt-2 text-sm font-semibold">{me?.name ?? me?.email}</div>
         <div className="text-[10px] text-muted-foreground">{me?.email}</div>
       </div>
-      <Section title="Bio">
-        <p className="text-[11px]">{profile?.bio ?? "—"}</p>
-      </Section>
+      <BioEditor initial={profile?.bio ?? ""} ctx={ctx} />
       <Section title="Account">
         <Row label="Member since" value={fmtDate(me?.createdAt)} />
         <Row label="Profile updated" value={fmtDate(profile?.updatedAt)} />
