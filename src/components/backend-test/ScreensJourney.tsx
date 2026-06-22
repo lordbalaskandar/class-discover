@@ -414,9 +414,10 @@ const SCREENS: Screen[] = [
         { f: { status: "CANCELLED" }, p: { limit: 20 } },
         ctx.accessToken!,
       );
-      return d.bookings.items;
+      const names = await hydrateClassNames(d.bookings.items ?? [], ctx.accessToken!);
+      return { items: d.bookings.items, names };
     },
-    render: (items) => <BookingsList items={items} tab="cancelled" />,
+    render: (d) => <BookingsList items={d.items} names={d.names} tab="cancelled" />,
   },
   {
     id: "profile",
