@@ -86,6 +86,22 @@ const Q_BOOKINGS_BY_CLASS = `query BBC($id:ID!){ bookingsByClass(classId:$id){ i
 const Q_COACH_TIP = `query CT{ coachTip{ hostId tip generatedAt } }`;
 const M_CREATE_BOOKING = `mutation CB($i:CreateBookingInput!){ createBooking(input:$i){ id classId gymId scheduledAt status createdAt } }`;
 const M_UPDATE_PROFILE = `mutation UP($i:UpdateProfileInput!){ updateProfile(input:$i){ userId bio avatarUrl updatedAt } }`;
+const M_CREATE_CLASS = `mutation CC($i:CreateClassInput!){ createClass(input:$i){ id title activityType startAt durationMinutes capacity priceCents status } }`;
+
+async function hydrateClassNames(items: any[], token: string): Promise<Record<string, string>> {
+  const ids = Array.from(new Set(items.map((i) => i.classId).filter(Boolean)));
+  if (!ids.length) return {};
+  const map: Record<string, string> = {};
+  await Promise.all(
+    ids.map(async (id) => {
+      try {
+        const d = await gql<{ class: any }>(Q_CLASS, { id }, token);
+        if (d.class?.title) map[id] = d.class.title;
+      } catch {}
+    }),
+  );
+  return map;
+}
 
 /* ============================================================ */
 /* Shared context — populated by upper section                  */
