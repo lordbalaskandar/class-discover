@@ -1418,19 +1418,36 @@ function Stat({ icon: Icon, label, value }: { icon: any; label: string; value: s
 }
 
 function BookingStep({ cls }: { cls: any }) {
+  const [spots, setSpots] = useState(1);
+  const [note, setNote] = useState("");
   if (!cls) return <div className="p-4 text-xs text-muted-foreground">Load class detail first.</div>;
   const fee = 250;
+  const max = cls.capacity ?? 8;
+  const subtotal = (cls.priceCents ?? 0) * spots;
   return (
     <Section title="Review your booking">
       <div className="rounded-lg border p-3 space-y-1">
         <div className="text-xs font-semibold">{cls.title}</div>
         <div className="text-[10px] text-muted-foreground">{fmtDate(cls.startAt)} · {cls.durationMinutes}m</div>
       </div>
+      <div className="mt-3 flex items-center justify-between rounded-md border p-2">
+        <span className="text-[11px]">Spots</span>
+        <div className="flex items-center gap-2">
+          <Button size="icon" variant="outline" className="h-6 w-6 p-0" onClick={() => setSpots((s) => Math.max(1, s - 1))}>−</Button>
+          <span className="text-xs font-semibold w-6 text-center">{spots}</span>
+          <Button size="icon" variant="outline" className="h-6 w-6 p-0" onClick={() => setSpots((s) => Math.min(max, s + 1))}>+</Button>
+        </div>
+      </div>
+      <textarea
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        placeholder="Note to host (optional)"
+        className="w-full mt-2 rounded-md border text-[11px] p-2 h-14 bg-background"
+      />
       <div className="mt-3 space-y-1">
-        <Row label="Spots" value="1" />
-        <Row label="Subtotal" value={money(cls.priceCents)} />
+        <Row label="Subtotal" value={money(subtotal)} />
         <Row label="Service fee" value={money(fee)} />
-        <Row label="Total" value={money((cls.priceCents ?? 0) + fee)} />
+        <Row label="Total" value={money(subtotal + fee)} />
       </div>
       <div className="mt-4"><Button className="w-full" size="sm">Continue to payment</Button></div>
     </Section>
