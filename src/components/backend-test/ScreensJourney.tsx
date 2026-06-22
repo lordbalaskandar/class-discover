@@ -1418,19 +1418,27 @@ function FiltersSheet({ filters, ctx }: { filters: any; ctx: JourneyCtx }) {
   const [aiRaw, setAiRaw] = useState<any>(filters);
 
   const apply = async () => {
-    if (!ctx.accessToken) return;
+    if (!ctx.accessToken) {
+      setErr("Sign in first using the integration walkthrough above.");
+      return;
+    }
     setBusy(true);
     setErr(null);
     try {
       const d = await gql<{ smartSearchFilters: any }>(Q_SMART, { q }, ctx.accessToken);
-      const r = d.smartSearchFilters ?? {};
-      setAiRaw(r);
-      // Merge any non-null AI fields into the traditional filters
+      const r = d?.smartSearchFilters ?? null;
+      console.log("[FiltersSheet] smartSearchFilters →", r);
+      setAiRaw(r ?? { _empty: true });
+      if (!r) {
+        setErr("AI returned no payload.");
+        return;
+      }
       if (r.activityType) setActivityType(String(r.activityType).toLowerCase());
       if (r.city) setCity(String(r.city));
       if (r.minRating != null) setMinRating(Number(r.minRating));
       if (r.radiusKm != null) setRadiusKm(Number(r.radiusKm));
     } catch (e: any) {
+      console.error("[FiltersSheet] AI parse error", e);
       setErr(e?.message ?? String(e));
     } finally {
       setBusy(false);
@@ -1443,6 +1451,21 @@ function FiltersSheet({ filters, ctx }: { filters: any; ctx: JourneyCtx }) {
     setMinRating(0);
     setRadiusKm(10);
   };
+
+  // Merge AI-returned activity into chip list if unknown
+  const aiActivity = aiRaw?.activityType ? String(aiRaw.activityType).toLowerCase() : "";
+  const chipList = aiActivity && !ACTIVITY_TYPES.includes(aiActivity)
+    ? [...ACTIVITY_TYPES, aiActivity]
+    : ACTIVITY_TYPES;
+
+  const aiFieldRows: { k: string; v: any; applied: boolean }[] = aiRaw && !aiRaw._empty
+    ? [
+        { k: "activityType", v: aiRaw.activityType, applied: !!aiRaw.activityType },
+        { k: "city", v: aiRaw.city, applied: !!aiRaw.city },
+        { k: "minRating", v: aiRaw.minRating, applied: aiRaw.minRating != null },
+        { k: "radiusKm", v: aiRaw.radiusKm, applied: aiRaw.radiusKm != null },
+      ]
+    : [];
 
   return (
     <>
@@ -1458,24 +1481,37 @@ function FiltersSheet({ filters, ctx }: { filters: any; ctx: JourneyCtx }) {
           Parse with AI
         </Button>
         {err && <div className="mt-2 text-[10px] text-destructive">{err}</div>}
-        {aiRaw && (
-          <div className="mt-2 text-[10px] text-muted-foreground">
-            AI →{" "}
-            {[
-              aiRaw.activityType,
-              aiRaw.city,
-              aiRaw.minRating != null ? `${aiRaw.minRating}★` : null,
-              aiRaw.radiusKm != null ? `${aiRaw.radiusKm}km` : null,
-            ]
-              .filter(Boolean)
-              .join(" · ") || "no fields extracted"}
+        {aiFieldRows.length > 0 && (
+          <div className="mt-3 rounded-md border bg-muted/30 p-2 space-y-1">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              AI response
+            </div>
+            {aiFieldRows.map((row) => (
+              <div key={row.k} className="flex items-center justify-between text-[10px]">
+                <span className="font-mono text-muted-foreground">{row.k}</span>
+                <span className="flex items-center gap-1">
+                  <span className={row.applied ? "text-foreground" : "text-muted-foreground/60"}>
+                    {row.v == null || row.v === "" ? "null" : String(row.v)}
+                  </span>
+                  {row.applied && (
+                    <span className="text-emerald-600 text-[9px]">✓ applied</span>
+                  )}
+                </span>
+              </div>
+            ))}
+            {aiFieldRows.every((r) => !r.applied) && (
+              <div className="text-[10px] text-amber-600 pt-1">
+                AI returned all-null. Try a more specific prompt (e.g. include city, activity, rating).
+              </div>
+            )}
           </div>
         )}
       </Section>
 
+
       <Section title="Activity">
         <div className="flex flex-wrap gap-1">
-          {ACTIVITY_TYPES.map((a) => (
+          {chipList.map((a) => (
             <button
               key={a}
               onClick={() => setActivityType(activityType === a ? "" : a)}
