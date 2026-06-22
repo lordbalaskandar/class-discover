@@ -1452,66 +1452,63 @@ function Stat({ icon: Icon, label, value }: { icon: any; label: string; value: s
   );
 }
 
-function BookingStep({ cls }: { cls: any }) {
-  const [spots, setSpots] = useState(1);
-  const [note, setNote] = useState("");
+function BookingStep({ cls, booking }: { cls: any; booking?: any }) {
   if (!cls) return <div className="p-4 text-xs text-muted-foreground">Load class detail first.</div>;
-  const fee = 250;
-  const max = cls.capacity ?? 8;
-  const subtotal = (cls.priceCents ?? 0) * spots;
   return (
-    <Section title="Review your booking">
+    <Section title={booking ? "Booking confirmed" : "Review your booking"}>
       <div className="rounded-lg border p-3 space-y-1">
         <div className="text-xs font-semibold">{cls.title}</div>
         <div className="text-[10px] text-muted-foreground">{fmtDate(cls.startAt)} · {cls.durationMinutes}m</div>
       </div>
-      <div className="mt-3 flex items-center justify-between rounded-md border p-2">
-        <span className="text-[11px]">Spots</span>
-        <div className="flex items-center gap-2">
-          <Button size="icon" variant="outline" className="h-6 w-6 p-0" onClick={() => setSpots((s) => Math.max(1, s - 1))}>−</Button>
-          <span className="text-xs font-semibold w-6 text-center">{spots}</span>
-          <Button size="icon" variant="outline" className="h-6 w-6 p-0" onClick={() => setSpots((s) => Math.min(max, s + 1))}>+</Button>
+      {booking ? (
+        <div className="mt-3 space-y-1">
+          <Row label="Status" value={booking.status ?? "—"} />
+          <Row label="Scheduled" value={fmtDate(booking.scheduledAt)} />
+          <Row label="Created" value={fmtDate(booking.createdAt)} />
+          <div className="mt-3 rounded-md border bg-emerald-500/10 text-emerald-700 p-2 text-[11px]">
+            Spot reserved via createBooking after successful payment.
+          </div>
         </div>
-      </div>
-      <textarea
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        placeholder="Note to host (optional)"
-        className="w-full mt-2 rounded-md border text-[11px] p-2 h-14 bg-background"
-      />
-      <div className="mt-3 space-y-1">
-        <Row label="Subtotal" value={money(subtotal)} />
-        <Row label="Service fee" value={money(fee)} />
-        <Row label="Total" value={money(subtotal + fee)} />
-      </div>
-      <div className="mt-4"><Button className="w-full" size="sm">Continue to payment</Button></div>
+      ) : (
+        <div className="mt-3 text-[11px] text-muted-foreground">
+          Booking will be created when you tap Run.
+        </div>
+      )}
     </Section>
   );
 }
 
-function PaymentScreen({ payment }: { payment: any }) {
+function PaymentScreen({ payment, cls }: { payment: any; cls: any }) {
+  const amount = payment?.amount ?? cls?.priceCents ?? 0;
+  const currency = payment?.currency ?? "GBP";
+  const status = payment?.status ?? "PENDING";
   return (
     <Section title="Payment">
-      <div className="rounded-lg border p-3">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="rounded-lg border p-3 space-y-2">
+        <div className="flex items-center gap-2">
           <CreditCard className="h-4 w-4" />
           <span className="text-xs font-semibold">Visa •••• 4242</span>
           <Badge variant="secondary" className="ml-auto text-[9px]">default</Badge>
         </div>
-        <div className="text-[10px] text-muted-foreground">Live record from paymentByBooking</div>
+        <Row label="Card holder" value="Test User" />
+        <Row label="Expires" value="12 / 29" />
+        <Row label="CVC" value="•••" />
       </div>
-      <div className="mt-3 space-y-1">
-        <Row label="ID" value={payment?.id ?? "—"} />
-        <Row label="Amount" value={payment ? `${payment.currency} ${(payment.amount / 100).toFixed(2)}` : "—"} />
-        <Row label="Status" value={payment?.status ?? "—"} />
-        <Row label="When" value={fmtDate(payment?.createdAt)} />
+      <div className="mt-3 rounded-lg border p-3 space-y-1">
+        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Order</div>
+        <Row label="Class" value={cls?.title ?? "—"} />
+        <Row label="When" value={fmtDate(cls?.startAt)} />
+        <Row label="Amount" value={`${currency} ${(amount / 100).toFixed(2)}`} />
+        <Row label="Status" value={status} />
       </div>
-      <div className="mt-4"><Button className="w-full" size="sm">Pay now</Button></div>
+      <div className="mt-4">
+        <Button className="w-full" size="sm">Pay {currency} {(amount / 100).toFixed(2)}</Button>
+      </div>
     </Section>
   );
 }
 
-function ConfirmationScreen({ booking }: { booking: any }) {
+function ConfirmationScreen({ booking, className }: { booking: any; className: string | null }) {
   return (
     <div className="p-4 text-center">
       <div className="mx-auto h-14 w-14 rounded-full bg-emerald-500/15 text-emerald-600 flex items-center justify-center mb-3">✓</div>
@@ -1520,7 +1517,7 @@ function ConfirmationScreen({ booking }: { booking: any }) {
       <div className="mt-4 rounded-lg border p-3 text-left space-y-1">
         <Row label="Status" value={booking?.status ?? "—"} />
         <Row label="When" value={fmtDate(booking?.scheduledAt)} />
-        <Row label="Class" value={booking?.classId ?? "—"} />
+        <Row label="Class" value={className ?? "—"} />
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2">
         <Button size="sm" variant="outline">Add to calendar</Button>
@@ -1530,7 +1527,7 @@ function ConfirmationScreen({ booking }: { booking: any }) {
   );
 }
 
-function BookingsList({ items, tab }: { items: any[]; tab: string }) {
+function BookingsList({ items, names, tab }: { items: any[]; names: Record<string, string>; tab: string }) {
   return (
     <>
       <div className="px-4 pt-4 flex gap-2">
@@ -1546,9 +1543,9 @@ function BookingsList({ items, tab }: { items: any[]; tab: string }) {
         )}
         {items.map((b) => (
           <div key={b.id} className="rounded-md border p-3">
-            <div className="text-[11px] font-semibold">{b.status}</div>
+            <div className="text-[11px] font-semibold truncate">{names?.[b.classId] ?? "Class"}</div>
             <div className="text-[10px] text-muted-foreground">{fmtDate(b.scheduledAt)}</div>
-            <div className="text-[9px] text-muted-foreground mt-1 truncate">class: {b.classId}</div>
+            <Badge variant="secondary" className="mt-1 text-[9px]">{b.status}</Badge>
           </div>
         ))}
       </div>
