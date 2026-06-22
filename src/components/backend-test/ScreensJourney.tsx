@@ -116,6 +116,23 @@ type Screen = {
 /* SCREENS                                                      */
 /* ============================================================ */
 
+async function resolveBookingId(ctx: JourneyCtx, cache: Cache): Promise<string | null> {
+  if (ctx.bookingId) return ctx.bookingId;
+  if (cache.resolvedBookingId) return cache.resolvedBookingId as string;
+  try {
+    const d = await gql<{ bookings: any }>(
+      Q_MY_BOOKINGS,
+      { f: null, p: { limit: 1 } },
+      ctx.accessToken!,
+    );
+    const id = d.bookings.items?.[0]?.id ?? null;
+    if (id) cache.resolvedBookingId = id;
+    return id;
+  } catch {
+    return null;
+  }
+}
+
 const SCREENS: Screen[] = [
   /* ---------------- USER FLOW ---------------- */
   {
