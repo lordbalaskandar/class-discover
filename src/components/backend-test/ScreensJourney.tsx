@@ -2237,11 +2237,48 @@ function AvailabilityScreen({ items }: { items: any[] }) {
   );
 }
 
-function ReviewsScreen({ reviews, summary }: { reviews: any[]; summary: any }) {
+function ReviewsScreen({
+  reviews,
+  summary,
+  gymId,
+  ctx,
+}: {
+  reviews: any[];
+  summary: any;
+  gymId: string | null;
+  ctx: JourneyCtx;
+}) {
   const avg =
     reviews.length === 0
       ? 0
       : reviews.reduce((a, r) => a + (r.rating ?? 0), 0) / reviews.length;
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("Loved the energy — great class!");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = async () => {
+    if (!ctx.accessToken || !gymId) {
+      setErr("Need a gym + auth to submit. Run Gym admin first.");
+      return;
+    }
+    setBusy(true);
+    setErr(null);
+    try {
+      const d = await gql<{ submitReview: any }>(
+        M_SUBMIT_REVIEW,
+        { i: { gymId, rating, comment } },
+        ctx.accessToken,
+      );
+      setMsg(`Review submitted (${d.submitReview.rating}★). AI summary will regenerate shortly.`);
+    } catch (e: any) {
+      setErr(e?.message ?? "Failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <>
       <Section title="Overall">
@@ -2250,6 +2287,25 @@ function ReviewsScreen({ reviews, summary }: { reviews: any[]; summary: any }) {
         </div>
         <div className="text-[10px] text-muted-foreground">{reviews.length} reviews</div>
       </Section>
+      <Section title="Leave a review">
+        <div className="flex items-center gap-1 mb-2">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button key={n} type="button" onClick={() => setRating(n)} className="p-0">
+              <Star className={cn("h-4 w-4", n <= rating ? "fill-primary text-primary" : "text-muted-foreground")} />
+            </button>
+          ))}
+        </div>
+        <textarea
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          className="w-full rounded-md border text-[11px] p-2 h-14 bg-background"
+        />
+        <Button size="sm" className="w-full mt-2" onClick={submit} disabled={busy || !gymId}>
+          {busy ? "Submitting…" : "Submit review"}
+        </Button>
+        {msg && <div className="mt-2 text-[10px] text-emerald-600">✓ {msg}</div>}
+        {err && <div className="mt-2 text-[10px] text-destructive">{err}</div>}
+      </Section>
       {summary && (
         <Section title="AI summary">
           <p className="text-[11px] italic bg-muted/40 rounded-md p-2 border">{summary.summary}</p>
@@ -2257,7 +2313,7 @@ function ReviewsScreen({ reviews, summary }: { reviews: any[]; summary: any }) {
       )}
       <Section title="Reviews">
         <div className="space-y-2">
-          {reviews.length === 0 && <div className="text-[11px] text-muted-foreground">No reviews yet.</div>}
+          {reviews.length === 0 && <div className="text-[11px] text-muted-foreground">No reviews yet — submit one above.</div>}
           {reviews.slice(0, 5).map((r) => (
             <div key={r.id} className="rounded-md border p-2">
               <div className="flex items-center gap-1 text-[10px]">
@@ -2327,49 +2383,184 @@ function HpGymScreen({ gym }: { gym: any }) {
   );
 }
 
-function HpGymCreateScreen({ gym }: { gym: any }) {
+function HpGymCreateScreen({ gym, ctx }: { gym: any; ctx: JourneyCtx }) {
+  const [name, setName] = useState(gym?.name ?? "Pulstract Studio");
+  const [description, setDescription] = useState(gym?.description ?? "Boutique fitness in the heart of the city.");
+  const [street, setStreet] = useState(gym?.address?.street ?? "1 High Street");
+  const [city, setCity] = useState(gym?.address?.city ?? "London");
+  const [country, setCountry] = useState(gym?.address?.country ?? "GB");
+  const [postcode, setPostcode] = useState(gym?.address?.postcode ?? "EC1A 1BB");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = async () => {
+    if (!ctx.accessToken) {
+      setErr("Sign in first.");
+      return;
+    }
+    setBusy(true);
+    setErr(null);
+    setMsg(null);
+    try {
+      if (gym?.id) {
+        const d = await gql<{ updateGym: any }>(
+          M_UPDATE_GYM,
+          {
+            id: gym.id,
+            i: { name, description, address: { street, city, country, postcode } },
+          },
+          ctx.accessToken,
+        );
+        setMsg(`Updated "${d.updateGym.name}".`);
+      } else {
+        const d = await gql<{ createGym: any }>(
+          M_CREATE_GYM,
+          { i: { name, description, address: { street, city, country, postcode } } },
+          ctx.accessToken,
+        );
+        setMsg(`Created "${d.createGym.name}". id ${d.createGym.id.slice(0, 8)}`);
+      }
+    } catch (e: any) {
+      setErr(e?.message ?? "Failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
-    <Section title="Create gym">
-      <Input className="h-8 text-xs" placeholder="Name" defaultValue={gym?.name ?? ""} />
-      <Input className="h-8 text-xs mt-2" placeholder="Tagline" defaultValue={gym?.description ?? ""} />
-      <Input className="h-8 text-xs mt-2" placeholder="City" defaultValue={gym?.address?.city ?? ""} />
-      <Input className="h-8 text-xs mt-2" placeholder="Postcode" defaultValue={gym?.address?.postcode ?? ""} />
-      <div className="text-[10px] text-muted-foreground mt-3">
-        {gym ? "Already created — values shown from the live record." : "No gym yet."}
+    <Section title={gym ? "Edit gym" : "Create gym"}>
+      <Input className="h-8 text-xs" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+      <Input className="h-8 text-xs mt-2" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
+      <Input className="h-8 text-xs mt-2" placeholder="Street" value={street} onChange={(e) => setStreet(e.target.value)} />
+      <div className="grid grid-cols-2 gap-2 mt-2">
+        <Input className="h-8 text-xs" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
+        <Input className="h-8 text-xs" placeholder="Country" value={country} onChange={(e) => setCountry(e.target.value)} />
       </div>
-      <div className="mt-3"><Button className="w-full" size="sm">{gym ? "Update" : "Create"}</Button></div>
+      <Input className="h-8 text-xs mt-2" placeholder="Postcode" value={postcode} onChange={(e) => setPostcode(e.target.value)} />
+      <div className="text-[10px] text-muted-foreground mt-3">
+        {gym ? `Tap Update to call updateGym(${gym.id.slice(0, 6)}).` : "Tap Create to call createGym."}
+      </div>
+      {msg && <div className="mt-2 text-[10px] text-emerald-600">✓ {msg}</div>}
+      {err && <div className="mt-2 text-[10px] text-destructive">{err}</div>}
+      <div className="mt-3">
+        <Button className="w-full" size="sm" onClick={submit} disabled={busy}>
+          {busy ? "Saving…" : gym ? "Update" : "Create"}
+        </Button>
+      </div>
     </Section>
   );
 }
 
-function GymMembersScreen({ members }: { members: any[] }) {
+function GymMembersScreen({
+  members,
+  firstClassId,
+  ctx,
+}: {
+  members: any[];
+  firstClassId: string | null;
+  ctx: JourneyCtx;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const seed = async () => {
+    if (!ctx.accessToken || !firstClassId) {
+      setErr("Need a class first — Create class in the host flow.");
+      return;
+    }
+    setBusy(true);
+    setErr(null);
+    try {
+      await gql(M_CREATE_BOOKING, { i: { classId: firstClassId } }, ctx.accessToken);
+      setMsg("Seeded a booking — tap Run again above to refresh the list.");
+    } catch (e: any) {
+      setErr(e?.message ?? "Failed");
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
     <Section title={`Members (${members.length})`}>
-      <div className="space-y-1">
-        {members.length === 0 && <div className="text-[11px] text-muted-foreground">No members yet — once someone books, they appear here.</div>}
-        {members.map((m) => (
-          <div key={m.userId} className="flex items-center gap-2 border rounded-md p-2 text-[11px]">
-            <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center text-[9px]">{m.userId?.slice(0,2)}</div>
-            <span className="flex-1 truncate">{m.userId}</span>
-            <Badge variant="outline" className="text-[9px]">{m.status}</Badge>
+      {members.length === 0 ? (
+        <>
+          <div className="text-[11px] text-muted-foreground">
+            No members yet — bookings across all of this host's classes are empty.
           </div>
-        ))}
-      </div>
+          <Button size="sm" className="w-full mt-2" onClick={seed} disabled={busy || !firstClassId}>
+            {busy ? "Seeding…" : "Seed a test booking"}
+          </Button>
+          {msg && <div className="mt-2 text-[10px] text-emerald-600">✓ {msg}</div>}
+          {err && <div className="mt-2 text-[10px] text-destructive">{err}</div>}
+        </>
+      ) : (
+        <div className="space-y-1">
+          {members.map((m) => (
+            <div key={m.userId} className="flex items-center gap-2 border rounded-md p-2 text-[11px]">
+              <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center text-[9px]">{m.userId?.slice(0, 2)}</div>
+              <div className="flex-1 min-w-0">
+                <div className="truncate font-medium">Member {m.userId?.slice(0, 6)}</div>
+                <div className="text-[9px] text-muted-foreground truncate">
+                  {m.className ?? "class"} · {fmtDate(m.scheduledAt)}
+                </div>
+              </div>
+              <Badge variant="outline" className="text-[9px]">{m.status}</Badge>
+            </div>
+          ))}
+        </div>
+      )}
     </Section>
   );
 }
 
-function GymCoachScreen({ tip, classes }: { tip: any; classes: any[] }) {
+function GymCoachScreen({
+  tip,
+  classes,
+  upcoming,
+  roster,
+}: {
+  tip: any;
+  classes: any[];
+  upcoming: any | null;
+  roster: any[];
+}) {
   return (
     <>
       <Section title="Today's AI coach tip">
-        <div className="rounded-md border p-3 italic text-[11px] bg-muted/30">{tip?.tip ?? "—"}</div>
+        <div className="rounded-md border p-3 italic text-[11px] bg-muted/30">{tip?.tip ?? "Tip unavailable."}</div>
       </Section>
-      <Section title="Roster">
+      {upcoming ? (
+        <Section title={`Next session · ${upcoming.title}`}>
+          <Row label="When" value={fmtDate(upcoming.startAt)} />
+          <Row label="Capacity" value={`${roster.length} / ${upcoming.capacity}`} />
+        </Section>
+      ) : (
+        <Section title="Next session">
+          <div className="text-[11px] text-muted-foreground">No upcoming classes yet.</div>
+        </Section>
+      )}
+      <Section title={`Roster (${roster.length})`}>
+        {roster.length === 0 ? (
+          <div className="text-[11px] text-muted-foreground">No attendees signed up for this session yet.</div>
+        ) : (
+          <div className="space-y-1">
+            {roster.slice(0, 8).map((b) => (
+              <div key={b.id} className="border rounded-md p-2 text-[11px] flex items-center gap-2">
+                <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center text-[9px]">
+                  {b.userId?.slice(0, 2)}
+                </div>
+                <span className="flex-1 truncate">Member {b.userId?.slice(0, 6)}</span>
+                <Badge variant="outline" className="text-[9px]">{b.status}</Badge>
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+      <Section title="All classes">
         <div className="space-y-1">
           {classes.slice(0, 6).map((c) => (
             <div key={c.id} className="border rounded-md p-2 text-[11px] flex justify-between">
-              <span>{c.title}</span>
+              <span className="truncate flex-1">{c.title}</span>
               <span className="text-muted-foreground">{c.capacity} cap</span>
             </div>
           ))}
