@@ -611,7 +611,7 @@ const SCREENS: Screen[] = [
       const p = await gql<{ profile: any }>(Q_PROFILE, { id: me.me.id }, ctx.accessToken!);
       return { me: me.me, profile: p.profile };
     },
-    render: (d) => <HostProfileEditor me={d.me} profile={d.profile} />,
+    render: (d, ctx) => <HostProfileEditor me={d.me} profile={d.profile} ctx={ctx} />,
   },
   {
     id: "hpTemplates",
