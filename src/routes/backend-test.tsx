@@ -25,6 +25,7 @@ import {
   checkBackendHealth,
   type HealthResult,
 } from "@/lib/backend-health.functions";
+import { ScreensJourney } from "@/components/backend-test/ScreensJourney";
 
 export const Route = createFileRoute("/backend-test")({
   ssr: false,
