@@ -1181,6 +1181,15 @@ function BackendTestPage() {
             </div>
           </Card>
         </div>
+
+        <ScreensJourney
+          ctx={{
+            accessToken: ctx.accessToken,
+            bookingId: ctx.booking?.id ?? null,
+            classId: ctx.classDetail?.id ?? ctx.classes?.[0]?.id ?? null,
+            gymId: ctx.gymDetail?.id ?? ctx.gyms?.[0]?.id ?? null,
+          }}
+        />
       </div>
     </div>
   );
