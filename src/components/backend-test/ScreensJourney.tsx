@@ -1405,46 +1405,136 @@ function ClassFeed({ items }: { items: any[] }) {
   );
 }
 
+const ACTIVITY_TYPES = ["yoga", "pilates", "hiit", "boxing", "spin", "strength", "dance", "climbing"];
+
 function FiltersSheet({ filters, ctx }: { filters: any; ctx: JourneyCtx }) {
   const [q, setQ] = useState("evening pilates classes near London at least 4 stars");
-  const [current, setCurrent] = useState<any>(filters);
+  const [activityType, setActivityType] = useState<string>(filters?.activityType ?? "");
+  const [city, setCity] = useState<string>(filters?.city ?? "");
+  const [minRating, setMinRating] = useState<number>(Number(filters?.minRating ?? 0));
+  const [radiusKm, setRadiusKm] = useState<number>(Number(filters?.radiusKm ?? 10));
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [aiRaw, setAiRaw] = useState<any>(filters);
+
   const apply = async () => {
     if (!ctx.accessToken) return;
     setBusy(true);
     setErr(null);
     try {
       const d = await gql<{ smartSearchFilters: any }>(Q_SMART, { q }, ctx.accessToken);
-      setCurrent(d.smartSearchFilters);
+      const r = d.smartSearchFilters ?? {};
+      setAiRaw(r);
+      // Merge any non-null AI fields into the traditional filters
+      if (r.activityType) setActivityType(String(r.activityType).toLowerCase());
+      if (r.city) setCity(String(r.city));
+      if (r.minRating != null) setMinRating(Number(r.minRating));
+      if (r.radiusKm != null) setRadiusKm(Number(r.radiusKm));
     } catch (e: any) {
       setErr(e?.message ?? String(e));
     } finally {
       setBusy(false);
     }
   };
+
+  const clear = () => {
+    setActivityType("");
+    setCity("");
+    setMinRating(0);
+    setRadiusKm(10);
+  };
+
   return (
-    <Section title="Tell AI what you want">
-      <textarea
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        className="w-full rounded-md border text-[11px] p-2 h-16 bg-background"
-      />
-      <Button size="sm" className="w-full mt-2" onClick={apply} disabled={busy}>
-        {busy ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
-        Apply
-      </Button>
-      {err && <div className="mt-2 text-[10px] text-destructive">{err}</div>}
-      <div className="rounded-lg border p-3 space-y-2 mt-4">
-        <div className="text-[10px] text-muted-foreground">AI parsed →</div>
-        <Row label="activityType" value={current?.activityType ?? "—"} />
-        <Row label="city" value={current?.city ?? "—"} />
-        <Row label="minRating" value={String(current?.minRating ?? "—")} />
-        <Row label="radiusKm" value={String(current?.radiusKm ?? "—")} />
+    <>
+      <Section title="Ask AI">
+        <textarea
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          className="w-full rounded-md border text-[11px] p-2 h-14 bg-background"
+          placeholder="e.g. evening pilates in London at least 4 stars"
+        />
+        <Button size="sm" className="w-full mt-2" onClick={apply} disabled={busy}>
+          {busy ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
+          Parse with AI
+        </Button>
+        {err && <div className="mt-2 text-[10px] text-destructive">{err}</div>}
+        {aiRaw && (
+          <div className="mt-2 text-[10px] text-muted-foreground">
+            AI →{" "}
+            {[
+              aiRaw.activityType,
+              aiRaw.city,
+              aiRaw.minRating != null ? `${aiRaw.minRating}★` : null,
+              aiRaw.radiusKm != null ? `${aiRaw.radiusKm}km` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ") || "no fields extracted"}
+          </div>
+        )}
+      </Section>
+
+      <Section title="Activity">
+        <div className="flex flex-wrap gap-1">
+          {ACTIVITY_TYPES.map((a) => (
+            <button
+              key={a}
+              onClick={() => setActivityType(activityType === a ? "" : a)}
+              className={cn(
+                "text-[10px] px-2 py-1 rounded-full border capitalize",
+                activityType === a ? "bg-primary text-primary-foreground border-primary" : "bg-background",
+              )}
+            >
+              {a}
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="City">
+        <Input
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          placeholder="Any city"
+          className="h-8 text-xs"
+        />
+      </Section>
+
+      <Section title={`Minimum rating · ${minRating}★`}>
+        <input
+          type="range"
+          min={0}
+          max={5}
+          step={0.5}
+          value={minRating}
+          onChange={(e) => setMinRating(Number(e.target.value))}
+          className="w-full"
+        />
+      </Section>
+
+      <Section title={`Radius · ${radiusKm} km`}>
+        <input
+          type="range"
+          min={1}
+          max={50}
+          step={1}
+          value={radiusKm}
+          onChange={(e) => setRadiusKm(Number(e.target.value))}
+          className="w-full"
+        />
+      </Section>
+
+      <div className="px-4 pb-4 flex gap-2">
+        <Button size="sm" variant="outline" className="flex-1" onClick={clear}>
+          Clear
+        </Button>
+        <Button size="sm" className="flex-1" disabled>
+          Show results
+        </Button>
       </div>
-    </Section>
+    </>
   );
 }
+
 
 function HostsList({ items }: { items: any[] }) {
   const [q, setQ] = useState("");
