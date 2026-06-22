@@ -84,6 +84,8 @@ const Q_MY_GYM = `query MG{ myGym{ id name description address{ street city coun
 const Q_MY_CLASSES = `query MC{ myClasses{ id title activityType startAt durationMinutes capacity priceCents status } }`;
 const Q_BOOKINGS_BY_CLASS = `query BBC($id:ID!){ bookingsByClass(classId:$id){ id userId scheduledAt status } }`;
 const Q_COACH_TIP = `query CT{ coachTip{ hostId tip generatedAt } }`;
+const M_CREATE_BOOKING = `mutation CB($i:CreateBookingInput!){ createBooking(input:$i){ id classId gymId scheduledAt status createdAt } }`;
+const M_UPDATE_PROFILE = `mutation UP($i:UpdateProfileInput!){ updateProfile(input:$i){ userId bio avatarUrl updatedAt } }`;
 
 /* ============================================================ */
 /* Shared context — populated by upper section                  */
