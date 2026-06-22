@@ -1829,20 +1829,67 @@ function Kpi({ icon: Icon, label, value }: { icon: any; label: string; value: st
   );
 }
 
-function HostCreateClass({ template }: { template: any }) {
+function HostCreateClass({ template, ctx }: { template: any; ctx: JourneyCtx }) {
+  const [title, setTitle] = useState(template?.title ?? "New class");
+  const [activityType, setActivityType] = useState(template?.activityType ?? "yoga");
+  const [capacity, setCapacity] = useState(String(template?.capacity ?? 12));
+  const [price, setPrice] = useState(((template?.priceCents ?? 1500) / 100).toFixed(2));
+  const [busy, setBusy] = useState(false);
+  const [created, setCreated] = useState<any>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const publish = async () => {
+    if (!ctx.accessToken) {
+      setErr("Sign in via the upper walkthrough first.");
+      return;
+    }
+    setBusy(true);
+    setErr(null);
+    try {
+      const startAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 3).toISOString();
+      const priceCents = Math.round((parseFloat(price) || 0) * 100);
+      const d = await gql<{ createClass: any }>(
+        M_CREATE_CLASS,
+        {
+          i: {
+            title,
+            description: `Published from backend test on ${new Date().toLocaleString()}`,
+            activityType: activityType.toLowerCase(),
+            startAt,
+            durationMinutes: 60,
+            capacity: parseInt(capacity, 10) || 12,
+            priceCents,
+          },
+        },
+        ctx.accessToken,
+      );
+      setCreated(d.createClass);
+    } catch (e: any) {
+      setErr(e?.message ?? "Failed to publish");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <Section title="New class">
-      <Input className="h-8 text-xs" defaultValue={template?.title ?? "New class"} />
+      <Input className="h-8 text-xs" value={title} onChange={(e) => setTitle(e.target.value)} />
       <div className="grid grid-cols-2 gap-2 mt-2">
-        <Input className="h-8 text-xs" defaultValue={template?.activityType ?? "YOGA"} />
-        <Input className="h-8 text-xs" defaultValue={String(template?.capacity ?? 12)} />
+        <Input className="h-8 text-xs" value={activityType} onChange={(e) => setActivityType(e.target.value)} />
+        <Input className="h-8 text-xs" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
       </div>
-      <Input className="h-8 text-xs mt-2" defaultValue={fmtDate(template?.startAt)} />
-      <Input className="h-8 text-xs mt-2" defaultValue={money(template?.priceCents).replace("£", "")} />
+      <Input className="h-8 text-xs mt-2" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Price (£)" />
       <div className="mt-3 text-[10px] text-muted-foreground">
-        Prefilled from your most recently created class via myClasses.
+        {created
+          ? `Published · id ${created.id?.slice(0, 8)} · status ${created.status}`
+          : "Prefilled from your most recently created class via myClasses. Publish runs createClass."}
       </div>
-      <div className="mt-3"><Button className="w-full" size="sm">Publish</Button></div>
+      {err && <div className="mt-2 text-[10px] text-destructive">{err}</div>}
+      <div className="mt-3">
+        <Button className="w-full" size="sm" onClick={publish} disabled={busy}>
+          {busy ? "Publishing…" : created ? "Publish another" : "Publish"}
+        </Button>
+      </div>
     </Section>
   );
 }
