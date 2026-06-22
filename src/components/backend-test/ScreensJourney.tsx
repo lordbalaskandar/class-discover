@@ -1511,7 +1511,7 @@ function FiltersSheet({ filters, ctx }: { filters: any; ctx: JourneyCtx }) {
 
       <Section title="Activity">
         <div className="flex flex-wrap gap-1">
-          {ACTIVITY_TYPES.map((a) => (
+          {chipList.map((a) => (
             <button
               key={a}
               onClick={() => setActivityType(activityType === a ? "" : a)}
