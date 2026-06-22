@@ -116,6 +116,23 @@ type Screen = {
 /* SCREENS                                                      */
 /* ============================================================ */
 
+async function resolveBookingId(ctx: JourneyCtx, cache: Cache): Promise<string | null> {
+  if (ctx.bookingId) return ctx.bookingId;
+  if (cache.resolvedBookingId) return cache.resolvedBookingId as string;
+  try {
+    const d = await gql<{ bookings: any }>(
+      Q_MY_BOOKINGS,
+      { f: null, p: { limit: 1 } },
+      ctx.accessToken!,
+    );
+    const id = d.bookings.items?.[0]?.id ?? null;
+    if (id) cache.resolvedBookingId = id;
+    return id;
+  } catch {
+    return null;
+  }
+}
+
 const SCREENS: Screen[] = [
   /* ---------------- USER FLOW ---------------- */
   {
@@ -282,9 +299,10 @@ const SCREENS: Screen[] = [
     endpoint: "Query · paymentByBooking",
     description: "Fetches the real payment record for the booking created in the upper integration walkthrough.",
     nextHint: "Tap Next for the confirmation screen.",
-    fetch: async (ctx) => {
-      if (!ctx.bookingId) throw new Error("No booking yet — run the upper walkthrough through Create booking first.");
-      const d = await gql<{ paymentByBooking: any }>(Q_PAYMENT_BY_BOOKING, { id: ctx.bookingId }, ctx.accessToken!);
+    fetch: async (ctx, cache) => {
+      const id = await resolveBookingId(ctx, cache);
+      if (!id) throw new Error("No bookings on this account. Run Create booking in the upper walkthrough first.");
+      const d = await gql<{ paymentByBooking: any }>(Q_PAYMENT_BY_BOOKING, { id }, ctx.accessToken!);
       return d.paymentByBooking;
     },
     render: (p) => <PaymentScreen payment={p} />,
@@ -297,9 +315,10 @@ const SCREENS: Screen[] = [
     endpoint: "Query · booking",
     description: "Step 3 — booking detail re-fetched from the booking service after payment.",
     nextHint: "Tap Next to open My bookings.",
-    fetch: async (ctx) => {
-      if (!ctx.bookingId) throw new Error("No booking id.");
-      const d = await gql<{ booking: any }>(Q_BOOKING, { id: ctx.bookingId }, ctx.accessToken!);
+    fetch: async (ctx, cache) => {
+      const id = await resolveBookingId(ctx, cache);
+      if (!id) throw new Error("No bookings on this account. Run Create booking in the upper walkthrough first.");
+      const d = await gql<{ booking: any }>(Q_BOOKING, { id }, ctx.accessToken!);
       return d.booking;
     },
     render: (b) => <ConfirmationScreen booking={b} />,
@@ -390,9 +409,10 @@ const SCREENS: Screen[] = [
     endpoint: "Query · paymentByBooking (most recent)",
     description: "There's no card-vault endpoint yet, so we show the most-recent real payment as the proof of charge.",
     nextHint: "Tap Next for Notifications.",
-    fetch: async (ctx) => {
-      if (!ctx.bookingId) return null;
-      const d = await gql<{ paymentByBooking: any }>(Q_PAYMENT_BY_BOOKING, { id: ctx.bookingId }, ctx.accessToken!);
+    fetch: async (ctx, cache) => {
+      const id = await resolveBookingId(ctx, cache);
+      if (!id) return null;
+      const d = await gql<{ paymentByBooking: any }>(Q_PAYMENT_BY_BOOKING, { id }, ctx.accessToken!);
       return d.paymentByBooking;
     },
     render: (p) => <PaymentMethods payment={p} />,
@@ -586,9 +606,10 @@ const SCREENS: Screen[] = [
     endpoint: "Query · paymentByBooking",
     description: "Most recent processed payment — proxy for payout history until a dedicated endpoint exists.",
     nextHint: "Tap Next for availability.",
-    fetch: async (ctx) => {
-      if (!ctx.bookingId) return null;
-      const d = await gql<{ paymentByBooking: any }>(Q_PAYMENT_BY_BOOKING, { id: ctx.bookingId }, ctx.accessToken!);
+    fetch: async (ctx, cache) => {
+      const id = await resolveBookingId(ctx, cache);
+      if (!id) return null;
+      const d = await gql<{ paymentByBooking: any }>(Q_PAYMENT_BY_BOOKING, { id }, ctx.accessToken!);
       return d.paymentByBooking;
     },
     render: (p) => <PayoutsScreen payment={p} />,
