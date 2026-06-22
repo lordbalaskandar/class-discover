@@ -397,7 +397,7 @@ const SCREENS: Screen[] = [
       const p = await gql<{ profile: any }>(Q_PROFILE, { id: me.me.id }, ctx.accessToken!);
       return { me: me.me, profile: p.profile };
     },
-    render: (d) => <ProfileScreen me={d.me} profile={d.profile} />,
+    render: (d, ctx) => <ProfileScreen me={d.me} profile={d.profile} ctx={ctx} />,
   },
   {
     id: "saved",
