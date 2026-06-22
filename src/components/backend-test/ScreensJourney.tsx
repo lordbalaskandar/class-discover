@@ -576,7 +576,7 @@ const SCREENS: Screen[] = [
       const d = await gql<{ myClasses: any[] }>(Q_MY_CLASSES, undefined, ctx.accessToken!);
       return d.myClasses?.[0] ?? null;
     },
-    render: (c) => <HostCreateClass template={c} />,
+    render: (c, ctx) => <HostCreateClass template={c} ctx={ctx} />,
   },
   {
     id: "manage",
