@@ -663,7 +663,7 @@ const SCREENS: Screen[] = [
       const d = await gql<{ myClasses: any[] }>(Q_MY_CLASSES, undefined, ctx.accessToken!);
       return d.myClasses ?? [];
     },
-    render: (items) => <TemplatesScreen items={items} />,
+    render: (items, ctx) => <TemplatesScreen items={items} ctx={ctx} />,
   },
   {
     id: "hpPayouts",
