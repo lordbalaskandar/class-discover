@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -1012,8 +1012,142 @@ export function ScreensJourney({ ctx }: { ctx: JourneyCtx }) {
             <span className="font-medium text-foreground">Next: </span>
             {screen.nextHint}
           </div>
+
+          {screenData !== undefined && status === "ok" && (
+            <ResponsePreview data={screenData} />
+          )}
         </Card>
       </div>
+    </div>
+  );
+}
+
+/* ============================================================ */
+/* Response preview                                             */
+/* ============================================================ */
+
+function summarizeResponse(data: any): { kind: "list" | "object" | "scalar" | "empty"; count?: number; keys?: string[]; sample?: any } {
+  if (data === null || data === undefined) return { kind: "empty" };
+  if (Array.isArray(data)) {
+    return {
+      kind: "list",
+      count: data.length,
+      sample: data.slice(0, 3),
+      keys: data[0] && typeof data[0] === "object" ? Object.keys(data[0]).slice(0, 6) : undefined,
+    };
+  }
+  if (typeof data === "object") {
+    // Find first array field for list-shaped payloads
+    const arrayKey = Object.keys(data).find((k) => Array.isArray((data as any)[k]));
+    if (arrayKey) {
+      const arr = (data as any)[arrayKey] as any[];
+      return {
+        kind: "list",
+        count: arr.length,
+        sample: arr.slice(0, 3),
+        keys: arr[0] && typeof arr[0] === "object" ? Object.keys(arr[0]).slice(0, 6) : undefined,
+      };
+    }
+    return { kind: "object", keys: Object.keys(data).slice(0, 8), sample: data };
+  }
+  return { kind: "scalar", sample: data };
+}
+
+function ResponsePreview({ data }: { data: any }) {
+  const [open, setOpen] = useState(false);
+  const summary = summarizeResponse(data);
+  const json = (() => {
+    try {
+      return JSON.stringify(data, null, 2);
+    } catch {
+      return String(data);
+    }
+  })();
+  const truncated = json.length > 1200 ? json.slice(0, 1200) + "\n… (truncated)" : json;
+
+  return (
+    <div className="border-t pt-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="text-xs uppercase tracking-wider text-muted-foreground">Response</div>
+        <Badge variant="outline" className="text-[10px]">
+          {summary.kind === "list"
+            ? `${summary.count} item${summary.count === 1 ? "" : "s"}`
+            : summary.kind === "object"
+              ? `${summary.keys?.length ?? 0} fields`
+              : summary.kind === "empty"
+                ? "empty"
+                : "value"}
+        </Badge>
+      </div>
+
+      {summary.kind === "list" && summary.keys && (
+        <div className="flex flex-wrap gap-1">
+          {summary.keys.map((k) => (
+            <span key={k} className="text-[10px] px-1.5 py-0.5 rounded bg-secondary font-mono">
+              {k}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {summary.kind === "object" && summary.keys && (
+        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[11px]">
+          {summary.keys.map((k) => {
+            const v = (summary.sample as any)[k];
+            const display =
+              v === null || v === undefined
+                ? "—"
+                : typeof v === "object"
+                  ? Array.isArray(v)
+                    ? `[${v.length}]`
+                    : "{…}"
+                  : String(v);
+            return (
+              <Fragment key={k}>
+                <dt className="font-mono text-muted-foreground">{k}</dt>
+                <dd className="truncate" title={display}>
+                  {display}
+                </dd>
+              </Fragment>
+            );
+          })}
+        </dl>
+      )}
+
+      {summary.kind === "list" && Array.isArray(summary.sample) && summary.sample.length > 0 && (
+        <div className="text-[11px] text-muted-foreground">
+          First {summary.sample.length} of {summary.count}:
+          <ul className="mt-1 space-y-0.5">
+            {summary.sample.map((item: any, idx: number) => {
+              const label =
+                item && typeof item === "object"
+                  ? item.title ?? item.name ?? item.displayName ?? item.id ?? JSON.stringify(item).slice(0, 60)
+                  : String(item);
+              return (
+                <li key={idx} className="truncate text-foreground/80" title={String(label)}>
+                  · {String(label)}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+
+      {summary.kind === "scalar" && (
+        <div className="text-xs font-mono break-all">{String(summary.sample)}</div>
+      )}
+
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="text-[10px] text-muted-foreground hover:text-foreground underline"
+      >
+        {open ? "Hide raw JSON" : "Show raw JSON"}
+      </button>
+      {open && (
+        <pre className="text-[10px] leading-relaxed bg-muted/50 rounded p-2 max-h-64 overflow-auto whitespace-pre-wrap break-all">
+          {truncated}
+        </pre>
+      )}
     </div>
   );
 }
