@@ -86,6 +86,22 @@ const Q_BOOKINGS_BY_CLASS = `query BBC($id:ID!){ bookingsByClass(classId:$id){ i
 const Q_COACH_TIP = `query CT{ coachTip{ hostId tip generatedAt } }`;
 const M_CREATE_BOOKING = `mutation CB($i:CreateBookingInput!){ createBooking(input:$i){ id classId gymId scheduledAt status createdAt } }`;
 const M_UPDATE_PROFILE = `mutation UP($i:UpdateProfileInput!){ updateProfile(input:$i){ userId bio avatarUrl updatedAt } }`;
+const M_CREATE_CLASS = `mutation CC($i:CreateClassInput!){ createClass(input:$i){ id title activityType startAt durationMinutes capacity priceCents status } }`;
+
+async function hydrateClassNames(items: any[], token: string): Promise<Record<string, string>> {
+  const ids = Array.from(new Set(items.map((i) => i.classId).filter(Boolean)));
+  if (!ids.length) return {};
+  const map: Record<string, string> = {};
+  await Promise.all(
+    ids.map(async (id) => {
+      try {
+        const d = await gql<{ class: any }>(Q_CLASS, { id }, token);
+        if (d.class?.title) map[id] = d.class.title;
+      } catch {}
+    }),
+  );
+  return map;
+}
 
 /* ============================================================ */
 /* Shared context — populated by upper section                  */
@@ -251,7 +267,7 @@ const SCREENS: Screen[] = [
     nextHint: "Tap Next to open a host profile.",
     fetch: async (ctx) => {
       const d = await gql<{ gyms: any }>(Q_GYMS, { f: null, p: { limit: 50 } }, ctx.accessToken!);
-      return d.gyms.items.filter((g: any) => g.address?.lat && g.address?.lng);
+      return d.gyms.items;
     },
     render: (items) => <HostsMap items={items} />,
   },
@@ -310,31 +326,47 @@ const SCREENS: Screen[] = [
     render: (c) => <ClassDetail cls={c} />,
   },
   {
-    id: "booking",
-    flow: "user",
-    tab: "sessions",
-    title: "Booking step",
-    endpoint: "Local — uses class detail",
-    description: "Step 1 of checkout. We compose the booking from the real class loaded above.",
-    nextHint: "Tap Next to fetch the payment intent for an existing booking.",
-    fetch: async (_ctx, cache) => cache.classDetail,
-    render: (c) => <BookingStep cls={c} />,
-  },
-  {
     id: "payment",
     flow: "user",
     tab: "sessions",
     title: "Payment",
     endpoint: "Query · paymentByBooking",
-    description: "Fetches the real payment record for the booking created in the upper integration walkthrough.",
-    nextHint: "Tap Next for the confirmation screen.",
+    description: "Step 1 of checkout — collect payment for the chosen class. Real payment record loaded from the booking service when available.",
+    nextHint: "Tap Next to create the booking after payment succeeds.",
     fetch: async (ctx, cache) => {
+      const cls = cache.classDetail ?? null;
       const id = await resolveBookingId(ctx, cache);
-      if (!id) throw new Error("No bookings on this account. Run Create booking in the upper walkthrough first.");
-      const d = await gql<{ paymentByBooking: any }>(Q_PAYMENT_BY_BOOKING, { id }, ctx.accessToken!);
-      return d.paymentByBooking;
+      let payment: any = null;
+      if (id) {
+        try {
+          const d = await gql<{ paymentByBooking: any }>(Q_PAYMENT_BY_BOOKING, { id }, ctx.accessToken!);
+          payment = d.paymentByBooking;
+        } catch {}
+      }
+      return { payment, cls };
     },
-    render: (p) => <PaymentScreen payment={p} />,
+    render: (d) => <PaymentScreen payment={d.payment} cls={d.cls} />,
+  },
+  {
+    id: "booking",
+    flow: "user",
+    tab: "sessions",
+    title: "Create booking",
+    endpoint: "Mutation · createBooking",
+    description: "Step 2 — payment succeeded, now reserve the spot via the booking service.",
+    nextHint: "Tap Next to see the confirmation screen.",
+    fetch: async (ctx, cache) => {
+      const cls = cache.classDetail;
+      if (!cls) throw new Error("Open Class detail first.");
+      const d = await gql<{ createBooking: any }>(
+        M_CREATE_BOOKING,
+        { i: { classId: cls.id } },
+        ctx.accessToken!,
+      );
+      cache.resolvedBookingId = d.createBooking?.id ?? cache.resolvedBookingId;
+      return { booking: d.createBooking, cls };
+    },
+    render: (d) => <BookingStep cls={d.cls} booking={d.booking} />,
   },
   {
     id: "confirmation",
@@ -346,11 +378,12 @@ const SCREENS: Screen[] = [
     nextHint: "Tap Next to open My bookings.",
     fetch: async (ctx, cache) => {
       const id = await resolveBookingId(ctx, cache);
-      if (!id) throw new Error("No bookings on this account. Run Create booking in the upper walkthrough first.");
+      if (!id) throw new Error("No bookings on this account. Run Create booking first.");
       const d = await gql<{ booking: any }>(Q_BOOKING, { id }, ctx.accessToken!);
-      return d.booking;
+      const cls = cache.classDetail;
+      return { booking: d.booking, className: cls?.id === d.booking?.classId ? cls.title : null };
     },
-    render: (b) => <ConfirmationScreen booking={b} />,
+    render: (d) => <ConfirmationScreen booking={d.booking} className={d.className} />,
   },
   {
     id: "bookings",
@@ -362,9 +395,10 @@ const SCREENS: Screen[] = [
     nextHint: "Tap Next to view past bookings.",
     fetch: async (ctx) => {
       const d = await gql<{ bookings: any }>(Q_MY_BOOKINGS, { f: null, p: { limit: 20 } }, ctx.accessToken!);
-      return d.bookings.items;
+      const names = await hydrateClassNames(d.bookings.items ?? [], ctx.accessToken!);
+      return { items: d.bookings.items, names };
     },
-    render: (items) => <BookingsList items={items} tab="upcoming" />,
+    render: (d) => <BookingsList items={d.items} names={d.names} tab="upcoming" />,
   },
   {
     id: "bookingsCancelled",
@@ -380,9 +414,10 @@ const SCREENS: Screen[] = [
         { f: { status: "CANCELLED" }, p: { limit: 20 } },
         ctx.accessToken!,
       );
-      return d.bookings.items;
+      const names = await hydrateClassNames(d.bookings.items ?? [], ctx.accessToken!);
+      return { items: d.bookings.items, names };
     },
-    render: (items) => <BookingsList items={items} tab="cancelled" />,
+    render: (d) => <BookingsList items={d.items} names={d.names} tab="cancelled" />,
   },
   {
     id: "profile",
@@ -541,7 +576,7 @@ const SCREENS: Screen[] = [
       const d = await gql<{ myClasses: any[] }>(Q_MY_CLASSES, undefined, ctx.accessToken!);
       return d.myClasses?.[0] ?? null;
     },
-    render: (c) => <HostCreateClass template={c} />,
+    render: (c, ctx) => <HostCreateClass template={c} ctx={ctx} />,
   },
   {
     id: "manage",
@@ -1301,31 +1336,62 @@ function HostsList({ items }: { items: any[] }) {
 }
 
 function HostsMap({ items }: { items: any[] }) {
-  // Schematic map: normalize lat/lng into 0..100 inside a viewport
-  const lats = items.map((i) => i.address.lat);
-  const lngs = items.map((i) => i.address.lng);
-  const minLat = Math.min(...lats), maxLat = Math.max(...lats);
-  const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+  const withCoords = items.filter(
+    (i) => i.address && typeof i.address.lat === "number" && typeof i.address.lng === "number",
+  );
+  const lats = withCoords.map((i) => i.address.lat);
+  const lngs = withCoords.map((i) => i.address.lng);
+  const minLat = lats.length ? Math.min(...lats) : 0;
+  const maxLat = lats.length ? Math.max(...lats) : 0;
+  const minLng = lngs.length ? Math.min(...lngs) : 0;
+  const maxLng = lngs.length ? Math.max(...lngs) : 0;
   const norm = (v: number, mn: number, mx: number) =>
     mx === mn ? 50 : ((v - mn) / (mx - mn)) * 90 + 5;
+
+  // Fallback: hash gym ids into a deterministic position so the map is never empty
+  const fakePos = (id: string) => {
+    let h = 0;
+    for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+    return { left: 8 + (h % 84), top: 10 + ((h >> 7) % 80) };
+  };
+
+  const plotted = items.slice(0, 24);
   return (
     <div className="relative h-[460px] m-3 rounded-lg overflow-hidden border bg-[linear-gradient(135deg,hsl(var(--muted))_25%,hsl(var(--background))_25%,hsl(var(--background))_50%,hsl(var(--muted))_50%,hsl(var(--muted))_75%,hsl(var(--background))_75%)] bg-[length:24px_24px]">
-      {items.slice(0, 20).map((g) => (
-        <div
-          key={g.id}
-          className="absolute -translate-x-1/2 -translate-y-full"
-          style={{
-            left: `${norm(g.address.lng, minLng, maxLng)}%`,
-            top: `${100 - norm(g.address.lat, minLat, maxLat)}%`,
-          }}
-          title={g.name}
-        >
-          <MapPin className="h-5 w-5 text-primary fill-primary" />
-        </div>
-      ))}
+      {plotted.map((g) => {
+        const hasCoords =
+          g.address && typeof g.address.lat === "number" && typeof g.address.lng === "number";
+        const pos = hasCoords
+          ? {
+              left: norm(g.address.lng, minLng, maxLng),
+              top: 100 - norm(g.address.lat, minLat, maxLat),
+            }
+          : fakePos(g.id);
+        return (
+          <div
+            key={g.id}
+            className="absolute -translate-x-1/2 -translate-y-full group"
+            style={{ left: `${pos.left}%`, top: `${pos.top}%` }}
+            title={g.name}
+          >
+            <MapPin
+              className={cn(
+                "h-5 w-5",
+                hasCoords ? "text-primary fill-primary" : "text-muted-foreground fill-muted",
+              )}
+            />
+          </div>
+        );
+      })}
       <div className="absolute bottom-2 left-2 right-2 bg-card/95 backdrop-blur rounded-md border p-2 text-[10px]">
-        <div className="font-semibold">{items.length} hosts plotted</div>
-        <div className="text-muted-foreground">Live coords from gyms()</div>
+        <div className="font-semibold">
+          {plotted.length} hosts · {withCoords.length} with live coordinates
+        </div>
+        <div className="text-muted-foreground">
+          {withCoords.length === 0
+            ? "Backend has no lat/lng yet — pins placed deterministically by id."
+            : "Live coords from gyms(); greyed pins lack address.lat/lng."}
+        </div>
       </div>
     </div>
   );
@@ -1417,66 +1483,63 @@ function Stat({ icon: Icon, label, value }: { icon: any; label: string; value: s
   );
 }
 
-function BookingStep({ cls }: { cls: any }) {
-  const [spots, setSpots] = useState(1);
-  const [note, setNote] = useState("");
+function BookingStep({ cls, booking }: { cls: any; booking?: any }) {
   if (!cls) return <div className="p-4 text-xs text-muted-foreground">Load class detail first.</div>;
-  const fee = 250;
-  const max = cls.capacity ?? 8;
-  const subtotal = (cls.priceCents ?? 0) * spots;
   return (
-    <Section title="Review your booking">
+    <Section title={booking ? "Booking confirmed" : "Review your booking"}>
       <div className="rounded-lg border p-3 space-y-1">
         <div className="text-xs font-semibold">{cls.title}</div>
         <div className="text-[10px] text-muted-foreground">{fmtDate(cls.startAt)} · {cls.durationMinutes}m</div>
       </div>
-      <div className="mt-3 flex items-center justify-between rounded-md border p-2">
-        <span className="text-[11px]">Spots</span>
-        <div className="flex items-center gap-2">
-          <Button size="icon" variant="outline" className="h-6 w-6 p-0" onClick={() => setSpots((s) => Math.max(1, s - 1))}>−</Button>
-          <span className="text-xs font-semibold w-6 text-center">{spots}</span>
-          <Button size="icon" variant="outline" className="h-6 w-6 p-0" onClick={() => setSpots((s) => Math.min(max, s + 1))}>+</Button>
+      {booking ? (
+        <div className="mt-3 space-y-1">
+          <Row label="Status" value={booking.status ?? "—"} />
+          <Row label="Scheduled" value={fmtDate(booking.scheduledAt)} />
+          <Row label="Created" value={fmtDate(booking.createdAt)} />
+          <div className="mt-3 rounded-md border bg-emerald-500/10 text-emerald-700 p-2 text-[11px]">
+            Spot reserved via createBooking after successful payment.
+          </div>
         </div>
-      </div>
-      <textarea
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        placeholder="Note to host (optional)"
-        className="w-full mt-2 rounded-md border text-[11px] p-2 h-14 bg-background"
-      />
-      <div className="mt-3 space-y-1">
-        <Row label="Subtotal" value={money(subtotal)} />
-        <Row label="Service fee" value={money(fee)} />
-        <Row label="Total" value={money(subtotal + fee)} />
-      </div>
-      <div className="mt-4"><Button className="w-full" size="sm">Continue to payment</Button></div>
+      ) : (
+        <div className="mt-3 text-[11px] text-muted-foreground">
+          Booking will be created when you tap Run.
+        </div>
+      )}
     </Section>
   );
 }
 
-function PaymentScreen({ payment }: { payment: any }) {
+function PaymentScreen({ payment, cls }: { payment: any; cls: any }) {
+  const amount = payment?.amount ?? cls?.priceCents ?? 0;
+  const currency = payment?.currency ?? "GBP";
+  const status = payment?.status ?? "PENDING";
   return (
     <Section title="Payment">
-      <div className="rounded-lg border p-3">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="rounded-lg border p-3 space-y-2">
+        <div className="flex items-center gap-2">
           <CreditCard className="h-4 w-4" />
           <span className="text-xs font-semibold">Visa •••• 4242</span>
           <Badge variant="secondary" className="ml-auto text-[9px]">default</Badge>
         </div>
-        <div className="text-[10px] text-muted-foreground">Live record from paymentByBooking</div>
+        <Row label="Card holder" value="Test User" />
+        <Row label="Expires" value="12 / 29" />
+        <Row label="CVC" value="•••" />
       </div>
-      <div className="mt-3 space-y-1">
-        <Row label="ID" value={payment?.id ?? "—"} />
-        <Row label="Amount" value={payment ? `${payment.currency} ${(payment.amount / 100).toFixed(2)}` : "—"} />
-        <Row label="Status" value={payment?.status ?? "—"} />
-        <Row label="When" value={fmtDate(payment?.createdAt)} />
+      <div className="mt-3 rounded-lg border p-3 space-y-1">
+        <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Order</div>
+        <Row label="Class" value={cls?.title ?? "—"} />
+        <Row label="When" value={fmtDate(cls?.startAt)} />
+        <Row label="Amount" value={`${currency} ${(amount / 100).toFixed(2)}`} />
+        <Row label="Status" value={status} />
       </div>
-      <div className="mt-4"><Button className="w-full" size="sm">Pay now</Button></div>
+      <div className="mt-4">
+        <Button className="w-full" size="sm">Pay {currency} {(amount / 100).toFixed(2)}</Button>
+      </div>
     </Section>
   );
 }
 
-function ConfirmationScreen({ booking }: { booking: any }) {
+function ConfirmationScreen({ booking, className }: { booking: any; className: string | null }) {
   return (
     <div className="p-4 text-center">
       <div className="mx-auto h-14 w-14 rounded-full bg-emerald-500/15 text-emerald-600 flex items-center justify-center mb-3">✓</div>
@@ -1485,7 +1548,7 @@ function ConfirmationScreen({ booking }: { booking: any }) {
       <div className="mt-4 rounded-lg border p-3 text-left space-y-1">
         <Row label="Status" value={booking?.status ?? "—"} />
         <Row label="When" value={fmtDate(booking?.scheduledAt)} />
-        <Row label="Class" value={booking?.classId ?? "—"} />
+        <Row label="Class" value={className ?? "—"} />
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2">
         <Button size="sm" variant="outline">Add to calendar</Button>
@@ -1495,7 +1558,7 @@ function ConfirmationScreen({ booking }: { booking: any }) {
   );
 }
 
-function BookingsList({ items, tab }: { items: any[]; tab: string }) {
+function BookingsList({ items, names, tab }: { items: any[]; names: Record<string, string>; tab: string }) {
   return (
     <>
       <div className="px-4 pt-4 flex gap-2">
@@ -1511,9 +1574,9 @@ function BookingsList({ items, tab }: { items: any[]; tab: string }) {
         )}
         {items.map((b) => (
           <div key={b.id} className="rounded-md border p-3">
-            <div className="text-[11px] font-semibold">{b.status}</div>
+            <div className="text-[11px] font-semibold truncate">{names?.[b.classId] ?? "Class"}</div>
             <div className="text-[10px] text-muted-foreground">{fmtDate(b.scheduledAt)}</div>
-            <div className="text-[9px] text-muted-foreground mt-1 truncate">class: {b.classId}</div>
+            <Badge variant="secondary" className="mt-1 text-[9px]">{b.status}</Badge>
           </div>
         ))}
       </div>
@@ -1600,9 +1663,9 @@ function PaymentMethods({ payment }: { payment: any }) {
       <Section title="Most recent charge">
         {payment ? (
           <div className="space-y-1">
-            <Row label="ID" value={payment.id} />
             <Row label="Amount" value={`${payment.currency} ${(payment.amount / 100).toFixed(2)}`} />
             <Row label="Status" value={payment.status} />
+            <Row label="When" value={fmtDate(payment.createdAt)} />
           </div>
         ) : (
           <div className="text-[11px] text-muted-foreground">No payments yet — run the upper walkthrough to create one.</div>
@@ -1766,20 +1829,67 @@ function Kpi({ icon: Icon, label, value }: { icon: any; label: string; value: st
   );
 }
 
-function HostCreateClass({ template }: { template: any }) {
+function HostCreateClass({ template, ctx }: { template: any; ctx: JourneyCtx }) {
+  const [title, setTitle] = useState(template?.title ?? "New class");
+  const [activityType, setActivityType] = useState(template?.activityType ?? "yoga");
+  const [capacity, setCapacity] = useState(String(template?.capacity ?? 12));
+  const [price, setPrice] = useState(((template?.priceCents ?? 1500) / 100).toFixed(2));
+  const [busy, setBusy] = useState(false);
+  const [created, setCreated] = useState<any>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const publish = async () => {
+    if (!ctx.accessToken) {
+      setErr("Sign in via the upper walkthrough first.");
+      return;
+    }
+    setBusy(true);
+    setErr(null);
+    try {
+      const startAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 3).toISOString();
+      const priceCents = Math.round((parseFloat(price) || 0) * 100);
+      const d = await gql<{ createClass: any }>(
+        M_CREATE_CLASS,
+        {
+          i: {
+            title,
+            description: `Published from backend test on ${new Date().toLocaleString()}`,
+            activityType: activityType.toLowerCase(),
+            startAt,
+            durationMinutes: 60,
+            capacity: parseInt(capacity, 10) || 12,
+            priceCents,
+          },
+        },
+        ctx.accessToken,
+      );
+      setCreated(d.createClass);
+    } catch (e: any) {
+      setErr(e?.message ?? "Failed to publish");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <Section title="New class">
-      <Input className="h-8 text-xs" defaultValue={template?.title ?? "New class"} />
+      <Input className="h-8 text-xs" value={title} onChange={(e) => setTitle(e.target.value)} />
       <div className="grid grid-cols-2 gap-2 mt-2">
-        <Input className="h-8 text-xs" defaultValue={template?.activityType ?? "YOGA"} />
-        <Input className="h-8 text-xs" defaultValue={String(template?.capacity ?? 12)} />
+        <Input className="h-8 text-xs" value={activityType} onChange={(e) => setActivityType(e.target.value)} />
+        <Input className="h-8 text-xs" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
       </div>
-      <Input className="h-8 text-xs mt-2" defaultValue={fmtDate(template?.startAt)} />
-      <Input className="h-8 text-xs mt-2" defaultValue={money(template?.priceCents).replace("£", "")} />
+      <Input className="h-8 text-xs mt-2" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="Price (£)" />
       <div className="mt-3 text-[10px] text-muted-foreground">
-        Prefilled from your most recently created class via myClasses.
+        {created
+          ? `Published · id ${created.id?.slice(0, 8)} · status ${created.status}`
+          : "Prefilled from your most recently created class via myClasses. Publish runs createClass."}
       </div>
-      <div className="mt-3"><Button className="w-full" size="sm">Publish</Button></div>
+      {err && <div className="mt-2 text-[10px] text-destructive">{err}</div>}
+      <div className="mt-3">
+        <Button className="w-full" size="sm" onClick={publish} disabled={busy}>
+          {busy ? "Publishing…" : created ? "Publish another" : "Publish"}
+        </Button>
+      </div>
     </Section>
   );
 }
