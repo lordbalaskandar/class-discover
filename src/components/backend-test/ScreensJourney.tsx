@@ -1139,18 +1139,59 @@ function money(c?: number) {
 /* ============================================================ */
 
 function ClassFeed({ items }: { items: any[] }) {
+  const [q, setQ] = useState("");
+  const [activity, setActivity] = useState<string | null>(null);
   if (!items?.length)
     return <div className="p-4 text-xs text-muted-foreground">No classes returned.</div>;
+  const activities = [...new Set(items.map((i) => i.activityType))].filter(Boolean);
+  const filtered = items.filter((c) => {
+    const matchQ =
+      !q ||
+      c.title?.toLowerCase().includes(q.toLowerCase()) ||
+      c.gymName?.toLowerCase().includes(q.toLowerCase()) ||
+      c.city?.toLowerCase().includes(q.toLowerCase());
+    const matchA = !activity || c.activityType === activity;
+    return matchQ && matchA;
+  });
   return (
     <>
       <div className="px-4 pt-4 pb-2 text-sm font-semibold">Find your next session</div>
-      <div className="px-4 pb-4 flex gap-2 overflow-x-auto">
-        {[...new Set(items.map((i) => i.activityType))].slice(0, 6).map((a) => (
-          <Badge key={a as string} variant="secondary" className="text-[10px] whitespace-nowrap">{a as string}</Badge>
+      <div className="px-4 pb-2">
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search title, gym, city…"
+            className="h-8 text-xs pl-7"
+          />
+        </div>
+      </div>
+      <div className="px-4 pb-3 flex gap-2 overflow-x-auto">
+        <button onClick={() => setActivity(null)}>
+          <Badge
+            variant={activity === null ? "default" : "secondary"}
+            className="text-[10px] whitespace-nowrap cursor-pointer"
+          >
+            All
+          </Badge>
+        </button>
+        {activities.slice(0, 8).map((a) => (
+          <button key={a as string} onClick={() => setActivity(a as string)}>
+            <Badge
+              variant={activity === a ? "default" : "secondary"}
+              className="text-[10px] whitespace-nowrap cursor-pointer"
+            >
+              {a as string}
+            </Badge>
+          </button>
         ))}
       </div>
+      <div className="px-4 pb-1 text-[10px] text-muted-foreground">
+        {filtered.length} of {items.length}
+      </div>
       <div className="px-4 space-y-3 pb-4">
-        {items.map((c) => (
+        {filtered.map((c) => (
           <div key={c.id} className="rounded-lg border overflow-hidden">
             <div className="h-20 bg-gradient-to-br from-primary/30 to-primary/5 flex items-end p-2">
               <Badge className="text-[9px]">{c.activityType}</Badge>
@@ -1173,28 +1214,74 @@ function ClassFeed({ items }: { items: any[] }) {
   );
 }
 
-function FiltersSheet({ filters }: { filters: any }) {
+function FiltersSheet({ filters, ctx }: { filters: any; ctx: JourneyCtx }) {
+  const [q, setQ] = useState("evening pilates classes near London at least 4 stars");
+  const [current, setCurrent] = useState<any>(filters);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const apply = async () => {
+    if (!ctx.accessToken) return;
+    setBusy(true);
+    setErr(null);
+    try {
+      const d = await gql<{ smartSearchFilters: any }>(Q_SMART, { q }, ctx.accessToken);
+      setCurrent(d.smartSearchFilters);
+    } catch (e: any) {
+      setErr(e?.message ?? String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
-    <Section title="AI-parsed filters">
-      <div className="rounded-lg border p-3 space-y-2">
-        <Row label="activityType" value={filters?.activityType ?? "—"} />
-        <Row label="city" value={filters?.city ?? "—"} />
-        <Row label="minRating" value={String(filters?.minRating ?? "—")} />
-        <Row label="radiusKm" value={String(filters?.radiusKm ?? "—")} />
-      </div>
-      <div className="mt-4">
-        <Button size="sm" className="w-full">Apply</Button>
+    <Section title="Tell AI what you want">
+      <textarea
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        className="w-full rounded-md border text-[11px] p-2 h-16 bg-background"
+      />
+      <Button size="sm" className="w-full mt-2" onClick={apply} disabled={busy}>
+        {busy ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
+        Apply
+      </Button>
+      {err && <div className="mt-2 text-[10px] text-destructive">{err}</div>}
+      <div className="rounded-lg border p-3 space-y-2 mt-4">
+        <div className="text-[10px] text-muted-foreground">AI parsed →</div>
+        <Row label="activityType" value={current?.activityType ?? "—"} />
+        <Row label="city" value={current?.city ?? "—"} />
+        <Row label="minRating" value={String(current?.minRating ?? "—")} />
+        <Row label="radiusKm" value={String(current?.radiusKm ?? "—")} />
       </div>
     </Section>
   );
 }
 
 function HostsList({ items }: { items: any[] }) {
+  const [q, setQ] = useState("");
+  const filtered = items.filter(
+    (g) =>
+      !q ||
+      g.name?.toLowerCase().includes(q.toLowerCase()) ||
+      g.address?.city?.toLowerCase().includes(q.toLowerCase()),
+  );
   return (
     <>
       <div className="px-4 pt-4 pb-2 text-sm font-semibold">Hosts near you</div>
+      <div className="px-4 pb-3">
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search name or city…"
+            className="h-8 text-xs pl-7"
+          />
+        </div>
+      </div>
+      <div className="px-4 pb-1 text-[10px] text-muted-foreground">
+        {filtered.length} of {items.length}
+      </div>
       <div className="px-4 space-y-2 pb-4">
-        {items.map((g) => (
+        {filtered.map((g) => (
           <div key={g.id} className="rounded-lg border p-3 flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/40 to-primary/10 flex items-center justify-center text-xs font-semibold">
               {g.name?.[0] ?? "?"}
