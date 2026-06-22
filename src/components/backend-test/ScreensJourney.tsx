@@ -298,9 +298,10 @@ const SCREENS: Screen[] = [
     endpoint: "Query · booking",
     description: "Step 3 — booking detail re-fetched from the booking service after payment.",
     nextHint: "Tap Next to open My bookings.",
-    fetch: async (ctx) => {
-      if (!ctx.bookingId) throw new Error("No booking id.");
-      const d = await gql<{ booking: any }>(Q_BOOKING, { id: ctx.bookingId }, ctx.accessToken!);
+    fetch: async (ctx, cache) => {
+      const id = await resolveBookingId(ctx, cache);
+      if (!id) throw new Error("No bookings on this account. Run Create booking in the upper walkthrough first.");
+      const d = await gql<{ booking: any }>(Q_BOOKING, { id }, ctx.accessToken!);
       return d.booking;
     },
     render: (b) => <ConfirmationScreen booking={b} />,
