@@ -392,9 +392,10 @@ const SCREENS: Screen[] = [
     endpoint: "Query · paymentByBooking (most recent)",
     description: "There's no card-vault endpoint yet, so we show the most-recent real payment as the proof of charge.",
     nextHint: "Tap Next for Notifications.",
-    fetch: async (ctx) => {
-      if (!ctx.bookingId) return null;
-      const d = await gql<{ paymentByBooking: any }>(Q_PAYMENT_BY_BOOKING, { id: ctx.bookingId }, ctx.accessToken!);
+    fetch: async (ctx, cache) => {
+      const id = await resolveBookingId(ctx, cache);
+      if (!id) return null;
+      const d = await gql<{ paymentByBooking: any }>(Q_PAYMENT_BY_BOOKING, { id }, ctx.accessToken!);
       return d.paymentByBooking;
     },
     render: (p) => <PaymentMethods payment={p} />,
