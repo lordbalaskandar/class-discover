@@ -707,19 +707,20 @@ const SCREENS: Screen[] = [
     tab: "profile",
     title: "Reviews",
     endpoint: "Query · reviews + reviewSummary",
-    description: "Loads reviews for the host's gym plus the AI summary in one shot.",
+    description: "Loads reviews for the host's gym plus the AI summary. Includes a one-tap submitReview action.",
     nextHint: "Tap Next for support.",
-    fetch: async (ctx) => {
+    fetch: async (ctx, cache) => {
       const mg = await gql<{ myGym: any }>(Q_MY_GYM, undefined, ctx.accessToken!);
       const gymId = mg.myGym?.id ?? ctx.gymId;
-      if (!gymId) return { reviews: [], summary: null };
+      cache.hpReviewsGymId = gymId;
+      if (!gymId) return { reviews: [], summary: null, gymId: null };
       const [r, s] = await Promise.all([
         gql<{ reviews: any[] }>(Q_REVIEWS, { g: gymId }, ctx.accessToken!).catch(() => ({ reviews: [] })),
         gql<{ reviewSummary: any }>(Q_REVIEW_SUMMARY, { g: gymId }, ctx.accessToken!).catch(() => ({ reviewSummary: null })),
       ]);
-      return { reviews: r.reviews ?? [], summary: s.reviewSummary };
+      return { reviews: r.reviews ?? [], summary: s.reviewSummary, gymId };
     },
-    render: (d) => <ReviewsScreen reviews={d.reviews} summary={d.summary} />,
+    render: (d, ctx) => <ReviewsScreen reviews={d.reviews} summary={d.summary} gymId={d.gymId} ctx={ctx} />,
   },
   {
     id: "hpSupport",
@@ -758,14 +759,14 @@ const SCREENS: Screen[] = [
     flow: "host",
     tab: "profile",
     title: "Create gym",
-    endpoint: "Query · myGym (post-create state)",
-    description: "Creation form — when a gym already exists we render the live record as the post-create confirmation.",
+    endpoint: "Mutation · createGym / updateGym",
+    description: "Creation form wired to the host service. Edit the fields and tap Create / Update to mutate.",
     nextHint: "Tap Next for the member list.",
     fetch: async (ctx) => {
       const d = await gql<{ myGym: any }>(Q_MY_GYM, undefined, ctx.accessToken!);
       return d.myGym;
     },
-    render: (g) => <HpGymCreateScreen gym={g} />,
+    render: (g, ctx) => <HpGymCreateScreen gym={g} ctx={ctx} />,
   },
   {
     id: "hpGymMembers",
@@ -779,34 +780,46 @@ const SCREENS: Screen[] = [
       const mc = await gql<{ myClasses: any[] }>(Q_MY_CLASSES, undefined, ctx.accessToken!);
       const classes = mc.myClasses ?? [];
       const lookups = await Promise.all(
-        classes.slice(0, 5).map((c) =>
+        classes.map((c) =>
           gql<{ bookingsByClass: any[] }>(Q_BOOKINGS_BY_CLASS, { id: c.id }, ctx.accessToken!)
-            .then((r) => r.bookingsByClass ?? [])
+            .then((r) => (r.bookingsByClass ?? []).map((b) => ({ ...b, className: c.title })))
             .catch(() => []),
         ),
       );
       const seen = new Map<string, any>();
       for (const arr of lookups) for (const b of arr) if (!seen.has(b.userId)) seen.set(b.userId, b);
-      return [...seen.values()];
+      return { members: [...seen.values()], firstClassId: classes[0]?.id ?? null };
     },
-    render: (members) => <GymMembersScreen members={members} />,
+    render: (d, ctx) => <GymMembersScreen members={d.members} firstClassId={d.firstClassId} ctx={ctx} />,
   },
   {
     id: "hpGymCoach",
     flow: "host",
     tab: "profile",
     title: "Coach view",
-    endpoint: "Query · coachTip + myClasses",
-    description: "Coach-only roster with attendance, plus an AI coach tip for today's session.",
+    endpoint: "Query · coachTip + myClasses + bookingsByClass",
+    description: "Coach-only roster for the next upcoming class plus an AI coach tip for today's session.",
     nextHint: "Tap Next for the gym editor.",
     fetch: async (ctx) => {
       const [tip, mc] = await Promise.all([
         gql<{ coachTip: any }>(Q_COACH_TIP, undefined, ctx.accessToken!).catch(() => ({ coachTip: null })),
         gql<{ myClasses: any[] }>(Q_MY_CLASSES, undefined, ctx.accessToken!),
       ]);
-      return { tip: tip.coachTip, classes: mc.myClasses ?? [] };
+      const classes = mc.myClasses ?? [];
+      const upcoming = classes
+        .filter((c) => c.startAt && new Date(c.startAt) >= new Date(Date.now() - 1000 * 60 * 60))
+        .sort((a, b) => +new Date(a.startAt) - +new Date(b.startAt))[0]
+        ?? classes[0];
+      let roster: any[] = [];
+      if (upcoming) {
+        try {
+          const b = await gql<{ bookingsByClass: any[] }>(Q_BOOKINGS_BY_CLASS, { id: upcoming.id }, ctx.accessToken!);
+          roster = b.bookingsByClass ?? [];
+        } catch {}
+      }
+      return { tip: tip.coachTip, classes, upcoming, roster };
     },
-    render: (d) => <GymCoachScreen tip={d.tip} classes={d.classes} />,
+    render: (d) => <GymCoachScreen tip={d.tip} classes={d.classes} upcoming={d.upcoming} roster={d.roster} />,
   },
   {
     id: "hpGymEdit",
