@@ -87,6 +87,9 @@ const Q_COACH_TIP = `query CT{ coachTip{ hostId tip generatedAt } }`;
 const M_CREATE_BOOKING = `mutation CB($i:CreateBookingInput!){ createBooking(input:$i){ id classId gymId scheduledAt status createdAt } }`;
 const M_UPDATE_PROFILE = `mutation UP($i:UpdateProfileInput!){ updateProfile(input:$i){ userId bio avatarUrl updatedAt } }`;
 const M_CREATE_CLASS = `mutation CC($i:CreateClassInput!){ createClass(input:$i){ id title activityType startAt durationMinutes capacity priceCents status } }`;
+const M_CREATE_GYM = `mutation CG($i:CreateGymInput!){ createGym(input:$i){ id name description address{ street city country postcode } } }`;
+const M_UPDATE_GYM = `mutation UG($id:ID!,$i:UpdateGymInput!){ updateGym(id:$id,input:$i){ id name description address{ street city country postcode } } }`;
+const M_SUBMIT_REVIEW = `mutation SR($i:SubmitReviewInput!){ submitReview(input:$i){ id gymId rating comment createdAt } }`;
 
 async function hydrateClassNames(items: any[], token: string): Promise<Record<string, string>> {
   const ids = Array.from(new Set(items.map((i) => i.classId).filter(Boolean)));
@@ -660,23 +663,29 @@ const SCREENS: Screen[] = [
       const d = await gql<{ myClasses: any[] }>(Q_MY_CLASSES, undefined, ctx.accessToken!);
       return d.myClasses ?? [];
     },
-    render: (items) => <TemplatesScreen items={items} />,
+    render: (items, ctx) => <TemplatesScreen items={items} ctx={ctx} />,
   },
   {
     id: "hpPayouts",
     flow: "host",
     tab: "profile",
     title: "Payouts",
-    endpoint: "Query · paymentByBooking",
-    description: "Most recent processed payment — proxy for payout history until a dedicated endpoint exists.",
+    endpoint: "Aggregated · myClasses × bookingsByClass",
+    description: "Estimated earnings derived from every confirmed booking on the host's real classes.",
     nextHint: "Tap Next for availability.",
-    fetch: async (ctx, cache) => {
-      const id = await resolveBookingId(ctx, cache);
-      if (!id) return null;
-      const d = await gql<{ paymentByBooking: any }>(Q_PAYMENT_BY_BOOKING, { id }, ctx.accessToken!);
-      return d.paymentByBooking;
+    fetch: async (ctx) => {
+      const mc = await gql<{ myClasses: any[] }>(Q_MY_CLASSES, undefined, ctx.accessToken!);
+      const classes = mc.myClasses ?? [];
+      const bookingLists = await Promise.all(
+        classes.map((c) =>
+          gql<{ bookingsByClass: any[] }>(Q_BOOKINGS_BY_CLASS, { id: c.id }, ctx.accessToken!)
+            .then((r) => ({ cls: c, bookings: r.bookingsByClass ?? [] }))
+            .catch(() => ({ cls: c, bookings: [] })),
+        ),
+      );
+      return bookingLists;
     },
-    render: (p) => <PayoutsScreen payment={p} />,
+    render: (rows) => <PayoutsScreen rows={rows} />,
   },
   {
     id: "hpAvailability",
@@ -698,19 +707,20 @@ const SCREENS: Screen[] = [
     tab: "profile",
     title: "Reviews",
     endpoint: "Query · reviews + reviewSummary",
-    description: "Loads reviews for the host's gym plus the AI summary in one shot.",
+    description: "Loads reviews for the host's gym plus the AI summary. Includes a one-tap submitReview action.",
     nextHint: "Tap Next for support.",
-    fetch: async (ctx) => {
+    fetch: async (ctx, cache) => {
       const mg = await gql<{ myGym: any }>(Q_MY_GYM, undefined, ctx.accessToken!);
       const gymId = mg.myGym?.id ?? ctx.gymId;
-      if (!gymId) return { reviews: [], summary: null };
+      cache.hpReviewsGymId = gymId;
+      if (!gymId) return { reviews: [], summary: null, gymId: null };
       const [r, s] = await Promise.all([
         gql<{ reviews: any[] }>(Q_REVIEWS, { g: gymId }, ctx.accessToken!).catch(() => ({ reviews: [] })),
         gql<{ reviewSummary: any }>(Q_REVIEW_SUMMARY, { g: gymId }, ctx.accessToken!).catch(() => ({ reviewSummary: null })),
       ]);
-      return { reviews: r.reviews ?? [], summary: s.reviewSummary };
+      return { reviews: r.reviews ?? [], summary: s.reviewSummary, gymId };
     },
-    render: (d) => <ReviewsScreen reviews={d.reviews} summary={d.summary} />,
+    render: (d, ctx) => <ReviewsScreen reviews={d.reviews} summary={d.summary} gymId={d.gymId} ctx={ctx} />,
   },
   {
     id: "hpSupport",
@@ -749,14 +759,14 @@ const SCREENS: Screen[] = [
     flow: "host",
     tab: "profile",
     title: "Create gym",
-    endpoint: "Query · myGym (post-create state)",
-    description: "Creation form — when a gym already exists we render the live record as the post-create confirmation.",
+    endpoint: "Mutation · createGym / updateGym",
+    description: "Creation form wired to the host service. Edit the fields and tap Create / Update to mutate.",
     nextHint: "Tap Next for the member list.",
     fetch: async (ctx) => {
       const d = await gql<{ myGym: any }>(Q_MY_GYM, undefined, ctx.accessToken!);
       return d.myGym;
     },
-    render: (g) => <HpGymCreateScreen gym={g} />,
+    render: (g, ctx) => <HpGymCreateScreen gym={g} ctx={ctx} />,
   },
   {
     id: "hpGymMembers",
@@ -770,34 +780,46 @@ const SCREENS: Screen[] = [
       const mc = await gql<{ myClasses: any[] }>(Q_MY_CLASSES, undefined, ctx.accessToken!);
       const classes = mc.myClasses ?? [];
       const lookups = await Promise.all(
-        classes.slice(0, 5).map((c) =>
+        classes.map((c) =>
           gql<{ bookingsByClass: any[] }>(Q_BOOKINGS_BY_CLASS, { id: c.id }, ctx.accessToken!)
-            .then((r) => r.bookingsByClass ?? [])
+            .then((r) => (r.bookingsByClass ?? []).map((b) => ({ ...b, className: c.title })))
             .catch(() => []),
         ),
       );
       const seen = new Map<string, any>();
       for (const arr of lookups) for (const b of arr) if (!seen.has(b.userId)) seen.set(b.userId, b);
-      return [...seen.values()];
+      return { members: [...seen.values()], firstClassId: classes[0]?.id ?? null };
     },
-    render: (members) => <GymMembersScreen members={members} />,
+    render: (d, ctx) => <GymMembersScreen members={d.members} firstClassId={d.firstClassId} ctx={ctx} />,
   },
   {
     id: "hpGymCoach",
     flow: "host",
     tab: "profile",
     title: "Coach view",
-    endpoint: "Query · coachTip + myClasses",
-    description: "Coach-only roster with attendance, plus an AI coach tip for today's session.",
+    endpoint: "Query · coachTip + myClasses + bookingsByClass",
+    description: "Coach-only roster for the next upcoming class plus an AI coach tip for today's session.",
     nextHint: "Tap Next for the gym editor.",
     fetch: async (ctx) => {
       const [tip, mc] = await Promise.all([
         gql<{ coachTip: any }>(Q_COACH_TIP, undefined, ctx.accessToken!).catch(() => ({ coachTip: null })),
         gql<{ myClasses: any[] }>(Q_MY_CLASSES, undefined, ctx.accessToken!),
       ]);
-      return { tip: tip.coachTip, classes: mc.myClasses ?? [] };
+      const classes = mc.myClasses ?? [];
+      const upcoming = classes
+        .filter((c) => c.startAt && new Date(c.startAt) >= new Date(Date.now() - 1000 * 60 * 60))
+        .sort((a, b) => +new Date(a.startAt) - +new Date(b.startAt))[0]
+        ?? classes[0];
+      let roster: any[] = [];
+      if (upcoming) {
+        try {
+          const b = await gql<{ bookingsByClass: any[] }>(Q_BOOKINGS_BY_CLASS, { id: upcoming.id }, ctx.accessToken!);
+          roster = b.bookingsByClass ?? [];
+        } catch {}
+      }
+      return { tip: tip.coachTip, classes, upcoming, roster };
     },
-    render: (d) => <GymCoachScreen tip={d.tip} classes={d.classes} />,
+    render: (d) => <GymCoachScreen tip={d.tip} classes={d.classes} upcoming={d.upcoming} roster={d.roster} />,
   },
   {
     id: "hpGymEdit",
@@ -2052,14 +2074,82 @@ function BioEditor({ initial, ctx }: { initial: string; ctx: JourneyCtx }) {
   );
 }
 
-function TemplatesScreen({ items }: { items: any[] }) {
+function TemplatesScreen({ items, ctx }: { items: any[]; ctx: JourneyCtx }) {
+  const [busy, setBusy] = useState<string | null>(null);
+  const [created, setCreated] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const newFromBlank = async () => {
+    if (!ctx.accessToken) return setErr("Sign in first.");
+    setBusy("blank");
+    setErr(null);
+    try {
+      const startAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 2).toISOString();
+      const d = await gql<{ createClass: any }>(
+        M_CREATE_CLASS,
+        { i: { title: "New template", description: "Created from templates screen", activityType: "yoga", startAt, durationMinutes: 60, capacity: 12, priceCents: 1500 } },
+        ctx.accessToken,
+      );
+      setCreated(`Template "${d.createClass.title}" created.`);
+    } catch (e: any) {
+      setErr(e?.message ?? "Failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const duplicate = async (c: any) => {
+    if (!ctx.accessToken) return setErr("Sign in first.");
+    setBusy(c.id);
+    setErr(null);
+    try {
+      const startAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString();
+      const d = await gql<{ createClass: any }>(
+        M_CREATE_CLASS,
+        {
+          i: {
+            title: `${c.title} (copy)`,
+            description: "Duplicated from template.",
+            activityType: (c.activityType ?? "yoga").toLowerCase(),
+            startAt,
+            durationMinutes: c.durationMinutes ?? 60,
+            capacity: c.capacity ?? 12,
+            priceCents: c.priceCents ?? 1500,
+          },
+        },
+        ctx.accessToken,
+      );
+      setCreated(`Class "${d.createClass.title}" scheduled in 7 days.`);
+    } catch (e: any) {
+      setErr(e?.message ?? "Failed");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   return (
     <Section title={`Templates (${items.length})`}>
+      <Button size="sm" className="w-full mb-2" onClick={newFromBlank} disabled={busy === "blank"}>
+        <Plus className="h-3 w-3 mr-1" />
+        {busy === "blank" ? "Creating…" : "Create template"}
+      </Button>
+      {created && <div className="text-[10px] text-emerald-600 mb-2">✓ {created}</div>}
+      {err && <div className="text-[10px] text-destructive mb-2">{err}</div>}
       <div className="space-y-2">
+        {items.length === 0 && (
+          <div className="text-[11px] text-muted-foreground rounded-md border bg-muted/30 p-2">
+            No templates yet — tap Create template above.
+          </div>
+        )}
         {items.map((c) => (
-          <div key={c.id} className="rounded-md border p-2">
-            <div className="text-[11px] font-medium">{c.title}</div>
-            <div className="text-[10px] text-muted-foreground">{c.activityType} · {c.durationMinutes}m · {money(c.priceCents)}</div>
+          <div key={c.id} className="rounded-md border p-2 flex items-center gap-2">
+            <div className="flex-1 min-w-0">
+              <div className="text-[11px] font-medium truncate">{c.title}</div>
+              <div className="text-[10px] text-muted-foreground">{c.activityType} · {c.durationMinutes}m · {money(c.priceCents)}</div>
+            </div>
+            <Button size="sm" variant="outline" className="h-7 text-[10px]" onClick={() => duplicate(c)} disabled={busy === c.id}>
+              {busy === c.id ? "…" : "Use"}
+            </Button>
           </div>
         ))}
       </div>
@@ -2067,21 +2157,49 @@ function TemplatesScreen({ items }: { items: any[] }) {
   );
 }
 
-function PayoutsScreen({ payment }: { payment: any }) {
+function PayoutsScreen({ rows }: { rows: { cls: any; bookings: any[] }[] }) {
+  const completed = rows.flatMap((r) =>
+    r.bookings.filter((b) => b.status === "CONFIRMED" || b.status === "COMPLETED").map(() => r.cls.priceCents ?? 0),
+  );
+  const pending = rows.flatMap((r) =>
+    r.bookings.filter((b) => b.status === "PENDING").map(() => r.cls.priceCents ?? 0),
+  );
+  const total = completed.reduce((a, n) => a + n, 0);
+  const pendingTotal = pending.reduce((a, n) => a + n, 0);
+  const totalBookings = rows.reduce((a, r) => a + r.bookings.length, 0);
+  const fmt = (cents: number) => `£${(cents / 100).toFixed(2)}`;
   return (
     <>
       <Section title="Next payout">
         <div className="rounded-lg border p-3">
           <div className="text-xs">Scheduled weekly</div>
-          <div className="text-2xl font-semibold mt-1">
-            {payment ? `${payment.currency} ${(payment.amount / 100).toFixed(2)}` : "—"}
+          <div className="text-2xl font-semibold mt-1">{fmt(total)}</div>
+          <div className="text-[10px] text-muted-foreground mt-1">
+            {completed.length} confirmed bookings across {rows.length} classes
           </div>
-          <div className="text-[10px] text-muted-foreground mt-1">From last booking</div>
+        </div>
+      </Section>
+      <Section title="Breakdown">
+        <Row label="Confirmed earnings" value={fmt(total)} />
+        <Row label="Pending" value={fmt(pendingTotal)} />
+        <Row label="Total bookings" value={String(totalBookings)} />
+      </Section>
+      <Section title="Per class">
+        <div className="space-y-1">
+          {rows.length === 0 && (
+            <div className="text-[11px] text-muted-foreground">No classes yet.</div>
+          )}
+          {rows.slice(0, 6).map((r) => (
+            <div key={r.cls.id} className="border rounded-md p-2 text-[11px] flex justify-between">
+              <span className="truncate flex-1">{r.cls.title}</span>
+              <span className="text-muted-foreground">{r.bookings.length} × {money(r.cls.priceCents)}</span>
+            </div>
+          ))}
         </div>
       </Section>
       <Section title="Account">
         <Row label="Bank" value="Stripe · ••2345" />
-        <Row label="Currency" value={payment?.currency ?? "GBP"} />
+        <Row label="Currency" value="GBP" />
       </Section>
     </>
   );
@@ -2119,11 +2237,48 @@ function AvailabilityScreen({ items }: { items: any[] }) {
   );
 }
 
-function ReviewsScreen({ reviews, summary }: { reviews: any[]; summary: any }) {
+function ReviewsScreen({
+  reviews,
+  summary,
+  gymId,
+  ctx,
+}: {
+  reviews: any[];
+  summary: any;
+  gymId: string | null;
+  ctx: JourneyCtx;
+}) {
   const avg =
     reviews.length === 0
       ? 0
       : reviews.reduce((a, r) => a + (r.rating ?? 0), 0) / reviews.length;
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("Loved the energy — great class!");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = async () => {
+    if (!ctx.accessToken || !gymId) {
+      setErr("Need a gym + auth to submit. Run Gym admin first.");
+      return;
+    }
+    setBusy(true);
+    setErr(null);
+    try {
+      const d = await gql<{ submitReview: any }>(
+        M_SUBMIT_REVIEW,
+        { i: { gymId, rating, comment } },
+        ctx.accessToken,
+      );
+      setMsg(`Review submitted (${d.submitReview.rating}★). AI summary will regenerate shortly.`);
+    } catch (e: any) {
+      setErr(e?.message ?? "Failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <>
       <Section title="Overall">
@@ -2132,6 +2287,25 @@ function ReviewsScreen({ reviews, summary }: { reviews: any[]; summary: any }) {
         </div>
         <div className="text-[10px] text-muted-foreground">{reviews.length} reviews</div>
       </Section>
+      <Section title="Leave a review">
+        <div className="flex items-center gap-1 mb-2">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button key={n} type="button" onClick={() => setRating(n)} className="p-0">
+              <Star className={cn("h-4 w-4", n <= rating ? "fill-primary text-primary" : "text-muted-foreground")} />
+            </button>
+          ))}
+        </div>
+        <textarea
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          className="w-full rounded-md border text-[11px] p-2 h-14 bg-background"
+        />
+        <Button size="sm" className="w-full mt-2" onClick={submit} disabled={busy || !gymId}>
+          {busy ? "Submitting…" : "Submit review"}
+        </Button>
+        {msg && <div className="mt-2 text-[10px] text-emerald-600">✓ {msg}</div>}
+        {err && <div className="mt-2 text-[10px] text-destructive">{err}</div>}
+      </Section>
       {summary && (
         <Section title="AI summary">
           <p className="text-[11px] italic bg-muted/40 rounded-md p-2 border">{summary.summary}</p>
@@ -2139,7 +2313,7 @@ function ReviewsScreen({ reviews, summary }: { reviews: any[]; summary: any }) {
       )}
       <Section title="Reviews">
         <div className="space-y-2">
-          {reviews.length === 0 && <div className="text-[11px] text-muted-foreground">No reviews yet.</div>}
+          {reviews.length === 0 && <div className="text-[11px] text-muted-foreground">No reviews yet — submit one above.</div>}
           {reviews.slice(0, 5).map((r) => (
             <div key={r.id} className="rounded-md border p-2">
               <div className="flex items-center gap-1 text-[10px]">
@@ -2209,49 +2383,184 @@ function HpGymScreen({ gym }: { gym: any }) {
   );
 }
 
-function HpGymCreateScreen({ gym }: { gym: any }) {
+function HpGymCreateScreen({ gym, ctx }: { gym: any; ctx: JourneyCtx }) {
+  const [name, setName] = useState(gym?.name ?? "Pulstract Studio");
+  const [description, setDescription] = useState(gym?.description ?? "Boutique fitness in the heart of the city.");
+  const [street, setStreet] = useState(gym?.address?.street ?? "1 High Street");
+  const [city, setCity] = useState(gym?.address?.city ?? "London");
+  const [country, setCountry] = useState(gym?.address?.country ?? "GB");
+  const [postcode, setPostcode] = useState(gym?.address?.postcode ?? "EC1A 1BB");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = async () => {
+    if (!ctx.accessToken) {
+      setErr("Sign in first.");
+      return;
+    }
+    setBusy(true);
+    setErr(null);
+    setMsg(null);
+    try {
+      if (gym?.id) {
+        const d = await gql<{ updateGym: any }>(
+          M_UPDATE_GYM,
+          {
+            id: gym.id,
+            i: { name, description, address: { street, city, country, postcode } },
+          },
+          ctx.accessToken,
+        );
+        setMsg(`Updated "${d.updateGym.name}".`);
+      } else {
+        const d = await gql<{ createGym: any }>(
+          M_CREATE_GYM,
+          { i: { name, description, address: { street, city, country, postcode } } },
+          ctx.accessToken,
+        );
+        setMsg(`Created "${d.createGym.name}". id ${d.createGym.id.slice(0, 8)}`);
+      }
+    } catch (e: any) {
+      setErr(e?.message ?? "Failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
-    <Section title="Create gym">
-      <Input className="h-8 text-xs" placeholder="Name" defaultValue={gym?.name ?? ""} />
-      <Input className="h-8 text-xs mt-2" placeholder="Tagline" defaultValue={gym?.description ?? ""} />
-      <Input className="h-8 text-xs mt-2" placeholder="City" defaultValue={gym?.address?.city ?? ""} />
-      <Input className="h-8 text-xs mt-2" placeholder="Postcode" defaultValue={gym?.address?.postcode ?? ""} />
-      <div className="text-[10px] text-muted-foreground mt-3">
-        {gym ? "Already created — values shown from the live record." : "No gym yet."}
+    <Section title={gym ? "Edit gym" : "Create gym"}>
+      <Input className="h-8 text-xs" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+      <Input className="h-8 text-xs mt-2" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} />
+      <Input className="h-8 text-xs mt-2" placeholder="Street" value={street} onChange={(e) => setStreet(e.target.value)} />
+      <div className="grid grid-cols-2 gap-2 mt-2">
+        <Input className="h-8 text-xs" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
+        <Input className="h-8 text-xs" placeholder="Country" value={country} onChange={(e) => setCountry(e.target.value)} />
       </div>
-      <div className="mt-3"><Button className="w-full" size="sm">{gym ? "Update" : "Create"}</Button></div>
+      <Input className="h-8 text-xs mt-2" placeholder="Postcode" value={postcode} onChange={(e) => setPostcode(e.target.value)} />
+      <div className="text-[10px] text-muted-foreground mt-3">
+        {gym ? `Tap Update to call updateGym(${gym.id.slice(0, 6)}).` : "Tap Create to call createGym."}
+      </div>
+      {msg && <div className="mt-2 text-[10px] text-emerald-600">✓ {msg}</div>}
+      {err && <div className="mt-2 text-[10px] text-destructive">{err}</div>}
+      <div className="mt-3">
+        <Button className="w-full" size="sm" onClick={submit} disabled={busy}>
+          {busy ? "Saving…" : gym ? "Update" : "Create"}
+        </Button>
+      </div>
     </Section>
   );
 }
 
-function GymMembersScreen({ members }: { members: any[] }) {
+function GymMembersScreen({
+  members,
+  firstClassId,
+  ctx,
+}: {
+  members: any[];
+  firstClassId: string | null;
+  ctx: JourneyCtx;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const seed = async () => {
+    if (!ctx.accessToken || !firstClassId) {
+      setErr("Need a class first — Create class in the host flow.");
+      return;
+    }
+    setBusy(true);
+    setErr(null);
+    try {
+      await gql(M_CREATE_BOOKING, { i: { classId: firstClassId } }, ctx.accessToken);
+      setMsg("Seeded a booking — tap Run again above to refresh the list.");
+    } catch (e: any) {
+      setErr(e?.message ?? "Failed");
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
     <Section title={`Members (${members.length})`}>
-      <div className="space-y-1">
-        {members.length === 0 && <div className="text-[11px] text-muted-foreground">No members yet — once someone books, they appear here.</div>}
-        {members.map((m) => (
-          <div key={m.userId} className="flex items-center gap-2 border rounded-md p-2 text-[11px]">
-            <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center text-[9px]">{m.userId?.slice(0,2)}</div>
-            <span className="flex-1 truncate">{m.userId}</span>
-            <Badge variant="outline" className="text-[9px]">{m.status}</Badge>
+      {members.length === 0 ? (
+        <>
+          <div className="text-[11px] text-muted-foreground">
+            No members yet — bookings across all of this host's classes are empty.
           </div>
-        ))}
-      </div>
+          <Button size="sm" className="w-full mt-2" onClick={seed} disabled={busy || !firstClassId}>
+            {busy ? "Seeding…" : "Seed a test booking"}
+          </Button>
+          {msg && <div className="mt-2 text-[10px] text-emerald-600">✓ {msg}</div>}
+          {err && <div className="mt-2 text-[10px] text-destructive">{err}</div>}
+        </>
+      ) : (
+        <div className="space-y-1">
+          {members.map((m) => (
+            <div key={m.userId} className="flex items-center gap-2 border rounded-md p-2 text-[11px]">
+              <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center text-[9px]">{m.userId?.slice(0, 2)}</div>
+              <div className="flex-1 min-w-0">
+                <div className="truncate font-medium">Member {m.userId?.slice(0, 6)}</div>
+                <div className="text-[9px] text-muted-foreground truncate">
+                  {m.className ?? "class"} · {fmtDate(m.scheduledAt)}
+                </div>
+              </div>
+              <Badge variant="outline" className="text-[9px]">{m.status}</Badge>
+            </div>
+          ))}
+        </div>
+      )}
     </Section>
   );
 }
 
-function GymCoachScreen({ tip, classes }: { tip: any; classes: any[] }) {
+function GymCoachScreen({
+  tip,
+  classes,
+  upcoming,
+  roster,
+}: {
+  tip: any;
+  classes: any[];
+  upcoming: any | null;
+  roster: any[];
+}) {
   return (
     <>
       <Section title="Today's AI coach tip">
-        <div className="rounded-md border p-3 italic text-[11px] bg-muted/30">{tip?.tip ?? "—"}</div>
+        <div className="rounded-md border p-3 italic text-[11px] bg-muted/30">{tip?.tip ?? "Tip unavailable."}</div>
       </Section>
-      <Section title="Roster">
+      {upcoming ? (
+        <Section title={`Next session · ${upcoming.title}`}>
+          <Row label="When" value={fmtDate(upcoming.startAt)} />
+          <Row label="Capacity" value={`${roster.length} / ${upcoming.capacity}`} />
+        </Section>
+      ) : (
+        <Section title="Next session">
+          <div className="text-[11px] text-muted-foreground">No upcoming classes yet.</div>
+        </Section>
+      )}
+      <Section title={`Roster (${roster.length})`}>
+        {roster.length === 0 ? (
+          <div className="text-[11px] text-muted-foreground">No attendees signed up for this session yet.</div>
+        ) : (
+          <div className="space-y-1">
+            {roster.slice(0, 8).map((b) => (
+              <div key={b.id} className="border rounded-md p-2 text-[11px] flex items-center gap-2">
+                <div className="h-6 w-6 rounded-full bg-primary/15 flex items-center justify-center text-[9px]">
+                  {b.userId?.slice(0, 2)}
+                </div>
+                <span className="flex-1 truncate">Member {b.userId?.slice(0, 6)}</span>
+                <Badge variant="outline" className="text-[9px]">{b.status}</Badge>
+              </div>
+            ))}
+          </div>
+        )}
+      </Section>
+      <Section title="All classes">
         <div className="space-y-1">
           {classes.slice(0, 6).map((c) => (
             <div key={c.id} className="border rounded-md p-2 text-[11px] flex justify-between">
-              <span>{c.title}</span>
+              <span className="truncate flex-1">{c.title}</span>
               <span className="text-muted-foreground">{c.capacity} cap</span>
             </div>
           ))}
