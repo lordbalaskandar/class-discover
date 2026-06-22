@@ -1632,9 +1632,9 @@ function PaymentMethods({ payment }: { payment: any }) {
       <Section title="Most recent charge">
         {payment ? (
           <div className="space-y-1">
-            <Row label="ID" value={payment.id} />
             <Row label="Amount" value={`${payment.currency} ${(payment.amount / 100).toFixed(2)}`} />
             <Row label="Status" value={payment.status} />
+            <Row label="When" value={fmtDate(payment.createdAt)} />
           </div>
         ) : (
           <div className="text-[11px] text-muted-foreground">No payments yet — run the upper walkthrough to create one.</div>
