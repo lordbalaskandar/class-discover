@@ -670,16 +670,22 @@ const SCREENS: Screen[] = [
     flow: "host",
     tab: "profile",
     title: "Payouts",
-    endpoint: "Query · paymentByBooking",
-    description: "Most recent processed payment — proxy for payout history until a dedicated endpoint exists.",
+    endpoint: "Aggregated · myClasses × bookingsByClass",
+    description: "Estimated earnings derived from every confirmed booking on the host's real classes.",
     nextHint: "Tap Next for availability.",
-    fetch: async (ctx, cache) => {
-      const id = await resolveBookingId(ctx, cache);
-      if (!id) return null;
-      const d = await gql<{ paymentByBooking: any }>(Q_PAYMENT_BY_BOOKING, { id }, ctx.accessToken!);
-      return d.paymentByBooking;
+    fetch: async (ctx) => {
+      const mc = await gql<{ myClasses: any[] }>(Q_MY_CLASSES, undefined, ctx.accessToken!);
+      const classes = mc.myClasses ?? [];
+      const bookingLists = await Promise.all(
+        classes.map((c) =>
+          gql<{ bookingsByClass: any[] }>(Q_BOOKINGS_BY_CLASS, { id: c.id }, ctx.accessToken!)
+            .then((r) => ({ cls: c, bookings: r.bookingsByClass ?? [] }))
+            .catch(() => ({ cls: c, bookings: [] })),
+        ),
+      );
+      return bookingLists;
     },
-    render: (p) => <PayoutsScreen payment={p} />,
+    render: (rows) => <PayoutsScreen rows={rows} />,
   },
   {
     id: "hpAvailability",
