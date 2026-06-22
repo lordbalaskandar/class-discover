@@ -121,6 +121,7 @@ type Screen = {
 async function resolveBookingId(ctx: JourneyCtx, cache: Cache): Promise<string | null> {
   if (ctx.bookingId) return ctx.bookingId;
   if (cache.resolvedBookingId) return cache.resolvedBookingId as string;
+  // Try existing bookings
   try {
     const d = await gql<{ bookings: any }>(
       Q_MY_BOOKINGS,
@@ -128,6 +129,32 @@ async function resolveBookingId(ctx: JourneyCtx, cache: Cache): Promise<string |
       ctx.accessToken!,
     );
     const id = d.bookings.items?.[0]?.id ?? null;
+    if (id) {
+      cache.resolvedBookingId = id;
+      return id;
+    }
+  } catch {}
+  // Auto-create one so the journey can continue without dependency on the upper section
+  let classId: string | undefined =
+    cache.classDetail?.id ?? cache.classes?.[0]?.id ?? ctx.classId ?? undefined;
+  if (!classId) {
+    try {
+      const d = await gql<{ classes: any }>(
+        Q_CLASSES,
+        { f: null, p: { limit: 1 } },
+        ctx.accessToken!,
+      );
+      classId = d.classes.items?.[0]?.id;
+    } catch {}
+  }
+  if (!classId) return null;
+  try {
+    const d = await gql<{ createBooking: any }>(
+      M_CREATE_BOOKING,
+      { i: { classId } },
+      ctx.accessToken!,
+    );
+    const id = d.createBooking?.id ?? null;
     if (id) cache.resolvedBookingId = id;
     return id;
   } catch {
