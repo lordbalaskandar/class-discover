@@ -267,7 +267,7 @@ const SCREENS: Screen[] = [
     nextHint: "Tap Next to open a host profile.",
     fetch: async (ctx) => {
       const d = await gql<{ gyms: any }>(Q_GYMS, { f: null, p: { limit: 50 } }, ctx.accessToken!);
-      return d.gyms.items.filter((g: any) => g.address?.lat && g.address?.lng);
+      return d.gyms.items;
     },
     render: (items) => <HostsMap items={items} />,
   },
