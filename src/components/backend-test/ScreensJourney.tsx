@@ -1012,6 +1012,10 @@ export function ScreensJourney({ ctx }: { ctx: JourneyCtx }) {
             <span className="font-medium text-foreground">Next: </span>
             {screen.nextHint}
           </div>
+
+          {screenData !== undefined && status === "ok" && (
+            <ResponsePreview data={screenData} />
+          )}
         </Card>
       </div>
     </div>
