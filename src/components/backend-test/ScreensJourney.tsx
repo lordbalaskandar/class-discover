@@ -196,7 +196,7 @@ const SCREENS: Screen[] = [
       );
       return d.smartSearchFilters;
     },
-    render: (f) => <FiltersSheet filters={f} />,
+    render: (f, ctx) => <FiltersSheet filters={f} ctx={ctx} />,
   },
   {
     id: "browseFiltered",
