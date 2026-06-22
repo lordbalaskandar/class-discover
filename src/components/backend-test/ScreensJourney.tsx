@@ -1874,7 +1874,7 @@ function MetricsScreen({ items }: { items: any[] }) {
   );
 }
 
-function HostProfileEditor({ me, profile }: { me: any; profile: any }) {
+function HostProfileEditor({ me, profile, ctx }: { me: any; profile: any; ctx: JourneyCtx }) {
   return (
     <>
       <div className="h-20 bg-gradient-to-br from-primary/30 to-primary/5" />
@@ -1887,12 +1887,7 @@ function HostProfileEditor({ me, profile }: { me: any; profile: any }) {
           <div className="text-[10px] text-muted-foreground">{me?.email}</div>
         </div>
       </div>
-      <Section title="Bio">
-        <textarea
-          className="w-full rounded-md border text-[11px] p-2 h-20 bg-background"
-          defaultValue={profile?.bio ?? ""}
-        />
-      </Section>
+      <BioEditor initial={profile?.bio ?? ""} ctx={ctx} />
       <Section title="Sections">
         {[
           { icon: FileText, label: "Templates" },
@@ -1910,6 +1905,42 @@ function HostProfileEditor({ me, profile }: { me: any; profile: any }) {
         ))}
       </Section>
     </>
+  );
+}
+
+function BioEditor({ initial, ctx }: { initial: string; ctx: JourneyCtx }) {
+  const [bio, setBio] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const save = async () => {
+    if (!ctx.accessToken) return;
+    setBusy(true);
+    setErr(null);
+    setSaved(null);
+    try {
+      const d = await gql<{ updateProfile: any }>(M_UPDATE_PROFILE, { i: { bio } }, ctx.accessToken);
+      setSaved(`Saved at ${fmtTime(d.updateProfile?.updatedAt)}`);
+    } catch (e: any) {
+      setErr(e?.message ?? String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Section title="Bio (live save → updateProfile)">
+      <textarea
+        value={bio}
+        onChange={(e) => setBio(e.target.value)}
+        className="w-full rounded-md border text-[11px] p-2 h-20 bg-background"
+      />
+      <Button size="sm" className="w-full mt-2" onClick={save} disabled={busy}>
+        {busy ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}
+        Save bio
+      </Button>
+      {saved && <div className="mt-2 text-[10px] text-emerald-600">✓ {saved}</div>}
+      {err && <div className="mt-2 text-[10px] text-destructive">{err}</div>}
+    </Section>
   );
 }
 
