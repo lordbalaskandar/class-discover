@@ -282,9 +282,10 @@ const SCREENS: Screen[] = [
     endpoint: "Query · paymentByBooking",
     description: "Fetches the real payment record for the booking created in the upper integration walkthrough.",
     nextHint: "Tap Next for the confirmation screen.",
-    fetch: async (ctx) => {
-      if (!ctx.bookingId) throw new Error("No booking yet — run the upper walkthrough through Create booking first.");
-      const d = await gql<{ paymentByBooking: any }>(Q_PAYMENT_BY_BOOKING, { id: ctx.bookingId }, ctx.accessToken!);
+    fetch: async (ctx, cache) => {
+      const id = await resolveBookingId(ctx, cache);
+      if (!id) throw new Error("No bookings on this account. Run Create booking in the upper walkthrough first.");
+      const d = await gql<{ paymentByBooking: any }>(Q_PAYMENT_BY_BOOKING, { id }, ctx.accessToken!);
       return d.paymentByBooking;
     },
     render: (p) => <PaymentScreen payment={p} />,
