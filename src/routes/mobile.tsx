@@ -431,8 +431,46 @@ function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
 
   const reset = () => {
     setScreen("browse");
-    setSelectedId("1");
+    setSelectedId(null);
     setBrowseFiltersOpen(false);
+  };
+
+  const createBooking = useCreateBooking();
+  const createPayment = useCreatePaymentIntent();
+  const [bookingBusy, setBookingBusy] = useState(false);
+
+  const handleContinueBooking = async (payload: { scheduledAt: string }) => {
+    if (!selected) return;
+    try {
+      setBookingBusy(true);
+      const b = await createBooking.mutateAsync({
+        classId: selected.id,
+        scheduledAt: payload.scheduledAt,
+      });
+      setLastBookingId(b.id);
+      setScreen("payment");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Booking failed");
+    } finally {
+      setBookingBusy(false);
+    }
+  };
+
+  const handlePay = async () => {
+    if (!lastBookingId || !selected) return;
+    try {
+      setBookingBusy(true);
+      await createPayment.mutateAsync({
+        bookingId: lastBookingId,
+        amount: (selected.price + 2.5) * 100,
+        currency: "USD",
+      });
+      setScreen("confirmation");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Payment failed");
+    } finally {
+      setBookingBusy(false);
+    }
   };
 
   return (
