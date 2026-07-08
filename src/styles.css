@@ -95,6 +95,7 @@
   --border: #ADA08A;
   --input: #ADA08A;
   --ring: #CDAB7F;
+  --logo-accent: #CDAB7F;         /* small bar in the P monogram */
 
   --gradient-hero: linear-gradient(135deg, #CDAB7F 0%, #E6CFA8 100%);
   --gradient-soft: linear-gradient(180deg, #F6F4DF 0%, #EFE9D6 100%);
