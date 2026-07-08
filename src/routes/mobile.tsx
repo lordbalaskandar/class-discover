@@ -2389,8 +2389,16 @@ function BookingScreen({
         </div>
       </ScreenScroll>
       <div className="border-t bg-card px-5 py-3">
-        <Button onClick={onContinue} className="w-full bg-gradient-hero shadow-elegant">
-          Continue to payment
+        <Button
+          disabled={busy || !date}
+          onClick={() =>
+            onContinue({
+              scheduledAt: (date ?? new Date()).toISOString(),
+            })
+          }
+          className="w-full bg-gradient-hero shadow-elegant"
+        >
+          {busy ? "Creating booking…" : "Continue to payment"}
         </Button>
       </div>
     </div>
