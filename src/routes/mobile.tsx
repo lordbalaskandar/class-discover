@@ -3745,7 +3745,28 @@ function HostCreateScreen({
   const [location, setLocation] = useState("Dolores Park, SF");
   const [price, setPrice] = useState("28");
   const [capacity, setCapacity] = useState("12");
+  const [duration, setDuration] = useState("60");
+  const [description, setDescription] = useState("A grounded, breath-led session for all levels.");
   const [bookingType, setBookingType] = useState<"scheduled" | "request">("scheduled");
+  const createMut = useCreateClass();
+  const publish = async () => {
+    try {
+      const startAt = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
+      await createMut.mutateAsync({
+        title: title.trim(),
+        description,
+        activityType: activity,
+        startAt,
+        durationMinutes: Math.max(15, parseInt(duration || "60", 10)),
+        capacity: Math.max(1, parseInt(capacity || "12", 10)),
+        priceCents: Math.max(0, Math.round(parseFloat(price || "0") * 100)),
+      });
+      toast.success("Class published");
+      onPublish();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not publish class");
+    }
+  };
 
   return (
     <div className="h-full flex flex-col">
