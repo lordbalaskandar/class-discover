@@ -2543,11 +2543,14 @@ function PaymentScreen({
       </ScreenScroll>
       <div className="border-t bg-card px-5 py-3">
         <Button
-          onClick={handlePay}
-          disabled={processing}
+          onClick={() => {
+            setProcessing(true);
+            Promise.resolve(onPay()).finally(() => setProcessing(false));
+          }}
+          disabled={processing || busy}
           className="w-full bg-gradient-hero shadow-elegant"
         >
-          {processing ? "Processing…" : `Pay $${total.toFixed(2)}`}
+          {processing || busy ? "Processing…" : `Pay $${total.toFixed(2)}`}
         </Button>
       </div>
     </div>
