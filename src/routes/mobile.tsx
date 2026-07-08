@@ -1241,6 +1241,7 @@ function FilterGroup({
 
 
 function HostsScreen({ onSelect }: { onSelect: (h: HostItem) => void }) {
+  const HOSTS = useLiveHosts();
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeChip, setActiveChip] = useState<string>("All");
