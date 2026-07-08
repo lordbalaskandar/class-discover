@@ -2559,10 +2559,12 @@ function PaymentScreen({
 
 function ConfirmationScreen({
   cls,
+  bookingId,
   onDone,
   onViewBookings,
 }: {
   cls: ClassItem;
+  bookingId?: string | null;
   onDone: () => void;
   onViewBookings: () => void;
 }) {
