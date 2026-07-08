@@ -125,6 +125,7 @@
   --border: rgb(205 171 127 / 0.20);
   --input: rgb(205 171 127 / 0.24);
   --ring: #CDAB7F;
+  --logo-accent: #091D29;         /* dark mode: accent bar flips to ink */
 
   --gradient-hero: linear-gradient(135deg, #CDAB7F 0%, #998668 100%);
   --gradient-soft: linear-gradient(180deg, #0E2735 0%, #091D29 100%);
