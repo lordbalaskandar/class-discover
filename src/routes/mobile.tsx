@@ -3304,13 +3304,32 @@ const DEFAULT_MEMBERS: GymMember[] = [
 ];
 
 function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
+  const HOST_CLASSES = useLiveHostClasses();
+  const { data: liveGym } = useLiveMyGym();
   const [screen, setScreen] = useState<HostScreenId>(initialScreen ?? "dashboard");
-  const [selectedId, setSelectedId] = useState<string>("h1");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [gym, setGym] = useState<GymInfo>(DEFAULT_GYM);
   const [members, setMembers] = useState<GymMember[]>(DEFAULT_MEMBERS);
+
+  useEffect(() => {
+    if (liveGym) {
+      setGym({
+        created: true,
+        name: liveGym.name,
+        tagline: liveGym.description ?? "",
+        address: [liveGym.address?.street, liveGym.address?.city, liveGym.address?.country]
+          .filter(Boolean)
+          .join(", "),
+        capacity: 20,
+        monthlyPrice: 99,
+        amenities: [],
+      });
+    }
+  }, [liveGym]);
+
   const selected = useMemo(
-    () => HOST_CLASSES.find((c) => c.id === selectedId) ?? HOST_CLASSES[0],
-    [selectedId],
+    () => HOST_CLASSES.find((c) => c.id === selectedId) ?? HOST_CLASSES[0] ?? null,
+    [selectedId, HOST_CLASSES],
   );
 
   const steps: { id: HostScreenId; label: string }[] = [
