@@ -846,6 +846,7 @@ function BrowseScreen({
   savedIds: Set<string>;
   onToggleSaved: (id: string) => void;
 }) {
+  const CLASSES = useLiveClasses();
   const [filtersOpen, setFiltersOpen] = useState(filtersOpenInitially);
   useEffect(() => {
     setFiltersOpen(filtersOpenInitially);
