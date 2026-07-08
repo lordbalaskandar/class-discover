@@ -1568,6 +1568,7 @@ function HostsScreen({ onSelect }: { onSelect: (h: HostItem) => void }) {
 }
 
 function MapScreen({ onSelectHost }: { onSelectHost: (h: HostItem) => void }) {
+  const HOSTS = useLiveHosts();
   const [typeFilter, setTypeFilter] = useState<"all" | "person" | "gym">("all");
   const [activity, setActivity] = useState<"All" | (typeof HOST_ACTIVITIES)[number]>("All");
   const [selectedId, setSelectedId] = useState<string | null>(null);
