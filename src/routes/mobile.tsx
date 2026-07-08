@@ -760,6 +760,22 @@ function PhoneTabBar({
   );
 }
 
+function EmptyState({ label, onBack }: { label: string; onBack?: () => void }) {
+  return (
+    <div className="h-full flex flex-col items-center justify-center px-8 text-center gap-3">
+      <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center">
+        <Search className="h-6 w-6 text-muted-foreground" />
+      </div>
+      <p className="text-sm text-muted-foreground">{label}</p>
+      {onBack && (
+        <Button variant="outline" size="sm" onClick={onBack}>
+          Back
+        </Button>
+      )}
+    </div>
+  );
+}
+
 /* ---------------- Flow guide ---------------- */
 
 function FlowGuide({ current }: { current: Screen }) {
