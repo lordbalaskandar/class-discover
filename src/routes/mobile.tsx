@@ -2416,10 +2416,12 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
 
 function PaymentScreen({
   cls,
+  busy = false,
   onBack,
   onPay,
 }: {
   cls: ClassItem;
+  busy?: boolean;
   onBack: () => void;
   onPay: () => void;
 }) {
