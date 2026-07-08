@@ -2853,13 +2853,13 @@ function ProfileScreen({
     <ScreenScroll>
       <div className="px-5 pt-6 pb-4 flex flex-col items-center text-center">
         <div className="h-20 w-20 rounded-full bg-gradient-hero text-primary-foreground flex items-center justify-center font-display text-2xl font-semibold shadow-elegant">
-          AM
+          {initials || "•"}
         </div>
-        <h2 className="font-display text-xl font-semibold mt-3">Alex Morgan</h2>
-        <p className="text-xs text-muted-foreground">alex@pulstract.com</p>
+        <h2 className="font-display text-xl font-semibold mt-3">{displayName}</h2>
+        <p className="text-xs text-muted-foreground">{me?.email ?? ""}</p>
         <Badge variant="secondary" className="mt-2 text-[10px]">
           <Sparkles className="h-3 w-3 mr-1" />
-          Member since 2024
+          Live backend
         </Badge>
       </div>
 
