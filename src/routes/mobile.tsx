@@ -2434,13 +2434,6 @@ function PaymentScreen({
 
   const total = cls.price + 2.5;
 
-  const handlePay = () => {
-    setProcessing(true);
-    setTimeout(() => {
-      setProcessing(false);
-      onPay();
-    }, 1400);
-  };
 
   return (
     <div className="h-full flex flex-col">
