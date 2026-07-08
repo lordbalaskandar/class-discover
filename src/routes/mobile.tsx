@@ -3330,8 +3330,11 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
   const selected = useMemo(
     () => HOST_CLASSES.find((c) => c.id === selectedId) ?? HOST_CLASSES[0] ?? null,
     [selectedId, HOST_CLASSES],
+  );
   const createGymMut = useCreateGym();
   const updateGymMut = useUpdateGym();
+
+
 
 
   const steps: { id: HostScreenId; label: string }[] = [
