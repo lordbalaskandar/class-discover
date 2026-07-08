@@ -2259,12 +2259,14 @@ function Info({
 
 function BookingScreen({
   cls,
+  busy = false,
   onBack,
   onContinue,
 }: {
   cls: ClassItem;
+  busy?: boolean;
   onBack: () => void;
-  onContinue: () => void;
+  onContinue: (payload: { scheduledAt: string }) => void;
 }) {
   const [spots, setSpots] = useState(1);
   const [date, setDate] = useState<Date | undefined>(() => {
