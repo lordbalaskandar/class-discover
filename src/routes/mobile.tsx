@@ -2821,10 +2821,19 @@ function ProfileScreen({
   onOpenSection: (s: ProfileSection) => void;
   savedCount: number;
 }) {
+  const { data: me } = useMe();
+  const bookings = useLiveMyBookings();
+  const displayName = me?.name || me?.email?.split("@")[0] || "You";
+  const initials = displayName
+    .split(/\s+/)
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
   const stats = [
-    { label: "Booked", value: "12" },
-    { label: "Hosts", value: "7" },
-    { label: "Reviews", value: "9" },
+    { label: "Booked", value: String(bookings.length) },
+    { label: "Saved", value: String(savedCount) },
+    { label: "Reviews", value: "0" },
   ];
   const rows: { label: string; sub: string; onClick?: () => void }[] = [
     { label: "My bookings", sub: "View upcoming & past classes", onClick: onBookings },
