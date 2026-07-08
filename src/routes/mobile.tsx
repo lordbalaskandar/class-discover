@@ -2578,7 +2578,7 @@ function ConfirmationScreen({
           <Card className="overflow-hidden">
             <div className="h-24" style={{ background: cls.image }} />
             <div className="p-4">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Booking #DRY-08421</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Booking #{(bookingId ?? "PENDING").slice(0, 12)}</p>
               <h3 className="font-semibold mt-1">{cls.title}</h3>
               <p className="text-xs text-muted-foreground">with {cls.host}</p>
               <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
