@@ -3446,9 +3446,19 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
           {screen === "hpGymCreate" && (
             <HostGymCreateScreen
               onBack={() => setScreen("hpGym")}
-              onCreate={(g) => {
-                setGym({ ...g, created: true });
-                setScreen("hpGym");
+              onCreate={async (g) => {
+                try {
+                  await createGymMut.mutateAsync({
+                    name: g.name,
+                    description: g.tagline,
+                    address: { street: g.address, city: "", country: "", postcode: "" },
+                  });
+                  setGym({ ...g, created: true });
+                  toast.success("Gym created");
+                  setScreen("hpGym");
+                } catch (e: any) {
+                  toast.error(e?.message ?? "Could not create gym");
+                }
               }}
             />
           )}
@@ -3470,9 +3480,24 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
           {screen === "hpGymEdit" && (
             <HostGymEditScreen
               gym={gym}
-              onSave={(g) => {
-                setGym({ ...g, created: true });
-                setScreen("hpGym");
+              onSave={async (g) => {
+                try {
+                  if (liveGym?.id) {
+                    await updateGymMut.mutateAsync({
+                      id: liveGym.id,
+                      input: {
+                        name: g.name,
+                        description: g.tagline,
+                        address: { street: g.address, city: "", country: "", postcode: "" },
+                      },
+                    });
+                  }
+                  setGym({ ...g, created: true });
+                  toast.success("Gym updated");
+                  setScreen("hpGym");
+                } catch (e: any) {
+                  toast.error(e?.message ?? "Could not update gym");
+                }
               }}
               onBack={() => setScreen("hpGym")}
             />
