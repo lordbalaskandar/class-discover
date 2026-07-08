@@ -53,6 +53,22 @@ import { DateRange } from "react-day-picker";
 import { PulstractAuthProvider, usePulstractAuth } from "@/lib/pulstract/auth";
 import { ServiceHealthBar } from "@/components/pulstract/ServiceHealthBar";
 import { AuthScreens } from "@/components/mobile/AuthScreens";
+import {
+  useLiveClasses,
+  useLiveHosts,
+  useLiveHostClasses,
+  useLiveMyBookings,
+  useLiveMyGym,
+} from "@/lib/pulstract/live-data";
+import {
+  useMe,
+  useCreateBooking,
+  useCreatePaymentIntent,
+  useCreateClass,
+  useCreateGym,
+  useUpdateGym,
+} from "@/lib/pulstract/hooks";
+import { toast } from "sonner";
 
 type MobileSearch = { flow?: "user" | "host"; screen?: string };
 
@@ -395,10 +411,12 @@ function FlowSection({
 }
 
 function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
+  const CLASSES = useLiveClasses();
   const [screen, setScreen] = useState<Screen>(initialScreen ?? "browse");
-  const [selectedId, setSelectedId] = useState<string>("1");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [browseFiltersOpen, setBrowseFiltersOpen] = useState(false);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [lastBookingId, setLastBookingId] = useState<string | null>(null);
   const toggleSaved = (id: string) =>
     setSavedIds((prev) => {
       const next = new Set(prev);
@@ -407,14 +425,52 @@ function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
       return next;
     });
   const selected = useMemo(
-    () => CLASSES.find((c) => c.id === selectedId) ?? CLASSES[0],
-    [selectedId],
+    () => CLASSES.find((c) => c.id === selectedId) ?? CLASSES[0] ?? null,
+    [selectedId, CLASSES],
   );
 
   const reset = () => {
     setScreen("browse");
-    setSelectedId("1");
+    setSelectedId(null);
     setBrowseFiltersOpen(false);
+  };
+
+  const createBooking = useCreateBooking();
+  const createPayment = useCreatePaymentIntent();
+  const [bookingBusy, setBookingBusy] = useState(false);
+
+  const handleContinueBooking = async (payload: { scheduledAt: string }) => {
+    if (!selected) return;
+    try {
+      setBookingBusy(true);
+      const b = await createBooking.mutateAsync({
+        classId: selected.id,
+        scheduledAt: payload.scheduledAt,
+      });
+      setLastBookingId(b.id);
+      setScreen("payment");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Booking failed");
+    } finally {
+      setBookingBusy(false);
+    }
+  };
+
+  const handlePay = async () => {
+    if (!lastBookingId || !selected) return;
+    try {
+      setBookingBusy(true);
+      await createPayment.mutateAsync({
+        bookingId: lastBookingId,
+        amount: (selected.price + 2.5) * 100,
+        currency: "USD",
+      });
+      setScreen("confirmation");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Payment failed");
+    } finally {
+      setBookingBusy(false);
+    }
   };
 
   return (
@@ -457,28 +513,34 @@ function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
               }}
             />
           )}
-          {screen === "host" && (
+          {screen === "host" && selected && (
             <HostScreen
               cls={selected}
               onBack={() => setScreen("browse")}
               onSelectClass={() => setScreen("class")}
               onGym={() => {
-                setSelectedId("2");
+                const gymCls = CLASSES.find((c) => c.hostType === "gym");
+                if (gymCls) setSelectedId(gymCls.id);
                 setScreen("gym");
               }}
             />
           )}
-          {screen === "gym" && (
-            <GymScreen
-              cls={CLASSES.find((c) => c.id === "2") ?? CLASSES[1]}
-              onBack={() => setScreen("browse")}
-              onSelectClass={() => {
-                setSelectedId("2");
-                setScreen("class");
-              }}
-            />
-          )}
-          {screen === "class" && (
+          {screen === "gym" && (() => {
+            const gymCls = CLASSES.find((c) => c.hostType === "gym") ?? selected;
+            return gymCls ? (
+              <GymScreen
+                cls={gymCls}
+                onBack={() => setScreen("browse")}
+                onSelectClass={() => {
+                  setSelectedId(gymCls.id);
+                  setScreen("class");
+                }}
+              />
+            ) : (
+              <EmptyState label="No gyms available yet." onBack={() => setScreen("browse")} />
+            );
+          })()}
+          {screen === "class" && selected && (
             <ClassScreen
               cls={selected}
               onBack={() => setScreen("browse")}
@@ -486,26 +548,32 @@ function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
               onBook={() => setScreen("booking")}
             />
           )}
-          {screen === "booking" && (
+          {screen === "booking" && selected && (
             <BookingScreen
               cls={selected}
+              busy={bookingBusy}
               onBack={() => setScreen("class")}
-              onContinue={() => setScreen("payment")}
+              onContinue={handleContinueBooking}
             />
           )}
-          {screen === "payment" && (
+          {screen === "payment" && selected && (
             <PaymentScreen
               cls={selected}
+              busy={bookingBusy}
               onBack={() => setScreen("booking")}
-              onPay={() => setScreen("confirmation")}
+              onPay={handlePay}
             />
           )}
-          {screen === "confirmation" && (
+          {screen === "confirmation" && selected && (
             <ConfirmationScreen
               cls={selected}
+              bookingId={lastBookingId}
               onDone={reset}
               onViewBookings={() => setScreen("bookings")}
             />
+          )}
+          {(screen === "host" || screen === "class" || screen === "booking" || screen === "payment" || screen === "confirmation") && !selected && (
+            <EmptyState label="No classes available from the backend yet." onBack={() => setScreen("browse")} />
           )}
           {screen === "bookings" && (
             <BookingsScreen
@@ -692,6 +760,22 @@ function PhoneTabBar({
   );
 }
 
+function EmptyState({ label, onBack }: { label: string; onBack?: () => void }) {
+  return (
+    <div className="h-full flex flex-col items-center justify-center px-8 text-center gap-3">
+      <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center">
+        <Search className="h-6 w-6 text-muted-foreground" />
+      </div>
+      <p className="text-sm text-muted-foreground">{label}</p>
+      {onBack && (
+        <Button variant="outline" size="sm" onClick={onBack}>
+          Back
+        </Button>
+      )}
+    </div>
+  );
+}
+
 /* ---------------- Flow guide ---------------- */
 
 function FlowGuide({ current }: { current: Screen }) {
@@ -762,6 +846,7 @@ function BrowseScreen({
   savedIds: Set<string>;
   onToggleSaved: (id: string) => void;
 }) {
+  const CLASSES = useLiveClasses();
   const [filtersOpen, setFiltersOpen] = useState(filtersOpenInitially);
   useEffect(() => {
     setFiltersOpen(filtersOpenInitially);
@@ -1156,6 +1241,7 @@ function FilterGroup({
 
 
 function HostsScreen({ onSelect }: { onSelect: (h: HostItem) => void }) {
+  const HOSTS = useLiveHosts();
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeChip, setActiveChip] = useState<string>("All");
@@ -1482,6 +1568,7 @@ function HostsScreen({ onSelect }: { onSelect: (h: HostItem) => void }) {
 }
 
 function MapScreen({ onSelectHost }: { onSelectHost: (h: HostItem) => void }) {
+  const HOSTS = useLiveHosts();
   const [typeFilter, setTypeFilter] = useState<"all" | "person" | "gym">("all");
   const [activity, setActivity] = useState<"All" | (typeof HOST_ACTIVITIES)[number]>("All");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -1665,6 +1752,7 @@ function HostScreen({
   onSelectClass: () => void;
   onGym?: () => void;
 }) {
+  const CLASSES = useLiveClasses();
   const isGym = cls.hostType === "gym";
   return (
     <ScreenScroll>
@@ -2175,12 +2263,14 @@ function Info({
 
 function BookingScreen({
   cls,
+  busy = false,
   onBack,
   onContinue,
 }: {
   cls: ClassItem;
+  busy?: boolean;
   onBack: () => void;
-  onContinue: () => void;
+  onContinue: (payload: { scheduledAt: string }) => void;
 }) {
   const [spots, setSpots] = useState(1);
   const [date, setDate] = useState<Date | undefined>(() => {
@@ -2303,8 +2393,16 @@ function BookingScreen({
         </div>
       </ScreenScroll>
       <div className="border-t bg-card px-5 py-3">
-        <Button onClick={onContinue} className="w-full bg-gradient-hero shadow-elegant">
-          Continue to payment
+        <Button
+          disabled={busy || !date}
+          onClick={() =>
+            onContinue({
+              scheduledAt: (date ?? new Date()).toISOString(),
+            })
+          }
+          className="w-full bg-gradient-hero shadow-elegant"
+        >
+          {busy ? "Creating booking…" : "Continue to payment"}
         </Button>
       </div>
     </div>
@@ -2322,10 +2420,12 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
 
 function PaymentScreen({
   cls,
+  busy = false,
   onBack,
   onPay,
 }: {
   cls: ClassItem;
+  busy?: boolean;
   onBack: () => void;
   onPay: () => void;
 }) {
@@ -2338,13 +2438,6 @@ function PaymentScreen({
 
   const total = cls.price + 2.5;
 
-  const handlePay = () => {
-    setProcessing(true);
-    setTimeout(() => {
-      setProcessing(false);
-      onPay();
-    }, 1400);
-  };
 
   return (
     <div className="h-full flex flex-col">
@@ -2447,11 +2540,14 @@ function PaymentScreen({
       </ScreenScroll>
       <div className="border-t bg-card px-5 py-3">
         <Button
-          onClick={handlePay}
-          disabled={processing}
+          onClick={() => {
+            setProcessing(true);
+            Promise.resolve(onPay()).finally(() => setProcessing(false));
+          }}
+          disabled={processing || busy}
           className="w-full bg-gradient-hero shadow-elegant"
         >
-          {processing ? "Processing…" : `Pay $${total.toFixed(2)}`}
+          {processing || busy ? "Processing…" : `Pay $${total.toFixed(2)}`}
         </Button>
       </div>
     </div>
@@ -2460,10 +2556,12 @@ function PaymentScreen({
 
 function ConfirmationScreen({
   cls,
+  bookingId,
   onDone,
   onViewBookings,
 }: {
   cls: ClassItem;
+  bookingId?: string | null;
   onDone: () => void;
   onViewBookings: () => void;
 }) {
@@ -2484,7 +2582,7 @@ function ConfirmationScreen({
           <Card className="overflow-hidden">
             <div className="h-24" style={{ background: cls.image }} />
             <div className="p-4">
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Booking #DRY-08421</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Booking #{(bookingId ?? "PENDING").slice(0, 12)}</p>
               <h3 className="font-semibold mt-1">{cls.title}</h3>
               <p className="text-xs text-muted-foreground">with {cls.host}</p>
               <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
@@ -2525,13 +2623,54 @@ function BookingsScreen({
   onOpen: (id: string) => void;
   onProfile: () => void;
 }) {
-  const upcoming = [
-    { cls: CLASSES[0], code: "DRY-08421", status: "Confirmed" as const },
-    { cls: CLASSES[2], code: "DRY-08390", status: "Confirmed" as const },
-  ];
-  const past = [
-    { cls: CLASSES[1], code: "DRY-07712", status: "Completed" as const },
-  ];
+  const items = useLiveMyBookings();
+  const now = new Date();
+  const upcoming = items.filter(
+    (b) => b.booking.status !== "cancelled" && new Date(b.booking.scheduledAt) >= now,
+  );
+  const past = items.filter(
+    (b) => b.booking.status === "cancelled" || new Date(b.booking.scheduledAt) < now,
+  );
+
+  const renderRow = (b: (typeof items)[number], style: "up" | "past") => {
+    const cls = b.cls;
+    const bg = cls?.image ?? "linear-gradient(135deg,#94a3b8,#64748b)";
+    return (
+      <Card
+        key={b.booking.id}
+        onClick={() => cls && onOpen(cls.id)}
+        className={cn(
+          "overflow-hidden cursor-pointer active:scale-[0.99] transition-transform",
+          style === "past" && "opacity-80",
+        )}
+      >
+        <div className="flex">
+          <div className={cn("w-20 shrink-0", style === "past" && "grayscale")} style={{ background: bg }} />
+          <div className="p-3 flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-semibold text-sm truncate">{cls?.title ?? "Class"}</p>
+              <Badge variant={style === "past" ? "outline" : "secondary"} className="text-[10px] shrink-0 capitalize">
+                {b.booking.status}
+              </Badge>
+            </div>
+            <p className="text-[11px] text-muted-foreground truncate">
+              with {cls?.host ?? "—"}
+            </p>
+            <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <CalendarIcon className="h-3 w-3" />
+                {new Date(b.booking.scheduledAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {new Date(b.booking.scheduledAt).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+              </span>
+            </div>
+          </div>
+        </div>
+      </Card>
+    );
+  };
 
   return (
     <ScreenScroll>
@@ -2551,77 +2690,19 @@ function BookingsScreen({
       </div>
 
       <div className="px-5">
-        <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-3 mb-2">
-          Upcoming
-        </p>
-        <div className="space-y-2">
-          {upcoming.map((b) => (
-            <Card
-              key={b.code}
-              onClick={() => onOpen(b.cls.id)}
-              className="overflow-hidden cursor-pointer active:scale-[0.99] transition-transform"
-            >
-              <div className="flex">
-                <div className="w-20 shrink-0" style={{ background: b.cls.image }} />
-                <div className="p-3 flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-sm truncate">{b.cls.title}</p>
-                    <Badge variant="secondary" className="text-[10px] shrink-0">
-                      {b.status}
-                    </Badge>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground truncate">
-                    with {b.cls.host}
-                  </p>
-                  <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <CalendarIcon className="h-3 w-3" />
-                      {b.cls.date}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {b.cls.time}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+        <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-3 mb-2">Upcoming</p>
+        {upcoming.length === 0 ? (
+          <p className="text-xs text-muted-foreground py-4">No upcoming bookings yet.</p>
+        ) : (
+          <div className="space-y-2">{upcoming.map((b) => renderRow(b, "up"))}</div>
+        )}
 
-        <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-5 mb-2">
-          Past
-        </p>
-        <div className="space-y-2 pb-4">
-          {past.map((b) => (
-            <Card
-              key={b.code}
-              onClick={() => onOpen(b.cls.id)}
-              className="overflow-hidden cursor-pointer opacity-80"
-            >
-              <div className="flex">
-                <div className="w-20 shrink-0 grayscale" style={{ background: b.cls.image }} />
-                <div className="p-3 flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-sm truncate">{b.cls.title}</p>
-                    <Badge variant="outline" className="text-[10px] shrink-0">
-                      {b.status}
-                    </Badge>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground truncate">
-                    with {b.cls.host}
-                  </p>
-                  <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Star className="h-3 w-3 fill-primary text-primary" />
-                      Rate this class
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+        <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-5 mb-2">Past</p>
+        {past.length === 0 ? (
+          <p className="text-xs text-muted-foreground py-4 pb-6">No past bookings.</p>
+        ) : (
+          <div className="space-y-2 pb-4">{past.map((b) => renderRow(b, "past"))}</div>
+        )}
       </div>
     </ScreenScroll>
   );
@@ -2642,6 +2723,7 @@ function SavedScreen({
   onBrowse: () => void;
   onOpen: (id: string) => void;
 }) {
+  const CLASSES = useLiveClasses();
   const saved = CLASSES.filter((c) => savedIds.has(c.id));
   return (
     <div className="h-full flex flex-col">
@@ -2739,10 +2821,19 @@ function ProfileScreen({
   onOpenSection: (s: ProfileSection) => void;
   savedCount: number;
 }) {
+  const { data: me } = useMe();
+  const bookings = useLiveMyBookings();
+  const displayName = me?.name || me?.email?.split("@")[0] || "You";
+  const initials = displayName
+    .split(/\s+/)
+    .map((p) => p[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
   const stats = [
-    { label: "Booked", value: "12" },
-    { label: "Hosts", value: "7" },
-    { label: "Reviews", value: "9" },
+    { label: "Booked", value: String(bookings.length) },
+    { label: "Saved", value: String(savedCount) },
+    { label: "Reviews", value: "0" },
   ];
   const rows: { label: string; sub: string; onClick?: () => void }[] = [
     { label: "My bookings", sub: "View upcoming & past classes", onClick: onBookings },
@@ -2762,13 +2853,13 @@ function ProfileScreen({
     <ScreenScroll>
       <div className="px-5 pt-6 pb-4 flex flex-col items-center text-center">
         <div className="h-20 w-20 rounded-full bg-gradient-hero text-primary-foreground flex items-center justify-center font-display text-2xl font-semibold shadow-elegant">
-          AM
+          {initials || "•"}
         </div>
-        <h2 className="font-display text-xl font-semibold mt-3">Alex Morgan</h2>
-        <p className="text-xs text-muted-foreground">alex@pulstract.com</p>
+        <h2 className="font-display text-xl font-semibold mt-3">{displayName}</h2>
+        <p className="text-xs text-muted-foreground">{me?.email ?? ""}</p>
         <Badge variant="secondary" className="mt-2 text-[10px]">
           <Sparkles className="h-3 w-3 mr-1" />
-          Member since 2024
+          Live backend
         </Badge>
       </div>
 
@@ -3222,14 +3313,38 @@ const DEFAULT_MEMBERS: GymMember[] = [
 ];
 
 function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
+  const HOST_CLASSES = useLiveHostClasses();
+  const { data: liveGym } = useLiveMyGym();
   const [screen, setScreen] = useState<HostScreenId>(initialScreen ?? "dashboard");
-  const [selectedId, setSelectedId] = useState<string>("h1");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [gym, setGym] = useState<GymInfo>(DEFAULT_GYM);
   const [members, setMembers] = useState<GymMember[]>(DEFAULT_MEMBERS);
+
+  useEffect(() => {
+    if (liveGym) {
+      setGym({
+        created: true,
+        name: liveGym.name,
+        tagline: liveGym.description ?? "",
+        address: [liveGym.address?.street, liveGym.address?.city, liveGym.address?.country]
+          .filter(Boolean)
+          .join(", "),
+        capacity: 20,
+        monthlyPrice: 99,
+        amenities: [],
+      });
+    }
+  }, [liveGym]);
+
   const selected = useMemo(
-    () => HOST_CLASSES.find((c) => c.id === selectedId) ?? HOST_CLASSES[0],
-    [selectedId],
+    () => HOST_CLASSES.find((c) => c.id === selectedId) ?? HOST_CLASSES[0] ?? null,
+    [selectedId, HOST_CLASSES],
   );
+  const createGymMut = useCreateGym();
+  const updateGymMut = useUpdateGym();
+
+
+
 
   const steps: { id: HostScreenId; label: string }[] = [
     { id: "dashboard", label: "Open dashboard" },
@@ -3296,13 +3411,15 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
               onPublish={() => setScreen("dashboard")}
             />
           )}
-          {screen === "manage" && (
+          {screen === "manage" && (selected ? (
             <HostManageScreen
               cls={selected}
               onBack={() => setScreen("dashboard")}
               onMetrics={() => setScreen("metrics")}
             />
-          )}
+          ) : (
+            <EmptyState label="No classes to manage yet." onBack={() => setScreen("dashboard")} />
+          ))}
           {screen === "earnings" && (
             <HostEarningsScreen onBack={() => setScreen("dashboard")} />
           )}
@@ -3343,9 +3460,19 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
           {screen === "hpGymCreate" && (
             <HostGymCreateScreen
               onBack={() => setScreen("hpGym")}
-              onCreate={(g) => {
-                setGym({ ...g, created: true });
-                setScreen("hpGym");
+              onCreate={async (g) => {
+                try {
+                  await createGymMut.mutateAsync({
+                    name: g.name,
+                    description: g.tagline,
+                    address: { street: g.address, city: "", country: "", postcode: "" },
+                  });
+                  setGym({ ...g, created: true });
+                  toast.success("Gym created");
+                  setScreen("hpGym");
+                } catch (e: any) {
+                  toast.error(e?.message ?? "Could not create gym");
+                }
               }}
             />
           )}
@@ -3367,9 +3494,24 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
           {screen === "hpGymEdit" && (
             <HostGymEditScreen
               gym={gym}
-              onSave={(g) => {
-                setGym({ ...g, created: true });
-                setScreen("hpGym");
+              onSave={async (g) => {
+                try {
+                  if (liveGym?.id) {
+                    await updateGymMut.mutateAsync({
+                      id: liveGym.id,
+                      input: {
+                        name: g.name,
+                        description: g.tagline,
+                        address: { street: g.address, city: "", country: "", postcode: "" },
+                      },
+                    });
+                  }
+                  setGym({ ...g, created: true });
+                  toast.success("Gym updated");
+                  setScreen("hpGym");
+                } catch (e: any) {
+                  toast.error(e?.message ?? "Could not update gym");
+                }
               }}
               onBack={() => setScreen("hpGym")}
             />
@@ -3486,6 +3628,7 @@ function HostDashboardScreen({
   onEarnings: () => void;
   onMetrics: () => void;
 }) {
+  const HOST_CLASSES = useLiveHostClasses();
   const totalBooked = HOST_CLASSES.reduce((a, c) => a + c.booked, 0);
   const today = HOST_CLASSES.filter((c) => c.date === "Today");
   return (
@@ -3611,7 +3754,28 @@ function HostCreateScreen({
   const [location, setLocation] = useState("Dolores Park, SF");
   const [price, setPrice] = useState("28");
   const [capacity, setCapacity] = useState("12");
+  const [duration, setDuration] = useState("60");
+  const [description, setDescription] = useState("A grounded, breath-led session for all levels.");
   const [bookingType, setBookingType] = useState<"scheduled" | "request">("scheduled");
+  const createMut = useCreateClass();
+  const publish = async () => {
+    try {
+      const startAt = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString();
+      await createMut.mutateAsync({
+        title: title.trim(),
+        description,
+        activityType: activity,
+        startAt,
+        durationMinutes: Math.max(15, parseInt(duration || "60", 10)),
+        capacity: Math.max(1, parseInt(capacity || "12", 10)),
+        priceCents: Math.max(0, Math.round(parseFloat(price || "0") * 100)),
+      });
+      toast.success("Class published");
+      onPublish();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not publish class");
+    }
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -3676,15 +3840,20 @@ function HostCreateScreen({
             <Label className="text-xs uppercase tracking-widest text-muted-foreground">Description</Label>
             <textarea
               rows={3}
-              defaultValue="A grounded, breath-led session for all levels."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               className="mt-2 w-full rounded-lg border bg-card p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
           </div>
         </div>
       </ScreenScroll>
       <div className="border-t bg-card px-5 py-3">
-        <Button onClick={onPublish} className="w-full bg-gradient-hero shadow-elegant">
-          Publish class
+        <Button
+          onClick={publish}
+          disabled={createMut.isPending || !title.trim()}
+          className="w-full bg-gradient-hero shadow-elegant"
+        >
+          {createMut.isPending ? "Publishing…" : "Publish class"}
         </Button>
       </div>
     </div>
