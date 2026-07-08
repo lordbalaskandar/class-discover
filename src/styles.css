@@ -95,7 +95,8 @@
   --border: #ADA08A;
   --input: #ADA08A;
   --ring: #CDAB7F;
-  --logo-accent: #CDAB7F;         /* small bar in the P monogram */
+  --logo-color: #091D29;          /* light mode: ink P */
+  --logo-accent: #CDAB7F;         /* light mode: gold accent bar */
 
   --gradient-hero: linear-gradient(135deg, #CDAB7F 0%, #E6CFA8 100%);
   --gradient-soft: linear-gradient(180deg, #F6F4DF 0%, #EFE9D6 100%);
@@ -125,7 +126,8 @@
   --border: rgb(205 171 127 / 0.20);
   --input: rgb(205 171 127 / 0.24);
   --ring: #CDAB7F;
-  --logo-accent: #091D29;         /* dark mode: accent bar flips to ink */
+  --logo-color: #CDAB7F;          /* dark mode: gold P */
+  --logo-accent: #F6F4DF;         /* dark mode: cream accent bar */
 
   --gradient-hero: linear-gradient(135deg, #CDAB7F 0%, #998668 100%);
   --gradient-soft: linear-gradient(180deg, #0E2735 0%, #091D29 100%);

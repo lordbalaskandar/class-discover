@@ -25,7 +25,7 @@ export function PulstractMark({
   gold,
   light,
 }: Props) {
-  const mainFill = color ?? gold ?? light ?? "currentColor";
+  const mainFill = color ?? gold ?? light ?? "var(--logo-color, currentColor)";
   const accentFill = accent ?? "var(--logo-accent, #CDAB7F)";
 
   // Bold rounded P letterform with a hollow bowl (even-odd fill).
