@@ -2723,6 +2723,7 @@ function SavedScreen({
   onBrowse: () => void;
   onOpen: (id: string) => void;
 }) {
+  const CLASSES = useLiveClasses();
   const saved = CLASSES.filter((c) => savedIds.has(c.id));
   return (
     <div className="h-full flex flex-col">
