@@ -28,10 +28,11 @@ export function PulstractMark({
   const mainFill = color ?? gold ?? light ?? "currentColor";
   const accentFill = accent ?? "var(--logo-accent, #CDAB7F)";
 
-  // Single hook shape (top-right "P" curl). Filled path, rounded.
-  // The full mark is this hook plus a 180°-rotated copy of itself around (32,32).
-  const hook =
-    "M18 8 h26 a12 12 0 0 1 12 12 v10 a12 12 0 0 1 -12 12 h-16 v-8 h16 a4 4 0 0 0 4 -4 v-10 a4 4 0 0 0 -4 -4 h-26 z";
+  // Bold rounded P letterform with a hollow bowl (even-odd fill).
+  // Second sub-path is the inner counter, cut out to create the bowl hole.
+  const pShape =
+    "M12 8 h28 a16 16 0 0 1 0 32 h-16 v16 h-12 z " +
+    "M24 18 v12 h16 a6 6 0 0 0 0 -12 z";
 
   return (
     <svg
@@ -39,12 +40,9 @@ export function PulstractMark({
       className={cn("block", className)}
       aria-hidden="true"
     >
-      {/* Top-right hook */}
-      <path d={hook} fill={mainFill} />
-      {/* Bottom-left hook — same shape rotated 180° around centre */}
-      <path d={hook} fill={mainFill} transform="rotate(180 32 32)" />
-      {/* Centre accent bar where the two hooks meet */}
-      <rect x="28" y="30" width="8" height="4" fill={accentFill} />
+      <path d={pShape} fill={mainFill} fillRule="evenodd" />
+      {/* Small brand accent bar sitting across the bowl-to-stem junction */}
+      <rect x="20" y="27" width="14" height="4" rx="1" fill={accentFill} />
     </svg>
   );
 }
