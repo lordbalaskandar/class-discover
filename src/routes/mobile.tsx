@@ -1752,6 +1752,7 @@ function HostScreen({
   onSelectClass: () => void;
   onGym?: () => void;
 }) {
+  const CLASSES = useLiveClasses();
   const isGym = cls.hostType === "gym";
   return (
     <ScreenScroll>
