@@ -89,9 +89,7 @@ function MarqueeRow({ words, reverse, duration }: { words: string[]; reverse: bo
           it.kind === "logo" ? (
             <PulstractMark
               key={`${it.key}-${i}`}
-              className="h-8 w-16 md:h-10 md:w-20 shrink-0 opacity-[0.32]"
-              gold="hsl(43 55% 54%)"
-              light="white"
+              className="h-8 w-8 md:h-10 md:w-10 shrink-0 opacity-[0.32] text-primary"
             />
           ) : (
             <span
@@ -153,7 +151,7 @@ function ComingSoonPage() {
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-16 md:py-24 text-center relative z-10">
         <div className="flex flex-col items-center">
-          <PulstractMark className="h-20 w-40 md:h-24 md:w-48" gold="hsl(43 55% 54%)" light="white" />
+          <PulstractMark className="h-24 w-24 md:h-28 md:w-28 text-primary" />
           <span className="mt-4 font-sans font-light text-base md:text-lg tracking-[0.4em] uppercase text-white">
             puls<span className="text-primary">t</span>ract
           </span>
