@@ -3397,13 +3397,15 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
               onPublish={() => setScreen("dashboard")}
             />
           )}
-          {screen === "manage" && (
+          {screen === "manage" && (selected ? (
             <HostManageScreen
               cls={selected}
               onBack={() => setScreen("dashboard")}
               onMetrics={() => setScreen("metrics")}
             />
-          )}
+          ) : (
+            <EmptyState label="No classes to manage yet." onBack={() => setScreen("dashboard")} />
+          ))}
           {screen === "earnings" && (
             <HostEarningsScreen onBack={() => setScreen("dashboard")} />
           )}
