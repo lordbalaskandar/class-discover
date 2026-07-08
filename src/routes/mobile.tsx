@@ -411,10 +411,12 @@ function FlowSection({
 }
 
 function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
+  const CLASSES = useLiveClasses();
   const [screen, setScreen] = useState<Screen>(initialScreen ?? "browse");
-  const [selectedId, setSelectedId] = useState<string>("1");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [browseFiltersOpen, setBrowseFiltersOpen] = useState(false);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [lastBookingId, setLastBookingId] = useState<string | null>(null);
   const toggleSaved = (id: string) =>
     setSavedIds((prev) => {
       const next = new Set(prev);
@@ -423,8 +425,8 @@ function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
       return next;
     });
   const selected = useMemo(
-    () => CLASSES.find((c) => c.id === selectedId) ?? CLASSES[0],
-    [selectedId],
+    () => CLASSES.find((c) => c.id === selectedId) ?? CLASSES[0] ?? null,
+    [selectedId, CLASSES],
   );
 
   const reset = () => {
