@@ -38,11 +38,12 @@ export function PulstractMark({
     <svg
       viewBox="0 0 64 64"
       className={cn("block", className)}
+      style={{ color: mainFill }}
       aria-hidden="true"
     >
-      <path d={pShape} fill={mainFill} fillRule="evenodd" />
+      <path d={pShape} fill="currentColor" fillRule="evenodd" />
       {/* Small brand accent bar sitting across the bowl-to-stem junction */}
-      <rect x="20" y="27" width="14" height="4" rx="1" fill={accentFill} />
+      <rect x="20" y="27" width="14" height="4" rx="1" style={{ fill: accentFill }} />
     </svg>
   );
 }
