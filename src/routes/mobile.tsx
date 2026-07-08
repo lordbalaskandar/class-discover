@@ -513,28 +513,34 @@ function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
               }}
             />
           )}
-          {screen === "host" && (
+          {screen === "host" && selected && (
             <HostScreen
               cls={selected}
               onBack={() => setScreen("browse")}
               onSelectClass={() => setScreen("class")}
               onGym={() => {
-                setSelectedId("2");
+                const gymCls = CLASSES.find((c) => c.hostType === "gym");
+                if (gymCls) setSelectedId(gymCls.id);
                 setScreen("gym");
               }}
             />
           )}
-          {screen === "gym" && (
-            <GymScreen
-              cls={CLASSES.find((c) => c.id === "2") ?? CLASSES[1]}
-              onBack={() => setScreen("browse")}
-              onSelectClass={() => {
-                setSelectedId("2");
-                setScreen("class");
-              }}
-            />
-          )}
-          {screen === "class" && (
+          {screen === "gym" && (() => {
+            const gymCls = CLASSES.find((c) => c.hostType === "gym") ?? selected;
+            return gymCls ? (
+              <GymScreen
+                cls={gymCls}
+                onBack={() => setScreen("browse")}
+                onSelectClass={() => {
+                  setSelectedId(gymCls.id);
+                  setScreen("class");
+                }}
+              />
+            ) : (
+              <EmptyState label="No gyms available yet." onBack={() => setScreen("browse")} />
+            );
+          })()}
+          {screen === "class" && selected && (
             <ClassScreen
               cls={selected}
               onBack={() => setScreen("browse")}
@@ -542,26 +548,32 @@ function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
               onBook={() => setScreen("booking")}
             />
           )}
-          {screen === "booking" && (
+          {screen === "booking" && selected && (
             <BookingScreen
               cls={selected}
+              busy={bookingBusy}
               onBack={() => setScreen("class")}
-              onContinue={() => setScreen("payment")}
+              onContinue={handleContinueBooking}
             />
           )}
-          {screen === "payment" && (
+          {screen === "payment" && selected && (
             <PaymentScreen
               cls={selected}
+              busy={bookingBusy}
               onBack={() => setScreen("booking")}
-              onPay={() => setScreen("confirmation")}
+              onPay={handlePay}
             />
           )}
-          {screen === "confirmation" && (
+          {screen === "confirmation" && selected && (
             <ConfirmationScreen
               cls={selected}
+              bookingId={lastBookingId}
               onDone={reset}
               onViewBookings={() => setScreen("bookings")}
             />
+          )}
+          {(screen === "host" || screen === "class" || screen === "booking" || screen === "payment" || screen === "confirmation") && !selected && (
+            <EmptyState label="No classes available from the backend yet." onBack={() => setScreen("browse")} />
           )}
           {screen === "bookings" && (
             <BookingsScreen
