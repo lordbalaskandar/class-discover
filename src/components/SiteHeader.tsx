@@ -66,10 +66,10 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link to="/" className="flex items-center gap-3 leading-none mr-10">
-          <PulstractMark className="h-9 w-[72px]" />
-          <span className="font-sans font-light text-[15px] tracking-[0.32em] uppercase">
-            puls<span className="text-primary">t</span>ract
+        <Link to="/" className="flex items-center gap-2.5 leading-none mr-10">
+          <PulstractMark className="h-8 w-8" />
+          <span className="font-display text-lg font-bold tracking-tight">
+            Puls<span className="text-primary">t</span>ract
           </span>
         </Link>
 
