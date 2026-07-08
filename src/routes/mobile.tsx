@@ -3619,6 +3619,7 @@ function HostDashboardScreen({
   onEarnings: () => void;
   onMetrics: () => void;
 }) {
+  const HOST_CLASSES = useLiveHostClasses();
   const totalBooked = HOST_CLASSES.reduce((a, c) => a + c.booked, 0);
   const today = HOST_CLASSES.filter((c) => c.date === "Today");
   return (
