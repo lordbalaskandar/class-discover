@@ -42,6 +42,7 @@ import {
   SlidersHorizontal,
   X,
   Map as MapIcon,
+  LogOut,
 } from "lucide-react";
 import { HostsMap } from "@/components/mobile/HostsMap";
 import { Calendar } from "@/components/ui/calendar";
@@ -49,6 +50,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
+import { PulstractAuthProvider, usePulstractAuth } from "@/lib/pulstract/auth";
+import { ServiceHealthBar } from "@/components/pulstract/ServiceHealthBar";
+import { AuthScreens } from "@/components/mobile/AuthScreens";
 
 type MobileSearch = { flow?: "user" | "host"; screen?: string };
 
@@ -277,44 +281,86 @@ const CLASSES: ClassItem[] = [
 ];
 
 function MobileShowcase() {
+  return (
+    <PulstractAuthProvider>
+      <MobileShowcaseInner />
+    </PulstractAuthProvider>
+  );
+}
+
+function MobileShowcaseInner() {
   const { flow, screen } = Route.useSearch();
   const showUser = !flow || flow === "user";
   const showHost = !flow || flow === "host";
+  const { session, signOut } = usePulstractAuth();
+
   return (
     <div className="min-h-screen">
       <SiteHeader />
       <div className="container mx-auto px-4 py-10 max-w-5xl">
-        <div className="text-center mb-10">
-          <Badge variant="secondary" className="mb-3">Mobile preview</Badge>
+        <div className="text-center mb-8">
+          <Badge variant="secondary" className="mb-3">Mobile preview · live backend</Badge>
           <h1 className="font-display text-4xl md:text-5xl font-semibold tracking-tight">
             The Pulstract app, end to end
           </h1>
           <p className="mt-3 text-muted-foreground max-w-2xl mx-auto">
-            Two interactive prototypes — the user flow for booking a class, and
-            the host flow for running them.
+            Interactive prototype wired to the real Pulstract dev backend —
+            classes, bookings and profile all round-trip through the gateway.
           </p>
         </div>
 
-        {showUser && (
-          <FlowSection
-            eyebrow="User flow"
-            title="Book a class"
-            description="Browse, check the host, review the class, pick a date, pay, and confirm."
-          >
-            <UserFlow initialScreen={flow === "user" ? (screen as Screen | undefined) : undefined} />
-          </FlowSection>
-        )}
+        <div className="mb-8 space-y-3">
+          <ServiceHealthBar />
+          {session && (
+            <div className="flex items-center justify-between text-xs bg-card border rounded-md px-3 py-2">
+              <span className="text-muted-foreground">
+                Signed in as <span className="font-semibold text-foreground">{session.email}</span>
+              </span>
+              <button
+                onClick={signOut}
+                className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+              >
+                <LogOut className="h-3 w-3" /> Sign out
+              </button>
+            </div>
+          )}
+        </div>
 
-        {showUser && showHost && <div className="my-16 border-t" />}
+        {!session ? (
+          <div className="flex flex-col items-center">
+            <p className="text-sm text-muted-foreground mb-4 text-center max-w-md">
+              Sign in or create an account to use the mobile prototype against
+              the live backend. Dev accounts are auto-confirmed.
+            </p>
+            <PhoneFrame>
+              <PhoneStatusBar />
+              <AuthScreens />
+            </PhoneFrame>
+          </div>
+        ) : (
+          <>
+            {showUser && (
+              <FlowSection
+                eyebrow="User flow"
+                title="Book a class"
+                description="Browse, check the host, review the class, pick a date, pay, and confirm."
+              >
+                <UserFlow initialScreen={flow === "user" ? (screen as Screen | undefined) : undefined} />
+              </FlowSection>
+            )}
 
-        {showHost && (
-          <FlowSection
-            eyebrow="Host flow"
-            title="Run your classes"
-            description="See today's schedule, publish a class, manage attendees, and track earnings."
-          >
-            <HostFlow initialScreen={flow === "host" ? (screen as HostScreenId | undefined) : undefined} />
-          </FlowSection>
+            {showUser && showHost && <div className="my-16 border-t" />}
+
+            {showHost && (
+              <FlowSection
+                eyebrow="Host flow"
+                title="Run your classes"
+                description="See today's schedule, publish a class, manage attendees, and track earnings."
+              >
+                <HostFlow initialScreen={flow === "host" ? (screen as HostScreenId | undefined) : undefined} />
+              </FlowSection>
+            )}
+          </>
         )}
       </div>
     </div>
