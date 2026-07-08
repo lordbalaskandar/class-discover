@@ -2623,13 +2623,54 @@ function BookingsScreen({
   onOpen: (id: string) => void;
   onProfile: () => void;
 }) {
-  const upcoming = [
-    { cls: CLASSES[0], code: "DRY-08421", status: "Confirmed" as const },
-    { cls: CLASSES[2], code: "DRY-08390", status: "Confirmed" as const },
-  ];
-  const past = [
-    { cls: CLASSES[1], code: "DRY-07712", status: "Completed" as const },
-  ];
+  const items = useLiveMyBookings();
+  const now = new Date();
+  const upcoming = items.filter(
+    (b) => b.booking.status !== "cancelled" && new Date(b.booking.scheduledAt) >= now,
+  );
+  const past = items.filter(
+    (b) => b.booking.status === "cancelled" || new Date(b.booking.scheduledAt) < now,
+  );
+
+  const renderRow = (b: (typeof items)[number], style: "up" | "past") => {
+    const cls = b.cls;
+    const bg = cls?.image ?? "linear-gradient(135deg,#94a3b8,#64748b)";
+    return (
+      <Card
+        key={b.booking.id}
+        onClick={() => cls && onOpen(cls.id)}
+        className={cn(
+          "overflow-hidden cursor-pointer active:scale-[0.99] transition-transform",
+          style === "past" && "opacity-80",
+        )}
+      >
+        <div className="flex">
+          <div className={cn("w-20 shrink-0", style === "past" && "grayscale")} style={{ background: bg }} />
+          <div className="p-3 flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2">
+              <p className="font-semibold text-sm truncate">{cls?.title ?? "Class"}</p>
+              <Badge variant={style === "past" ? "outline" : "secondary"} className="text-[10px] shrink-0 capitalize">
+                {b.booking.status}
+              </Badge>
+            </div>
+            <p className="text-[11px] text-muted-foreground truncate">
+              with {cls?.host ?? "—"}
+            </p>
+            <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <CalendarIcon className="h-3 w-3" />
+                {new Date(b.booking.scheduledAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {new Date(b.booking.scheduledAt).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+              </span>
+            </div>
+          </div>
+        </div>
+      </Card>
+    );
+  };
 
   return (
     <ScreenScroll>
@@ -2649,77 +2690,19 @@ function BookingsScreen({
       </div>
 
       <div className="px-5">
-        <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-3 mb-2">
-          Upcoming
-        </p>
-        <div className="space-y-2">
-          {upcoming.map((b) => (
-            <Card
-              key={b.code}
-              onClick={() => onOpen(b.cls.id)}
-              className="overflow-hidden cursor-pointer active:scale-[0.99] transition-transform"
-            >
-              <div className="flex">
-                <div className="w-20 shrink-0" style={{ background: b.cls.image }} />
-                <div className="p-3 flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-sm truncate">{b.cls.title}</p>
-                    <Badge variant="secondary" className="text-[10px] shrink-0">
-                      {b.status}
-                    </Badge>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground truncate">
-                    with {b.cls.host}
-                  </p>
-                  <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <CalendarIcon className="h-3 w-3" />
-                      {b.cls.date}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {b.cls.time}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+        <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-3 mb-2">Upcoming</p>
+        {upcoming.length === 0 ? (
+          <p className="text-xs text-muted-foreground py-4">No upcoming bookings yet.</p>
+        ) : (
+          <div className="space-y-2">{upcoming.map((b) => renderRow(b, "up"))}</div>
+        )}
 
-        <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-5 mb-2">
-          Past
-        </p>
-        <div className="space-y-2 pb-4">
-          {past.map((b) => (
-            <Card
-              key={b.code}
-              onClick={() => onOpen(b.cls.id)}
-              className="overflow-hidden cursor-pointer opacity-80"
-            >
-              <div className="flex">
-                <div className="w-20 shrink-0 grayscale" style={{ background: b.cls.image }} />
-                <div className="p-3 flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-sm truncate">{b.cls.title}</p>
-                    <Badge variant="outline" className="text-[10px] shrink-0">
-                      {b.status}
-                    </Badge>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground truncate">
-                    with {b.cls.host}
-                  </p>
-                  <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Star className="h-3 w-3 fill-primary text-primary" />
-                      Rate this class
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+        <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-5 mb-2">Past</p>
+        {past.length === 0 ? (
+          <p className="text-xs text-muted-foreground py-4 pb-6">No past bookings.</p>
+        ) : (
+          <div className="space-y-2 pb-4">{past.map((b) => renderRow(b, "past"))}</div>
+        )}
       </div>
     </ScreenScroll>
   );
