@@ -3831,15 +3831,20 @@ function HostCreateScreen({
             <Label className="text-xs uppercase tracking-widest text-muted-foreground">Description</Label>
             <textarea
               rows={3}
-              defaultValue="A grounded, breath-led session for all levels."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               className="mt-2 w-full rounded-lg border bg-card p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
           </div>
         </div>
       </ScreenScroll>
       <div className="border-t bg-card px-5 py-3">
-        <Button onClick={onPublish} className="w-full bg-gradient-hero shadow-elegant">
-          Publish class
+        <Button
+          onClick={publish}
+          disabled={createMut.isPending || !title.trim()}
+          className="w-full bg-gradient-hero shadow-elegant"
+        >
+          {createMut.isPending ? "Publishing…" : "Publish class"}
         </Button>
       </div>
     </div>
