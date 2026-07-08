@@ -4,6 +4,43 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ---- Basis Grotesque Pro (self-hosted from Lovable Assets CDN) ---- */
+@font-face {
+  font-family: "Basis Grotesque Pro";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("/__l5e/assets-v1/6fb78fe4-1031-4c5e-b42a-b2ca720c1d13/BasisGrotesquePro-Light.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Basis Grotesque Pro";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/__l5e/assets-v1/61a48dcb-77b6-4db9-824d-b855dae86042/BasisGrotesquePro-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Basis Grotesque Pro";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/__l5e/assets-v1/1b1bfd87-b9dc-4316-ab6f-7252eebf27c8/BasisGrotesquePro-Medium.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Basis Grotesque Pro";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/__l5e/assets-v1/f82a19a2-dadc-482f-8554-f907c6901a52/BasisGrotesquePro-Bold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Basis Grotesque Pro";
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("/__l5e/assets-v1/04d77ea5-34fa-4d8a-a5e0-0da9947a25e9/BasisGrotesquePro-Black.ttf") format("truetype");
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -31,65 +68,67 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-ring-offset-background: var(--background);
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Fraunces", "Source Serif Pro", ui-serif, Georgia, serif;
+  --font-sans: "Basis Grotesque Pro", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Basis Grotesque Pro", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 :root {
   --radius: 0.75rem;
-  /* Editorial cream + ink + gold (matches pitch deck) */
-  --background: oklch(0.97 0.012 85);          /* warm cream #F5F1E8-ish */
-  --foreground: oklch(0.16 0.01 60);           /* near-black ink */
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.16 0.01 60);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.16 0.01 60);
-  --primary: oklch(0.74 0.11 78);              /* muted gold #C9A24C */
-  --primary-foreground: oklch(0.16 0.01 60);
-  --primary-glow: oklch(0.82 0.09 82);
-  --secondary: oklch(0.94 0.015 80);
-  --secondary-foreground: oklch(0.18 0.01 60);
-  --muted: oklch(0.94 0.012 80);
-  --muted-foreground: oklch(0.5 0.015 70);
-  --accent: oklch(0.74 0.11 78);               /* gold accent */
-  --accent-foreground: oklch(0.16 0.01 60);
-  --destructive: oklch(0.6 0.23 27);
-  --destructive-foreground: oklch(0.99 0.005 80);
-  --border: oklch(0.9 0.012 80);
-  --input: oklch(0.9 0.012 80);
-  --ring: oklch(0.74 0.11 78);
+  /* Pulstract brand — light mode: cream ground, ink text, gold accent */
+  --background: #F6F4DF;            /* cream */
+  --foreground: #091D29;            /* ink */
+  --card: #FFFFFF;
+  --card-foreground: #091D29;
+  --popover: #FFFFFF;
+  --popover-foreground: #091D29;
+  --primary: #CDAB7F;               /* brand gold */
+  --primary-foreground: #091D29;
+  --primary-glow: #E6CFA8;
+  --secondary: #06324C;             /* deep teal */
+  --secondary-foreground: #F6F4DF;
+  --muted: #EFE9D6;
+  --muted-foreground: #998668;      /* bronze */
+  --accent: #CDAB7F;
+  --accent-foreground: #091D29;
+  --destructive: oklch(0.58 0.22 27);
+  --destructive-foreground: #F6F4DF;
+  --border: #ADA08A;
+  --input: #ADA08A;
+  --ring: #CDAB7F;
 
-  --gradient-hero: linear-gradient(135deg, oklch(0.74 0.11 78) 0%, oklch(0.82 0.09 82) 100%);
-  --gradient-soft: linear-gradient(180deg, oklch(0.97 0.012 85) 0%, oklch(0.94 0.02 80) 100%);
-  --shadow-card: 0 1px 2px oklch(0.16 0.01 60 / 0.06), 0 8px 24px -12px oklch(0.16 0.01 60 / 0.14);
-  --shadow-elegant: 0 10px 30px -10px oklch(0.16 0.01 60 / 0.35);
+  --gradient-hero: linear-gradient(135deg, #CDAB7F 0%, #E6CFA8 100%);
+  --gradient-soft: linear-gradient(180deg, #F6F4DF 0%, #EFE9D6 100%);
+  --shadow-card: 0 1px 2px rgb(9 29 41 / 0.06), 0 8px 24px -12px rgb(9 29 41 / 0.14);
+  --shadow-elegant: 0 10px 30px -10px rgb(9 29 41 / 0.35);
 }
 
 .dark {
-  --background: oklch(0.16 0.005 60);          /* near-black like deck */
-  --foreground: oklch(0.97 0.012 85);          /* cream */
-  --card: oklch(0.21 0.006 60);
-  --card-foreground: oklch(0.97 0.012 85);
-  --popover: oklch(0.21 0.006 60);
-  --popover-foreground: oklch(0.97 0.012 85);
-  --primary: oklch(0.78 0.12 80);              /* gold */
-  --primary-foreground: oklch(0.14 0.005 60);
-  --secondary: oklch(0.26 0.008 60);
-  --secondary-foreground: oklch(0.97 0.012 85);
-  --muted: oklch(0.26 0.008 60);
-  --muted-foreground: oklch(0.72 0.01 70);
-  --accent: oklch(0.78 0.12 80);
-  --accent-foreground: oklch(0.14 0.005 60);
+  /* Dark mode: ink ground, cream text, gold accent */
+  --background: #091D29;
+  --foreground: #F6F4DF;
+  --card: #0E2735;
+  --card-foreground: #F6F4DF;
+  --popover: #0E2735;
+  --popover-foreground: #F6F4DF;
+  --primary: #CDAB7F;
+  --primary-foreground: #091D29;
+  --primary-glow: #E6CFA8;
+  --secondary: #06324C;
+  --secondary-foreground: #F6F4DF;
+  --muted: #0E2735;
+  --muted-foreground: #ADA08A;
+  --accent: #CDAB7F;
+  --accent-foreground: #091D29;
   --destructive: oklch(0.55 0.22 27);
-  --destructive-foreground: oklch(0.98 0.005 80);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.78 0.12 80);
+  --destructive-foreground: #F6F4DF;
+  --border: rgb(205 171 127 / 0.20);
+  --input: rgb(205 171 127 / 0.24);
+  --ring: #CDAB7F;
 
-  --gradient-hero: linear-gradient(135deg, oklch(0.78 0.12 80) 0%, oklch(0.68 0.1 78) 100%);
-  --gradient-soft: linear-gradient(180deg, oklch(0.21 0.006 60) 0%, oklch(0.16 0.005 60) 100%);
-  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.4), 0 8px 24px -12px oklch(0 0 0 / 0.55);
-  --shadow-elegant: 0 10px 30px -10px oklch(0 0 0 / 0.6);
+  --gradient-hero: linear-gradient(135deg, #CDAB7F 0%, #998668 100%);
+  --gradient-soft: linear-gradient(180deg, #0E2735 0%, #091D29 100%);
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -12px rgb(0 0 0 / 0.55);
+  --shadow-elegant: 0 10px 30px -10px rgb(0 0 0 / 0.6);
 }
 
 @layer base {
@@ -98,9 +137,14 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    font-weight: 400;
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, h4 { font-family: var(--font-display); letter-spacing: -0.02em; }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
 }
 
 @layer utilities {
