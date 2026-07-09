@@ -3136,11 +3136,15 @@ function ProfileBecomeHostScreen({ onBack }: { onBack: () => void }) {
         </div>
 
         <div className="px-5 mt-5 pb-2">
-          <Button className="w-full bg-gradient-hero shadow-elegant">
-            Start hosting
+          <Button
+            className="w-full bg-gradient-hero shadow-elegant"
+            onClick={handleStart}
+            disabled={alreadyHost || becomeHost.isPending}
+          >
+            {alreadyHost ? "You're already a host" : becomeHost.isPending ? "Upgrading…" : "Start hosting"}
           </Button>
           <p className="text-[10px] text-muted-foreground text-center mt-2">
-            Takes about 5 minutes
+            {alreadyHost ? "Head to the host flow to manage classes" : "Takes about 5 minutes"}
           </p>
         </div>
       </ScreenScroll>
