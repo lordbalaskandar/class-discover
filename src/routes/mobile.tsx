@@ -5268,10 +5268,16 @@ function HostGymEditScreen({
 function HostGymMembersScreen({
   members,
   onChange,
+  onInvite,
+  onRemove,
+  onSetStatus,
   onBack,
 }: {
   members: GymMember[];
-  onChange: (m: GymMember[]) => void;
+  onChange?: (m: GymMember[]) => void;
+  onInvite?: (email: string, monthlyPriceCents?: number) => void | Promise<void>;
+  onRemove?: (id: string) => void | Promise<void>;
+  onSetStatus?: (id: string, status: string) => void | Promise<void>;
   onBack: () => void;
 }) {
   const [query, setQuery] = useState("");
@@ -5291,32 +5297,46 @@ function HostGymMembersScreen({
   });
 
   const setRole = (id: string, role: GymMember["role"]) =>
-    onChange(members.map((m) => (m.id === id ? { ...m, role } : m)));
-  const setStatus = (id: string, status: GymMember["status"]) =>
-    onChange(members.map((m) => (m.id === id ? { ...m, status } : m)));
-  const remove = (id: string) => onChange(members.filter((m) => m.id !== id));
+    onChange?.(members.map((m) => (m.id === id ? { ...m, role } : m)));
+  const setStatus = (id: string, status: GymMember["status"]) => {
+    if (onSetStatus) {
+      onSetStatus(id, status === "Active" ? "active" : "removed");
+    } else {
+      onChange?.(members.map((m) => (m.id === id ? { ...m, status } : m)));
+    }
+  };
+  const remove = (id: string) => {
+    if (onRemove) onRemove(id);
+    else onChange?.(members.filter((m) => m.id !== id));
+  };
   const add = () => {
-    if (!newName.trim() || !newEmail.trim()) return;
-    const initials = newName
-      .trim()
-      .split(/\s+/)
-      .map((p) => p[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
-    onChange([
-      ...members,
-      {
-        id: `m${Date.now()}`,
-        name: newName.trim(),
-        email: newEmail.trim(),
-        initials,
-        plan: newPlan,
-        role: "Member",
-        joined: "Today",
-        status: "Pending",
-      },
-    ]);
+    if (!newEmail.trim()) return;
+    const monthlyPriceCents =
+      newPlan === "Monthly" ? 9900 : newPlan === "Annual" ? 89900 : 0;
+    if (onInvite) {
+      onInvite(newEmail.trim(), monthlyPriceCents);
+    } else {
+      const initials = (newName || newEmail)
+        .trim()
+        .split(/\s+/)
+        .map((p) => p[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase();
+      onChange?.([
+        ...members,
+        {
+          id: `m${Date.now()}`,
+          name: newName.trim() || newEmail.split("@")[0],
+          email: newEmail.trim(),
+          initials,
+          plan: newPlan,
+          role: "Member",
+          joined: "Today",
+          status: "Pending",
+        },
+      ]);
+    }
     setNewName("");
     setNewEmail("");
     setAdding(false);
