@@ -98,9 +98,19 @@ export const M_SET_DEFAULT_PAYMENT_METHOD = `mutation SDPM($id:String!){ setDefa
 /* Types (loose — the gateway is source of truth)               */
 /* ============================================================ */
 
-export type ApiUser = { id: string; email: string; name: string; createdAt?: string };
+export type ApiUser = { id: string; email: string; name: string; isHost?: boolean; createdAt?: string };
 export type ApiAddress = { street?: string; city?: string; country?: string; postcode?: string; lat?: number; lng?: number };
-export type ApiGym = { id: string; name: string; description?: string | null; rating?: number | null; totalRatings?: number | null; address?: ApiAddress | null };
+export type ApiGym = {
+  id: string;
+  name: string;
+  description?: string | null;
+  rating?: number | null;
+  totalRatings?: number | null;
+  amenities?: string[] | null;
+  capacity?: number | null;
+  monthlyPriceCents?: number | null;
+  address?: ApiAddress | null;
+};
 export type ApiClass = {
   id: string;
   gymId: string;
@@ -116,7 +126,18 @@ export type ApiClass = {
   city?: string | null;
   country?: string | null;
 };
-export type ApiBooking = { id: string; classId: string; gymId?: string; scheduledAt: string; status: string; createdAt?: string; userId?: string };
-export type ApiProfile = { userId: string; bio?: string | null; avatarUrl?: string | null; updatedAt?: string | null };
-export type ApiReview = { id: string; userId: string; rating: number; comment?: string | null; createdAt: string };
+export type ApiBooking = { id: string; classId: string; gymId?: string; scheduledAt: string; status: string; createdAt?: string; userId?: string; attendeeName?: string | null };
+export type ApiProfile = {
+  userId: string;
+  bio?: string | null;
+  avatarUrl?: string | null;
+  displayName?: string | null;
+  notificationEmail?: boolean;
+  notificationPush?: boolean;
+  updatedAt?: string | null;
+};
+export type ApiReview = { id: string; userId: string; gymId?: string; rating: number; comment?: string | null; createdAt: string };
 export type ApiPayment = { id: string; bookingId: string; amount: number; currency: string; status: string; createdAt?: string; clientSecret?: string };
+export type ApiPaymentMethod = { id: string; brand: string; last4: string; expMonth: number; expYear: number; isDefault: boolean };
+export type ApiMetricsFunnel = { gymId: string; period: string; views: number; bookings: number; conversions: number };
+export type ApiGymMembership = { id: string; gymId: string; userId?: string | null; email: string; status: string; monthlyPriceCents?: number | null; joinedAt: string };
