@@ -430,15 +430,12 @@ function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
   const [screen, setScreen] = useState<Screen>(initialScreen ?? "browse");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [browseFiltersOpen, setBrowseFiltersOpen] = useState(false);
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
-  const [lastBookingId, setLastBookingId] = useState<string | null>(null);
-  const toggleSaved = (id: string) =>
-    setSavedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  const { data: savedList = [] } = useSavedClasses();
+  const toggleSavedMut = useToggleSavedClass();
+  const savedIds = useMemo(() => new Set(savedList.map((c) => c.id)), [savedList]);
+  const toggleSaved = async (id: string) => {
+    try { await toggleSavedMut.mutateAsync(id); } catch (e: any) { toast.error(e?.message ?? "Failed to save"); }
+  };
   const selected = useMemo(
     () => CLASSES.find((c) => c.id === selectedId) ?? CLASSES[0] ?? null,
     [selectedId, CLASSES],
