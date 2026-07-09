@@ -52,10 +52,10 @@ export function cryptoRandomPassword(): string {
 /* GraphQL operations                                           */
 /* ============================================================ */
 
-export const Q_ME = `query Me { me { id email name createdAt } }`;
-export const Q_PROFILE = `query P($id:ID!){ profile(userId:$id){ userId bio avatarUrl updatedAt } }`;
-export const Q_GYMS = `query G($f:GymFilter,$p:Pagination){ gyms(filter:$f,pagination:$p){ items{ id name description rating totalRatings address{ street city country postcode lat lng } } nextToken } }`;
-export const Q_GYM = `query GG($id:ID!){ gym(id:$id){ id name description rating totalRatings address{ street city country postcode lat lng } createdAt } }`;
+export const Q_ME = `query Me { me { id email name isHost createdAt } }`;
+export const Q_PROFILE = `query P($id:ID!){ profile(userId:$id){ userId bio avatarUrl displayName notificationEmail notificationPush updatedAt } }`;
+export const Q_GYMS = `query G($f:GymFilter,$p:Pagination){ gyms(filter:$f,pagination:$p){ items{ id name description rating totalRatings amenities capacity monthlyPriceCents address{ street city country postcode lat lng } } nextToken } }`;
+export const Q_GYM = `query GG($id:ID!){ gym(id:$id){ id name description rating totalRatings amenities capacity monthlyPriceCents address{ street city country postcode lat lng } createdAt } }`;
 export const Q_CLASSES = `query C($f:ClassFilter,$p:Pagination){ classes(filter:$f,pagination:$p){ items{ id gymId title description activityType startAt durationMinutes capacity priceCents status gymName city country } nextToken } }`;
 export const Q_CLASS = `query CC($id:ID!){ class(id:$id){ id gymId title description activityType startAt durationMinutes capacity priceCents status gymName city country createdAt } }`;
 export const Q_BOOKING = `query B($id:ID!){ booking(id:$id){ id userId classId gymId scheduledAt status createdAt } }`;
@@ -64,10 +64,15 @@ export const Q_PAYMENT_BY_BOOKING = `query PB($id:ID!){ paymentByBooking(booking
 export const Q_REVIEWS = `query R($g:ID!){ reviews(gymId:$g){ id userId rating comment createdAt } }`;
 export const Q_REVIEW_SUMMARY = `query RS($g:ID!){ reviewSummary(gymId:$g){ gymId summary reviewCount generatedAt } }`;
 export const Q_SMART = `query SS($q:String!){ smartSearchFilters(query:$q){ activityType city radiusKm minRating } }`;
-export const Q_MY_GYM = `query MG{ myGym{ id name description rating totalRatings address{ street city country postcode } } }`;
+export const Q_MY_GYM = `query MG{ myGym{ id name description rating totalRatings amenities capacity monthlyPriceCents address{ street city country postcode } } }`;
 export const Q_MY_CLASSES = `query MC{ myClasses{ id title description activityType startAt durationMinutes capacity priceCents status } }`;
-export const Q_BOOKINGS_BY_CLASS = `query BBC($id:ID!){ bookingsByClass(classId:$id){ id userId scheduledAt status } }`;
+export const Q_BOOKINGS_BY_CLASS = `query BBC($id:ID!){ bookingsByClass(classId:$id){ id userId scheduledAt status attendeeName } }`;
 export const Q_COACH_TIP = `query CT{ coachTip{ hostId tip generatedAt } }`;
+export const Q_SAVED_CLASSES = `query SC{ savedClasses{ id gymId title activityType startAt durationMinutes capacity priceCents status gymName city } }`;
+export const Q_PAYMENT_METHODS = `query PM{ paymentMethods{ id brand last4 expMonth expYear isDefault } }`;
+export const Q_MY_GYM_REVIEWS = `query MGR{ myGymReviews{ id userId gymId rating comment createdAt } }`;
+export const Q_METRICS_FUNNEL = `query MF($p:String){ metricsFunnel(period:$p){ gymId period views bookings conversions } }`;
+export const Q_GYM_MEMBERSHIPS = `query GM($g:ID!){ gymMemberships(gymId:$g){ id gymId userId email status monthlyPriceCents joinedAt } }`;
 
 export const M_CREATE_BOOKING = `mutation CB($i:CreateBookingInput!){ createBooking(input:$i){ id classId gymId scheduledAt status createdAt } }`;
 export const M_UPDATE_PROFILE = `mutation UP($i:UpdateProfileInput!){ updateProfile(input:$i){ userId bio avatarUrl updatedAt } }`;
@@ -76,17 +81,36 @@ export const M_UPDATE_CLASS = `mutation UC($id:ID!,$i:UpdateClassInput!){ update
 export const M_CANCEL_CLASS = `mutation CnC($id:ID!){ cancelClass(id:$id) }`;
 export const M_CANCEL_BOOKING = `mutation CnB($id:ID!){ cancelBooking(id:$id){ id status } }`;
 export const M_CREATE_GYM = `mutation CG($i:CreateGymInput!){ createGym(input:$i){ id name description address{ street city country postcode } } }`;
-export const M_UPDATE_GYM = `mutation UG($id:ID!,$i:UpdateGymInput!){ updateGym(id:$id,input:$i){ id name description address{ street city country postcode } } }`;
+export const M_UPDATE_GYM = `mutation UG($id:ID!,$i:UpdateGymInput!){ updateGym(id:$id,input:$i){ id name description amenities capacity monthlyPriceCents address{ street city country postcode } } }`;
 export const M_SUBMIT_REVIEW = `mutation SR($i:SubmitReviewInput!){ submitReview(input:$i){ id gymId rating comment createdAt } }`;
 export const M_PAYMENT_INTENT = `mutation PI($i:CreatePaymentIntentInput!){ createPaymentIntent(input:$i){ id bookingId amount currency status clientSecret createdAt } }`;
+export const M_TOGGLE_SAVED = `mutation TS($id:ID!){ toggleSavedClass(classId:$id) }`;
+export const M_BECOME_HOST = `mutation BH{ becomeHost{ id email name isHost createdAt } }`;
+export const M_UPDATE_NOTIF = `mutation UN($i:UpdateNotificationPreferencesInput!){ updateNotificationPreferences(input:$i){ userId notificationEmail notificationPush } }`;
+export const M_INVITE_MEMBER = `mutation IM($i:InviteMemberInput!){ inviteMember(input:$i){ id gymId userId email status monthlyPriceCents joinedAt } }`;
+export const M_UPDATE_MEMBER = `mutation UM($id:ID!,$i:UpdateMemberInput!){ updateMember(id:$id,input:$i){ id gymId userId email status monthlyPriceCents joinedAt } }`;
+export const M_REMOVE_MEMBER = `mutation RM($id:ID!){ removeMember(id:$id) }`;
+export const M_ADD_PAYMENT_METHOD = `mutation APM($p:String!){ addPaymentMethod(paymentMethodId:$p){ id brand last4 expMonth expYear isDefault } }`;
+export const M_REMOVE_PAYMENT_METHOD = `mutation RPM($id:String!){ removePaymentMethod(id:$id) }`;
+export const M_SET_DEFAULT_PAYMENT_METHOD = `mutation SDPM($id:String!){ setDefaultPaymentMethod(id:$id){ id brand last4 isDefault } }`;
 
 /* ============================================================ */
 /* Types (loose — the gateway is source of truth)               */
 /* ============================================================ */
 
-export type ApiUser = { id: string; email: string; name: string; createdAt?: string };
+export type ApiUser = { id: string; email: string; name: string; isHost?: boolean; createdAt?: string };
 export type ApiAddress = { street?: string; city?: string; country?: string; postcode?: string; lat?: number; lng?: number };
-export type ApiGym = { id: string; name: string; description?: string | null; rating?: number | null; totalRatings?: number | null; address?: ApiAddress | null };
+export type ApiGym = {
+  id: string;
+  name: string;
+  description?: string | null;
+  rating?: number | null;
+  totalRatings?: number | null;
+  amenities?: string[] | null;
+  capacity?: number | null;
+  monthlyPriceCents?: number | null;
+  address?: ApiAddress | null;
+};
 export type ApiClass = {
   id: string;
   gymId: string;
@@ -102,7 +126,18 @@ export type ApiClass = {
   city?: string | null;
   country?: string | null;
 };
-export type ApiBooking = { id: string; classId: string; gymId?: string; scheduledAt: string; status: string; createdAt?: string; userId?: string };
-export type ApiProfile = { userId: string; bio?: string | null; avatarUrl?: string | null; updatedAt?: string | null };
-export type ApiReview = { id: string; userId: string; rating: number; comment?: string | null; createdAt: string };
+export type ApiBooking = { id: string; classId: string; gymId?: string; scheduledAt: string; status: string; createdAt?: string; userId?: string; attendeeName?: string | null };
+export type ApiProfile = {
+  userId: string;
+  bio?: string | null;
+  avatarUrl?: string | null;
+  displayName?: string | null;
+  notificationEmail?: boolean;
+  notificationPush?: boolean;
+  updatedAt?: string | null;
+};
+export type ApiReview = { id: string; userId: string; gymId?: string; rating: number; comment?: string | null; createdAt: string };
 export type ApiPayment = { id: string; bookingId: string; amount: number; currency: string; status: string; createdAt?: string; clientSecret?: string };
+export type ApiPaymentMethod = { id: string; brand: string; last4: string; expMonth: number; expYear: number; isDefault: boolean };
+export type ApiMetricsFunnel = { gymId: string; period: string; views: number; bookings: number; conversions: number };
+export type ApiGymMembership = { id: string; gymId: string; userId?: string | null; email: string; status: string; monthlyPriceCents?: number | null; joinedAt: string };

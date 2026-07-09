@@ -63,11 +63,25 @@ import {
 } from "@/lib/pulstract/live-data";
 import {
   useMe,
+  useProfile,
   useCreateBooking,
   useCreatePaymentIntent,
   useCreateClass,
   useCreateGym,
   useUpdateGym,
+  useSavedClasses,
+  useToggleSavedClass,
+  usePaymentMethods,
+  useRemovePaymentMethod,
+  useSetDefaultPaymentMethod,
+  useUpdateNotificationPrefs,
+  useBecomeHost,
+  useMetricsFunnel,
+  useGymMemberships,
+  useInviteMember,
+  useUpdateMember,
+  useRemoveMember,
+  useBookingsByClass,
 } from "@/lib/pulstract/hooks";
 import { toast } from "sonner";
 
@@ -417,15 +431,13 @@ function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
   const [screen, setScreen] = useState<Screen>(initialScreen ?? "browse");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [browseFiltersOpen, setBrowseFiltersOpen] = useState(false);
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [lastBookingId, setLastBookingId] = useState<string | null>(null);
-  const toggleSaved = (id: string) =>
-    setSavedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  const { data: savedList = [] } = useSavedClasses();
+  const toggleSavedMut = useToggleSavedClass();
+  const savedIds = useMemo(() => new Set(savedList.map((c) => c.id)), [savedList]);
+  const toggleSaved = async (id: string) => {
+    try { await toggleSavedMut.mutateAsync(id); } catch (e: any) { toast.error(e?.message ?? "Failed to save"); }
+  };
   const selected = useMemo(
     () => CLASSES.find((c) => c.id === selectedId) ?? CLASSES[0] ?? null,
     [selectedId, CLASSES],
@@ -2905,18 +2917,25 @@ function ProfileScreen({
 }
 
 function ProfilePaymentScreen({ onBack }: { onBack: () => void }) {
-  const [methods, setMethods] = useState([
-    { id: "1", brand: "Visa", last4: "4242", exp: "08/27", default: true },
-    { id: "2", brand: "Mastercard", last4: "1117", exp: "03/26", default: false },
-  ]);
-  const makeDefault = (id: string) =>
-    setMethods((m) => m.map((x) => ({ ...x, default: x.id === id })));
-  const remove = (id: string) => setMethods((m) => m.filter((x) => x.id !== id));
+  const { data: methods = [], isLoading } = usePaymentMethods();
+  const setDefault = useSetDefaultPaymentMethod();
+  const removePM = useRemovePaymentMethod();
+  const makeDefault = async (id: string) => {
+    try { await setDefault.mutateAsync(id); } catch (e: any) { toast.error(e?.message ?? "Failed"); }
+  };
+  const remove = async (id: string) => {
+    try { await removePM.mutateAsync(id); } catch (e: any) { toast.error(e?.message ?? "Failed"); }
+  };
   return (
     <div className="h-full flex flex-col">
       <ScreenHeader title="Payment methods" onBack={onBack} />
       <ScreenScroll>
         <div className="px-5 pt-3 space-y-2">
+          {!isLoading && methods.length === 0 && (
+            <Card className="p-6 text-center">
+              <p className="text-xs text-muted-foreground">No saved cards yet.</p>
+            </Card>
+          )}
           {methods.map((m) => (
             <Card key={m.id} className="p-3">
               <div className="flex items-center gap-3">
@@ -2924,12 +2943,14 @@ function ProfilePaymentScreen({ onBack }: { onBack: () => void }) {
                   <CreditCard className="h-4 w-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm">
+                  <p className="font-medium text-sm capitalize">
                     {m.brand} •••• {m.last4}
                   </p>
-                  <p className="text-[11px] text-muted-foreground">Exp {m.exp}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Exp {String(m.expMonth).padStart(2, "0")}/{String(m.expYear).slice(-2)}
+                  </p>
                 </div>
-                {m.default ? (
+                {m.isDefault ? (
                   <Badge variant="secondary" className="text-[10px]">Default</Badge>
                 ) : (
                   <button
@@ -2940,7 +2961,7 @@ function ProfilePaymentScreen({ onBack }: { onBack: () => void }) {
                   </button>
                 )}
               </div>
-              {!m.default && (
+              {!m.isDefault && (
                 <button
                   onClick={() => remove(m.id)}
                   className="mt-2 text-[11px] text-muted-foreground hover:text-destructive"
@@ -2950,12 +2971,16 @@ function ProfilePaymentScreen({ onBack }: { onBack: () => void }) {
               )}
             </Card>
           ))}
-          <Button variant="outline" className="w-full mt-2">
+          <Button
+            variant="outline"
+            className="w-full mt-2"
+            onClick={() => toast.info("Add card requires Stripe Elements — coming next")}
+          >
             <Plus className="h-4 w-4 mr-1" /> Add payment method
           </Button>
           <p className="text-[10px] text-muted-foreground text-center mt-3 px-4">
             <Lock className="inline h-3 w-3 mr-1" />
-            Payments are processed securely.
+            Payments are processed securely by Stripe.
           </p>
         </div>
       </ScreenScroll>
@@ -2964,63 +2989,72 @@ function ProfilePaymentScreen({ onBack }: { onBack: () => void }) {
 }
 
 function ProfileNotificationsScreen({ onBack }: { onBack: () => void }) {
-  const [prefs, setPrefs] = useState({
-    pushBookings: true,
-    pushReminders: true,
-    pushPromos: false,
-    pushMessages: true,
-    emailBookings: true,
-    emailDigest: false,
-    emailPromos: false,
-  });
-  type Key = keyof typeof prefs;
-  const toggle = (k: Key) => setPrefs((p) => ({ ...p, [k]: !p[k] }));
-  const Row = ({ k, label, sub }: { k: Key; label: string; sub: string }) => (
+  const { data: me } = useMe();
+  const { data: profile } = useProfile(me?.id ?? null);
+  const updateNotif = useUpdateNotificationPrefs();
+  const emailOn = profile?.notificationEmail ?? true;
+  const pushOn = profile?.notificationPush ?? true;
+
+  const toggle = async (key: "notificationEmail" | "notificationPush", next: boolean) => {
+    try {
+      await updateNotif.mutateAsync({ [key]: next } as any);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not update preferences");
+    }
+  };
+
+  const Row = ({
+    on,
+    label,
+    sub,
+    onChange,
+  }: { on: boolean; label: string; sub: string; onChange: (n: boolean) => void }) => (
     <div className="py-2.5 flex items-center justify-between gap-3">
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium">{label}</p>
         <p className="text-[11px] text-muted-foreground">{sub}</p>
       </div>
       <button
-        onClick={() => toggle(k)}
+        onClick={() => onChange(!on)}
         role="switch"
-        aria-checked={prefs[k]}
+        aria-checked={on}
         className={cn(
           "relative h-6 w-10 rounded-full transition-colors shrink-0",
-          prefs[k] ? "bg-primary" : "bg-muted",
+          on ? "bg-primary" : "bg-muted",
         )}
       >
         <span
           className={cn(
             "absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-all",
-            prefs[k] ? "left-[18px]" : "left-0.5",
+            on ? "left-[18px]" : "left-0.5",
           )}
         />
       </button>
     </div>
   );
+
   return (
     <div className="h-full flex flex-col">
       <ScreenHeader title="Notifications" onBack={onBack} />
       <ScreenScroll>
         <div className="px-5 pt-3">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-1">
-            Push
-          </p>
           <Card className="px-3 divide-y">
-            <Row k="pushBookings" label="Booking updates" sub="Confirmations & changes" />
-            <Row k="pushReminders" label="Class reminders" sub="1 hour before start" />
-            <Row k="pushMessages" label="Messages from hosts" sub="Replies & questions" />
-            <Row k="pushPromos" label="Offers & promos" sub="Occasional deals" />
+            <Row
+              on={pushOn}
+              label="Push notifications"
+              sub="Bookings, reminders and messages from hosts"
+              onChange={(n) => toggle("notificationPush", n)}
+            />
+            <Row
+              on={emailOn}
+              label="Email notifications"
+              sub="Receipts, weekly digest and updates"
+              onChange={(n) => toggle("notificationEmail", n)}
+            />
           </Card>
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-1 mt-4">
-            Email
+          <p className="text-[10px] text-muted-foreground text-center mt-3 px-4">
+            More granular controls are coming soon.
           </p>
-          <Card className="px-3 divide-y">
-            <Row k="emailBookings" label="Booking receipts" sub="Always recommended" />
-            <Row k="emailDigest" label="Weekly digest" sub="New classes near you" />
-            <Row k="emailPromos" label="Promotional emails" sub="Featured hosts & events" />
-          </Card>
         </div>
       </ScreenScroll>
     </div>
@@ -3028,6 +3062,17 @@ function ProfileNotificationsScreen({ onBack }: { onBack: () => void }) {
 }
 
 function ProfileBecomeHostScreen({ onBack }: { onBack: () => void }) {
+  const { data: me } = useMe();
+  const becomeHost = useBecomeHost();
+  const alreadyHost = !!me?.isHost;
+  const handleStart = async () => {
+    try {
+      await becomeHost.mutateAsync();
+      toast.success("You're a host! Switch to the host flow to get started.");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not upgrade account");
+    }
+  };
   const benefits = [
     { icon: DollarSign, label: "Set your own price", sub: "Keep 90% of every booking" },
     { icon: CalendarDays, label: "Flexible schedule", sub: "List sessions when you're free" },
@@ -3090,11 +3135,15 @@ function ProfileBecomeHostScreen({ onBack }: { onBack: () => void }) {
         </div>
 
         <div className="px-5 mt-5 pb-2">
-          <Button className="w-full bg-gradient-hero shadow-elegant">
-            Start hosting
+          <Button
+            className="w-full bg-gradient-hero shadow-elegant"
+            onClick={handleStart}
+            disabled={alreadyHost || becomeHost.isPending}
+          >
+            {alreadyHost ? "You're already a host" : becomeHost.isPending ? "Upgrading…" : "Start hosting"}
           </Button>
           <p className="text-[10px] text-muted-foreground text-center mt-2">
-            Takes about 5 minutes
+            {alreadyHost ? "Head to the host flow to manage classes" : "Takes about 5 minutes"}
           </p>
         </div>
       </ScreenScroll>
@@ -3331,12 +3380,38 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
         address: [liveGym.address?.street, liveGym.address?.city, liveGym.address?.country]
           .filter(Boolean)
           .join(", "),
-        capacity: 20,
-        monthlyPrice: 99,
-        amenities: [],
+        capacity: liveGym.capacity ?? 20,
+        monthlyPrice: liveGym.monthlyPriceCents != null ? liveGym.monthlyPriceCents / 100 : 99,
+        amenities: liveGym.amenities ?? [],
       });
     }
   }, [liveGym]);
+
+  // Live gym memberships from backend; map to the local `GymMember` shape.
+  const { data: liveMemberships = [] } = useGymMemberships(liveGym?.id ?? null);
+  const liveMembers = useMemo<GymMember[]>(
+    () =>
+      liveMemberships.map((m) => {
+        const initials = m.email
+          .split(/[@.\s]/)
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((s) => s[0]?.toUpperCase() ?? "")
+          .join("") || "??";
+        return {
+          id: m.id,
+          name: m.email.split("@")[0],
+          initials,
+          email: m.email,
+          plan: (m.monthlyPriceCents ?? 0) > 0 ? "Monthly" : "Day pass",
+          role: "Member",
+          joined: new Date(m.joinedAt).toLocaleDateString(undefined, { month: "short", year: "numeric" }),
+          status: m.status === "active" ? "Active" : "Paused",
+        };
+      }),
+    [liveMemberships],
+  );
+  const displayMembers = liveGym ? liveMembers : members;
 
   const selected = useMemo(
     () => HOST_CLASSES.find((c) => c.id === selectedId) ?? HOST_CLASSES[0] ?? null,
@@ -3344,6 +3419,9 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
   );
   const createGymMut = useCreateGym();
   const updateGymMut = useUpdateGym();
+  const inviteMemberMut = useInviteMember();
+  const removeMemberMut = useRemoveMember();
+  const updateMemberMut = useUpdateMember();
 
 
 
@@ -3452,7 +3530,7 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
           {screen === "hpGym" && (
             <HostGymScreen
               gym={gym}
-              memberCount={members.length}
+              memberCount={displayMembers.length}
               onBack={() => setScreen("hostProfile")}
               onCreate={() => setScreen("hpGymCreate")}
               onMembers={() => setScreen("hpGymMembers")}
@@ -3480,15 +3558,41 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
           )}
           {screen === "hpGymMembers" && (
             <HostGymMembersScreen
-              members={members}
-              onChange={setMembers}
+              members={displayMembers}
+              onChange={liveGym ? undefined : setMembers}
+              onInvite={
+                liveGym
+                  ? async (email, monthlyPriceCents) => {
+                      try {
+                        await inviteMemberMut.mutateAsync({ gymId: liveGym.id, email, monthlyPriceCents });
+                        toast.success("Invite sent");
+                      } catch (e: any) {
+                        toast.error(e?.message ?? "Could not invite");
+                      }
+                    }
+                  : undefined
+              }
+              onRemove={
+                liveGym
+                  ? async (id) => {
+                      try { await removeMemberMut.mutateAsync(id); } catch (e: any) { toast.error(e?.message ?? "Failed"); }
+                    }
+                  : undefined
+              }
+              onSetStatus={
+                liveGym
+                  ? async (id, status) => {
+                      try { await updateMemberMut.mutateAsync({ id, input: { status } }); } catch (e: any) { toast.error(e?.message ?? "Failed"); }
+                    }
+                  : undefined
+              }
               onBack={() => setScreen("hpGym")}
             />
           )}
           {screen === "hpGymCoach" && (
             <HostGymCoachScreen
               gym={gym}
-              members={members}
+              members={displayMembers}
               onBack={() => setScreen("hpGym")}
               onMembers={() => setScreen("hpGymMembers")}
             />
@@ -3871,7 +3975,21 @@ function HostManageScreen({
   onBack: () => void;
   onMetrics: () => void;
 }) {
-  const attendees = HOST_ATTENDEES.slice(0, cls.booked);
+  const { data: liveAttendees } = useBookingsByClass(cls.id);
+  const attendees =
+    liveAttendees && liveAttendees.length > 0
+      ? liveAttendees.map((b) => {
+          const name = b.attendeeName ?? "Guest";
+          const initials = name
+            .split(/\s+/)
+            .map((p) => p[0])
+            .filter(Boolean)
+            .slice(0, 2)
+            .join("")
+            .toUpperCase();
+          return { name, initials, note: null as string | null };
+        })
+      : HOST_ATTENDEES.slice(0, cls.booked);
   return (
     <div className="h-full flex flex-col">
       <ScreenScroll>
@@ -4398,6 +4516,8 @@ function HostSupportScreen({ onBack }: { onBack: () => void }) {
 function HostMetricsScreen({ onBack }: { onBack: () => void }) {
   const range = ["7d", "30d", "90d"];
   const [active, setActive] = useState(1);
+  const period = active === 0 ? "week" : active === 1 ? "month" : "year";
+  const { data: liveFunnel } = useMetricsFunnel(period);
 
   const kpis = [
     { icon: Eye, label: "Profile views", value: "3,482", delta: "+24%", up: true },
@@ -4468,6 +4588,33 @@ function HostMetricsScreen({ onBack }: { onBack: () => void }) {
             <Activity className="h-3 w-3" /> Live
           </span>
         </div>
+
+        {liveFunnel && (
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Live · {liveFunnel.period}
+                </p>
+                <p className="font-display text-lg font-semibold">Views → bookings</p>
+              </div>
+              <Badge variant="secondary" className="text-[10px]">
+                {(liveFunnel.conversions * 100).toFixed(1)}%
+              </Badge>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="p-3 rounded-xl border bg-muted/30">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Views</p>
+                <p className="font-display text-xl font-semibold mt-1">{liveFunnel.views}</p>
+              </div>
+              <div className="p-3 rounded-xl border bg-muted/30">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Bookings</p>
+                <p className="font-display text-xl font-semibold mt-1">{liveFunnel.bookings}</p>
+              </div>
+            </div>
+          </Card>
+        )}
+
 
         {/* KPI grid */}
         <div className="grid grid-cols-2 gap-2">
@@ -5165,10 +5312,16 @@ function HostGymEditScreen({
 function HostGymMembersScreen({
   members,
   onChange,
+  onInvite,
+  onRemove,
+  onSetStatus,
   onBack,
 }: {
   members: GymMember[];
-  onChange: (m: GymMember[]) => void;
+  onChange?: (m: GymMember[]) => void;
+  onInvite?: (email: string, monthlyPriceCents?: number) => void | Promise<void>;
+  onRemove?: (id: string) => void | Promise<void>;
+  onSetStatus?: (id: string, status: string) => void | Promise<void>;
   onBack: () => void;
 }) {
   const [query, setQuery] = useState("");
@@ -5188,32 +5341,46 @@ function HostGymMembersScreen({
   });
 
   const setRole = (id: string, role: GymMember["role"]) =>
-    onChange(members.map((m) => (m.id === id ? { ...m, role } : m)));
-  const setStatus = (id: string, status: GymMember["status"]) =>
-    onChange(members.map((m) => (m.id === id ? { ...m, status } : m)));
-  const remove = (id: string) => onChange(members.filter((m) => m.id !== id));
+    onChange?.(members.map((m) => (m.id === id ? { ...m, role } : m)));
+  const setStatus = (id: string, status: GymMember["status"]) => {
+    if (onSetStatus) {
+      onSetStatus(id, status === "Active" ? "active" : "removed");
+    } else {
+      onChange?.(members.map((m) => (m.id === id ? { ...m, status } : m)));
+    }
+  };
+  const remove = (id: string) => {
+    if (onRemove) onRemove(id);
+    else onChange?.(members.filter((m) => m.id !== id));
+  };
   const add = () => {
-    if (!newName.trim() || !newEmail.trim()) return;
-    const initials = newName
-      .trim()
-      .split(/\s+/)
-      .map((p) => p[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
-    onChange([
-      ...members,
-      {
-        id: `m${Date.now()}`,
-        name: newName.trim(),
-        email: newEmail.trim(),
-        initials,
-        plan: newPlan,
-        role: "Member",
-        joined: "Today",
-        status: "Pending",
-      },
-    ]);
+    if (!newEmail.trim()) return;
+    const monthlyPriceCents =
+      newPlan === "Monthly" ? 9900 : newPlan === "Annual" ? 89900 : 0;
+    if (onInvite) {
+      onInvite(newEmail.trim(), monthlyPriceCents);
+    } else {
+      const initials = (newName || newEmail)
+        .trim()
+        .split(/\s+/)
+        .map((p) => p[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase();
+      onChange?.([
+        ...members,
+        {
+          id: `m${Date.now()}`,
+          name: newName.trim() || newEmail.split("@")[0],
+          email: newEmail.trim(),
+          initials,
+          plan: newPlan,
+          role: "Member",
+          joined: "Today",
+          status: "Pending",
+        },
+      ]);
+    }
     setNewName("");
     setNewEmail("");
     setAdding(false);
