@@ -4574,6 +4574,33 @@ function HostMetricsScreen({ onBack }: { onBack: () => void }) {
           </span>
         </div>
 
+        {liveFunnel && (
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Live · {liveFunnel.period}
+                </p>
+                <p className="font-display text-lg font-semibold">Views → bookings</p>
+              </div>
+              <Badge variant="secondary" className="text-[10px]">
+                {(liveFunnel.conversions * 100).toFixed(1)}%
+              </Badge>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="p-3 rounded-xl border bg-muted/30">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Views</p>
+                <p className="font-display text-xl font-semibold mt-1">{liveFunnel.views}</p>
+              </div>
+              <div className="p-3 rounded-xl border bg-muted/30">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Bookings</p>
+                <p className="font-display text-xl font-semibold mt-1">{liveFunnel.bookings}</p>
+              </div>
+            </div>
+          </Card>
+        )}
+
+
         {/* KPI grid */}
         <div className="grid grid-cols-2 gap-2">
           {kpis.map((k) => (
