@@ -430,6 +430,7 @@ function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
   const [screen, setScreen] = useState<Screen>(initialScreen ?? "browse");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [browseFiltersOpen, setBrowseFiltersOpen] = useState(false);
+  const [lastBookingId, setLastBookingId] = useState<string | null>(null);
   const { data: savedList = [] } = useSavedClasses();
   const toggleSavedMut = useToggleSavedClass();
   const savedIds = useMemo(() => new Set(savedList.map((c) => c.id)), [savedList]);
