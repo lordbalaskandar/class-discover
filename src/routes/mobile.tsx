@@ -3063,6 +3063,17 @@ function ProfileNotificationsScreen({ onBack }: { onBack: () => void }) {
 }
 
 function ProfileBecomeHostScreen({ onBack }: { onBack: () => void }) {
+  const { data: me } = useMe();
+  const becomeHost = useBecomeHost();
+  const alreadyHost = !!me?.isHost;
+  const handleStart = async () => {
+    try {
+      await becomeHost.mutateAsync();
+      toast.success("You're a host! Switch to the host flow to get started.");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not upgrade account");
+    }
+  };
   const benefits = [
     { icon: DollarSign, label: "Set your own price", sub: "Keep 90% of every booking" },
     { icon: CalendarDays, label: "Flexible schedule", sub: "List sessions when you're free" },
