@@ -464,8 +464,8 @@ function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
       setBookingBusy(true);
       await createPayment.mutateAsync({
         bookingId: lastBookingId,
-        amount: (selected.price + 2.5) * 100,
-        currency: "USD",
+        amount: Math.round(selected.price * 100),
+        currency: "eur",
       });
       setScreen("confirmation");
     } catch (e: any) {
