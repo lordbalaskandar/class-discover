@@ -3974,7 +3974,21 @@ function HostManageScreen({
   onBack: () => void;
   onMetrics: () => void;
 }) {
-  const attendees = HOST_ATTENDEES.slice(0, cls.booked);
+  const { data: liveAttendees } = useBookingsByClass(cls.id);
+  const attendees =
+    liveAttendees && liveAttendees.length > 0
+      ? liveAttendees.map((b) => {
+          const name = b.attendeeName ?? "Guest";
+          const initials = name
+            .split(/\s+/)
+            .map((p) => p[0])
+            .filter(Boolean)
+            .slice(0, 2)
+            .join("")
+            .toUpperCase();
+          return { name, initials, note: null as string | null };
+        })
+      : HOST_ATTENDEES.slice(0, cls.booked);
   return (
     <div className="h-full flex flex-col">
       <ScreenScroll>
