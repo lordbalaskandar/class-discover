@@ -52,6 +52,7 @@ import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 import { PulstractAuthProvider, usePulstractAuth } from "@/lib/pulstract/auth";
 import { ServiceHealthBar } from "@/components/pulstract/ServiceHealthBar";
+import { GlobalLoadingIndicator } from "@/components/pulstract/GlobalLoadingIndicator";
 import { AuthScreens } from "@/components/mobile/AuthScreens";
 import {
   useLiveClasses,
@@ -312,6 +313,7 @@ function MobileShowcaseInner() {
 
   return (
     <div className="min-h-screen">
+      <GlobalLoadingIndicator />
       <SiteHeader />
       <div className="container mx-auto px-4 py-10 max-w-5xl">
         <div className="text-center mb-8">
