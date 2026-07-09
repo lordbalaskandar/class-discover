@@ -4501,6 +4501,8 @@ function HostSupportScreen({ onBack }: { onBack: () => void }) {
 function HostMetricsScreen({ onBack }: { onBack: () => void }) {
   const range = ["7d", "30d", "90d"];
   const [active, setActive] = useState(1);
+  const period = active === 0 ? "week" : active === 1 ? "month" : "year";
+  const { data: liveFunnel } = useMetricsFunnel(period);
 
   const kpis = [
     { icon: Eye, label: "Profile views", value: "3,482", delta: "+24%", up: true },
