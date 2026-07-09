@@ -63,11 +63,24 @@ import {
 } from "@/lib/pulstract/live-data";
 import {
   useMe,
+  useProfile,
   useCreateBooking,
   useCreatePaymentIntent,
   useCreateClass,
   useCreateGym,
   useUpdateGym,
+  useSavedClasses,
+  useToggleSavedClass,
+  usePaymentMethods,
+  useRemovePaymentMethod,
+  useSetDefaultPaymentMethod,
+  useUpdateNotificationPrefs,
+  useBecomeHost,
+  useMetricsFunnel,
+  useGymMemberships,
+  useInviteMember,
+  useUpdateMember,
+  useRemoveMember,
 } from "@/lib/pulstract/hooks";
 import { toast } from "sonner";
 
