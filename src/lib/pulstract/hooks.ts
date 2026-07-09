@@ -421,6 +421,201 @@ export function useSubmitReview() {
   });
 }
 
+
+/* ============================= New endpoint hooks ============================= */
+
+export function useSavedClasses() {
+  const token = useToken();
+  return useQuery({
+    enabled: !!token,
+    queryKey: ["savedClasses"],
+    queryFn: async () => {
+      const d = await gql<{ savedClasses: ApiClass[] }>(Q_SAVED_CLASSES, undefined, token);
+      return d.savedClasses ?? [];
+    },
+  });
+}
+
+export function useToggleSavedClass() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (classId: string) => {
+      const d = await gql<{ toggleSavedClass: boolean }>(M_TOGGLE_SAVED, { id: classId }, token);
+      return d.toggleSavedClass;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["savedClasses"] }),
+  });
+}
+
+export function usePaymentMethods() {
+  const token = useToken();
+  return useQuery({
+    enabled: !!token,
+    queryKey: ["paymentMethods"],
+    queryFn: async () => {
+      const d = await gql<{ paymentMethods: ApiPaymentMethod[] }>(Q_PAYMENT_METHODS, undefined, token);
+      return d.paymentMethods ?? [];
+    },
+  });
+}
+
+export function useAddPaymentMethod() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (paymentMethodId: string) => {
+      const d = await gql<{ addPaymentMethod: ApiPaymentMethod }>(
+        M_ADD_PAYMENT_METHOD,
+        { p: paymentMethodId },
+        token,
+      );
+      return d.addPaymentMethod;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["paymentMethods"] }),
+  });
+}
+
+export function useRemovePaymentMethod() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await gql<{ removePaymentMethod: boolean }>(M_REMOVE_PAYMENT_METHOD, { id }, token);
+      return id;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["paymentMethods"] }),
+  });
+}
+
+export function useSetDefaultPaymentMethod() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const d = await gql<{ setDefaultPaymentMethod: ApiPaymentMethod }>(
+        M_SET_DEFAULT_PAYMENT_METHOD,
+        { id },
+        token,
+      );
+      return d.setDefaultPaymentMethod;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["paymentMethods"] }),
+  });
+}
+
+export function useMyGymReviews() {
+  const token = useToken();
+  return useQuery({
+    enabled: !!token,
+    queryKey: ["myGymReviews"],
+    queryFn: async () => {
+      const d = await gql<{ myGymReviews: ApiReview[] }>(Q_MY_GYM_REVIEWS, undefined, token);
+      return d.myGymReviews ?? [];
+    },
+  });
+}
+
+export function useMetricsFunnel(period: string = "month") {
+  const token = useToken();
+  return useQuery({
+    enabled: !!token,
+    queryKey: ["metricsFunnel", period],
+    queryFn: async () => {
+      const d = await gql<{ metricsFunnel: ApiMetricsFunnel }>(Q_METRICS_FUNNEL, { p: period }, token);
+      return d.metricsFunnel;
+    },
+  });
+}
+
+export function useGymMemberships(gymId: string | null) {
+  const token = useToken();
+  return useQuery({
+    enabled: !!token && !!gymId,
+    queryKey: ["gymMemberships", gymId],
+    queryFn: async () => {
+      const d = await gql<{ gymMemberships: ApiGymMembership[] }>(
+        Q_GYM_MEMBERSHIPS,
+        { g: gymId },
+        token,
+      );
+      return d.gymMemberships ?? [];
+    },
+  });
+}
+
+export function useInviteMember() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { gymId: string; email: string; monthlyPriceCents?: number }) => {
+      const d = await gql<{ inviteMember: ApiGymMembership }>(M_INVITE_MEMBER, { i: input }, token);
+      return d.inviteMember;
+    },
+    onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: ["gymMemberships", vars.gymId] }),
+  });
+}
+
+export function useUpdateMember() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      input,
+    }: {
+      id: string;
+      input: { monthlyPriceCents?: number; status?: string };
+    }) => {
+      const d = await gql<{ updateMember: ApiGymMembership | null }>(
+        M_UPDATE_MEMBER,
+        { id, i: input },
+        token,
+      );
+      return d.updateMember;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["gymMemberships"] }),
+  });
+}
+
+export function useRemoveMember() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await gql<{ removeMember: boolean }>(M_REMOVE_MEMBER, { id }, token);
+      return id;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["gymMemberships"] }),
+  });
+}
+
+export function useBecomeHost() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const d = await gql<{ becomeHost: ApiUser }>(M_BECOME_HOST, undefined, token);
+      return d.becomeHost;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["me"] }),
+  });
+}
+
+export function useUpdateNotificationPrefs() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { notificationEmail?: boolean; notificationPush?: boolean }) => {
+      const d = await gql<{
+        updateNotificationPreferences: { userId: string; notificationEmail: boolean; notificationPush: boolean };
+      }>(M_UPDATE_NOTIF, { i: input }, token);
+      return d.updateNotificationPreferences;
+    },
+    onSuccess: (d) => qc.invalidateQueries({ queryKey: ["profile", d.userId] }),
+  });
+}
+
 /* ============================= Helpers ============================= */
 
 /** Cents → "$22" style label (no trailing zeros when whole). */
