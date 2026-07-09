@@ -2918,18 +2918,25 @@ function ProfileScreen({
 }
 
 function ProfilePaymentScreen({ onBack }: { onBack: () => void }) {
-  const [methods, setMethods] = useState([
-    { id: "1", brand: "Visa", last4: "4242", exp: "08/27", default: true },
-    { id: "2", brand: "Mastercard", last4: "1117", exp: "03/26", default: false },
-  ]);
-  const makeDefault = (id: string) =>
-    setMethods((m) => m.map((x) => ({ ...x, default: x.id === id })));
-  const remove = (id: string) => setMethods((m) => m.filter((x) => x.id !== id));
+  const { data: methods = [], isLoading } = usePaymentMethods();
+  const setDefault = useSetDefaultPaymentMethod();
+  const removePM = useRemovePaymentMethod();
+  const makeDefault = async (id: string) => {
+    try { await setDefault.mutateAsync(id); } catch (e: any) { toast.error(e?.message ?? "Failed"); }
+  };
+  const remove = async (id: string) => {
+    try { await removePM.mutateAsync(id); } catch (e: any) { toast.error(e?.message ?? "Failed"); }
+  };
   return (
     <div className="h-full flex flex-col">
       <ScreenHeader title="Payment methods" onBack={onBack} />
       <ScreenScroll>
         <div className="px-5 pt-3 space-y-2">
+          {!isLoading && methods.length === 0 && (
+            <Card className="p-6 text-center">
+              <p className="text-xs text-muted-foreground">No saved cards yet.</p>
+            </Card>
+          )}
           {methods.map((m) => (
             <Card key={m.id} className="p-3">
               <div className="flex items-center gap-3">
@@ -2937,12 +2944,14 @@ function ProfilePaymentScreen({ onBack }: { onBack: () => void }) {
                   <CreditCard className="h-4 w-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm">
+                  <p className="font-medium text-sm capitalize">
                     {m.brand} •••• {m.last4}
                   </p>
-                  <p className="text-[11px] text-muted-foreground">Exp {m.exp}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    Exp {String(m.expMonth).padStart(2, "0")}/{String(m.expYear).slice(-2)}
+                  </p>
                 </div>
-                {m.default ? (
+                {m.isDefault ? (
                   <Badge variant="secondary" className="text-[10px]">Default</Badge>
                 ) : (
                   <button
@@ -2953,7 +2962,7 @@ function ProfilePaymentScreen({ onBack }: { onBack: () => void }) {
                   </button>
                 )}
               </div>
-              {!m.default && (
+              {!m.isDefault && (
                 <button
                   onClick={() => remove(m.id)}
                   className="mt-2 text-[11px] text-muted-foreground hover:text-destructive"
@@ -2963,12 +2972,16 @@ function ProfilePaymentScreen({ onBack }: { onBack: () => void }) {
               )}
             </Card>
           ))}
-          <Button variant="outline" className="w-full mt-2">
+          <Button
+            variant="outline"
+            className="w-full mt-2"
+            onClick={() => toast.info("Add card requires Stripe Elements — coming next")}
+          >
             <Plus className="h-4 w-4 mr-1" /> Add payment method
           </Button>
           <p className="text-[10px] text-muted-foreground text-center mt-3 px-4">
             <Lock className="inline h-3 w-3 mr-1" />
-            Payments are processed securely.
+            Payments are processed securely by Stripe.
           </p>
         </div>
       </ScreenScroll>
