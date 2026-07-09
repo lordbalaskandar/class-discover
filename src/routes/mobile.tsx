@@ -2990,63 +2990,72 @@ function ProfilePaymentScreen({ onBack }: { onBack: () => void }) {
 }
 
 function ProfileNotificationsScreen({ onBack }: { onBack: () => void }) {
-  const [prefs, setPrefs] = useState({
-    pushBookings: true,
-    pushReminders: true,
-    pushPromos: false,
-    pushMessages: true,
-    emailBookings: true,
-    emailDigest: false,
-    emailPromos: false,
-  });
-  type Key = keyof typeof prefs;
-  const toggle = (k: Key) => setPrefs((p) => ({ ...p, [k]: !p[k] }));
-  const Row = ({ k, label, sub }: { k: Key; label: string; sub: string }) => (
+  const { data: me } = useMe();
+  const { data: profile } = useProfile(me?.id ?? null);
+  const updateNotif = useUpdateNotificationPrefs();
+  const emailOn = profile?.notificationEmail ?? true;
+  const pushOn = profile?.notificationPush ?? true;
+
+  const toggle = async (key: "notificationEmail" | "notificationPush", next: boolean) => {
+    try {
+      await updateNotif.mutateAsync({ [key]: next } as any);
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not update preferences");
+    }
+  };
+
+  const Row = ({
+    on,
+    label,
+    sub,
+    onChange,
+  }: { on: boolean; label: string; sub: string; onChange: (n: boolean) => void }) => (
     <div className="py-2.5 flex items-center justify-between gap-3">
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium">{label}</p>
         <p className="text-[11px] text-muted-foreground">{sub}</p>
       </div>
       <button
-        onClick={() => toggle(k)}
+        onClick={() => onChange(!on)}
         role="switch"
-        aria-checked={prefs[k]}
+        aria-checked={on}
         className={cn(
           "relative h-6 w-10 rounded-full transition-colors shrink-0",
-          prefs[k] ? "bg-primary" : "bg-muted",
+          on ? "bg-primary" : "bg-muted",
         )}
       >
         <span
           className={cn(
             "absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-all",
-            prefs[k] ? "left-[18px]" : "left-0.5",
+            on ? "left-[18px]" : "left-0.5",
           )}
         />
       </button>
     </div>
   );
+
   return (
     <div className="h-full flex flex-col">
       <ScreenHeader title="Notifications" onBack={onBack} />
       <ScreenScroll>
         <div className="px-5 pt-3">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-1">
-            Push
-          </p>
           <Card className="px-3 divide-y">
-            <Row k="pushBookings" label="Booking updates" sub="Confirmations & changes" />
-            <Row k="pushReminders" label="Class reminders" sub="1 hour before start" />
-            <Row k="pushMessages" label="Messages from hosts" sub="Replies & questions" />
-            <Row k="pushPromos" label="Offers & promos" sub="Occasional deals" />
+            <Row
+              on={pushOn}
+              label="Push notifications"
+              sub="Bookings, reminders and messages from hosts"
+              onChange={(n) => toggle("notificationPush", n)}
+            />
+            <Row
+              on={emailOn}
+              label="Email notifications"
+              sub="Receipts, weekly digest and updates"
+              onChange={(n) => toggle("notificationEmail", n)}
+            />
           </Card>
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-1 mt-4">
-            Email
+          <p className="text-[10px] text-muted-foreground text-center mt-3 px-4">
+            More granular controls are coming soon.
           </p>
-          <Card className="px-3 divide-y">
-            <Row k="emailBookings" label="Booking receipts" sub="Always recommended" />
-            <Row k="emailDigest" label="Weekly digest" sub="New classes near you" />
-            <Row k="emailPromos" label="Promotional emails" sub="Featured hosts & events" />
-          </Card>
         </div>
       </ScreenScroll>
     </div>
