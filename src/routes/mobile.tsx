@@ -3529,7 +3529,7 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
           {screen === "hpGym" && (
             <HostGymScreen
               gym={gym}
-              memberCount={members.length}
+              memberCount={displayMembers.length}
               onBack={() => setScreen("hostProfile")}
               onCreate={() => setScreen("hpGymCreate")}
               onMembers={() => setScreen("hpGymMembers")}
@@ -3557,15 +3557,41 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
           )}
           {screen === "hpGymMembers" && (
             <HostGymMembersScreen
-              members={members}
-              onChange={setMembers}
+              members={displayMembers}
+              onChange={liveGym ? undefined : setMembers}
+              onInvite={
+                liveGym
+                  ? async (email, monthlyPriceCents) => {
+                      try {
+                        await inviteMemberMut.mutateAsync({ gymId: liveGym.id, email, monthlyPriceCents });
+                        toast.success("Invite sent");
+                      } catch (e: any) {
+                        toast.error(e?.message ?? "Could not invite");
+                      }
+                    }
+                  : undefined
+              }
+              onRemove={
+                liveGym
+                  ? async (id) => {
+                      try { await removeMemberMut.mutateAsync(id); } catch (e: any) { toast.error(e?.message ?? "Failed"); }
+                    }
+                  : undefined
+              }
+              onSetStatus={
+                liveGym
+                  ? async (id, status) => {
+                      try { await updateMemberMut.mutateAsync({ id, input: { status } }); } catch (e: any) { toast.error(e?.message ?? "Failed"); }
+                    }
+                  : undefined
+              }
               onBack={() => setScreen("hpGym")}
             />
           )}
           {screen === "hpGymCoach" && (
             <HostGymCoachScreen
               gym={gym}
-              members={members}
+              members={displayMembers}
               onBack={() => setScreen("hpGym")}
               onMembers={() => setScreen("hpGymMembers")}
             />
