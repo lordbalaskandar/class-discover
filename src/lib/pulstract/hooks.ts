@@ -252,10 +252,12 @@ export function useCreateBooking() {
   const token = useToken();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { classId: string; scheduledAt: string }) => {
+    mutationFn: async (input: { classId: string; scheduledAt?: string }) => {
+      // Backend `CreateBookingInput` currently accepts only `classId`;
+      // scheduledAt is inferred from the class start time on the server.
       const d = await gql<{ createBooking: ApiBooking }>(
         M_CREATE_BOOKING,
-        { i: input },
+        { i: { classId: input.classId } },
         token,
       );
       return d.createBooking;
