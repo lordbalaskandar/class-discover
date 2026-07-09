@@ -3379,12 +3379,38 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
         address: [liveGym.address?.street, liveGym.address?.city, liveGym.address?.country]
           .filter(Boolean)
           .join(", "),
-        capacity: 20,
-        monthlyPrice: 99,
-        amenities: [],
+        capacity: liveGym.capacity ?? 20,
+        monthlyPrice: liveGym.monthlyPriceCents != null ? liveGym.monthlyPriceCents / 100 : 99,
+        amenities: liveGym.amenities ?? [],
       });
     }
   }, [liveGym]);
+
+  // Live gym memberships from backend; map to the local `GymMember` shape.
+  const { data: liveMemberships = [] } = useGymMemberships(liveGym?.id ?? null);
+  const liveMembers = useMemo<GymMember[]>(
+    () =>
+      liveMemberships.map((m) => {
+        const initials = m.email
+          .split(/[@.\s]/)
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((s) => s[0]?.toUpperCase() ?? "")
+          .join("") || "??";
+        return {
+          id: m.id,
+          name: m.email.split("@")[0],
+          initials,
+          email: m.email,
+          plan: (m.monthlyPriceCents ?? 0) > 0 ? "Monthly" : "Day pass",
+          role: "Member",
+          joined: new Date(m.joinedAt).toLocaleDateString(undefined, { month: "short", year: "numeric" }),
+          status: m.status === "active" ? "Active" : "Paused",
+        };
+      }),
+    [liveMemberships],
+  );
+  const displayMembers = liveGym ? liveMembers : members;
 
   const selected = useMemo(
     () => HOST_CLASSES.find((c) => c.id === selectedId) ?? HOST_CLASSES[0] ?? null,
@@ -3392,6 +3418,9 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
   );
   const createGymMut = useCreateGym();
   const updateGymMut = useUpdateGym();
+  const inviteMemberMut = useInviteMember();
+  const removeMemberMut = useRemoveMember();
+  const updateMemberMut = useUpdateMember();
 
 
 
