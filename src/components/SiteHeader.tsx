@@ -14,7 +14,6 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthModal } from "@/components/AuthModal";
-import { AppSwitcher } from "@/components/AppSwitcher";
 
 function useThemeToggle() {
   const [isDark, setIsDark] = useState(false);
