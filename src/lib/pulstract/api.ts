@@ -95,36 +95,35 @@ export const M_REMOVE_PAYMENT_METHOD = `mutation RPM($id:String!){ removePayment
 export const M_SET_DEFAULT_PAYMENT_METHOD = `mutation SDPM($id:String!){ setDefaultPaymentMethod(id:$id){ id brand last4 isDefault } }`;
 
 /* Host operations — payouts, templates, availability, reviews, support */
-export const Q_PAYOUTS = `query PO($p:Pagination){ payouts(pagination:$p){ items{ id amount currency status scheduledAt paidAt createdAt } nextToken } }`;
-export const Q_NEXT_PAYOUT = `query NP{ nextPayout{ amount currency scheduledAt } }`;
-export const Q_HOST_EARNINGS = `query HE($p:String){ hostEarnings(period:$p){ period total currency series{ label value } recent{ id title amount date } } }`;
-export const Q_HOST_PAYOUT_ACCOUNT = `query HPA{ hostPayoutAccount{ id status brand last4 currency payoutSchedule } }`;
-export const Q_CLASS_TEMPLATES = `query CT{ classTemplates{ id title description activityType durationMinutes capacity priceCents uses } }`;
-export const Q_HOST_AVAILABILITY = `query HA{ hostAvailability{ acceptingBookings weekly{ day slots{ start end } } blackouts{ id startDate endDate reason } } }`;
-export const Q_HOST_SUPPORT_TICKETS = `query HST{ hostSupportTickets{ id subject status createdAt lastMessageAt } }`;
-export const Q_TOP_CLASSES = `query TC($p:String){ topClasses(period:$p){ classId title fillRate rating repeat } }`;
-export const Q_ATTENDANCE_STATS = `query AS($p:String){ attendanceStats(period:$p){ label impressions views } }`;
+export const Q_PAYOUTS = `query PO($p:Pagination){ payouts(pagination:$p){ items{ id amountCents currency status arrivalDate createdAt failureMessage } nextToken } }`;
+export const Q_NEXT_PAYOUT = `query NP{ nextPayout{ id amountCents currency status arrivalDate createdAt failureMessage } }`;
+export const Q_HOST_EARNINGS = `query HE($p:String!){ hostEarnings(period:$p){ period grossCents netCents platformFeeCents refundedCents bookingCount series{ date grossCents netCents bookings } } }`;
+export const Q_HOST_PAYOUT_ACCOUNT = `query HPA{ hostPayoutAccount{ status payoutsEnabled requirementsDue bankLast4 availableCents pendingCents currency } }`;
+export const Q_CLASS_TEMPLATES = `query CT{ classTemplates{ id gymId title description activityType durationMinutes capacity priceCents createdAt updatedAt } }`;
+export const Q_HOST_AVAILABILITY = `query HA{ hostAvailability{ timezone weekly{ weekday startMinutes endMinutes } blackouts{ date reason } } }`;
+export const Q_HOST_SUPPORT_TICKETS = `query HST{ hostSupportTickets{ id subject body status createdAt } }`;
+export const Q_TOP_CLASSES = `query TC($p:String!){ topClasses(period:$p){ classId title bookings revenueCents } }`;
+export const Q_ATTENDANCE_STATS = `query AS($p:String!){ attendanceStats(period:$p){ period scheduled attended noShows cancellations } }`;
+export const Q_HOST_RETENTION = `query HR($p:String!){ hostRetention(period:$p){ period ltvCents activeMembers atRiskCount cohorts{ cohort size retained } } }`;
 
-export const M_CREATE_TEMPLATE = `mutation CTP($i:CreateClassTemplateInput!){ createClassTemplate(input:$i){ id title activityType durationMinutes capacity priceCents uses } }`;
-export const M_UPDATE_TEMPLATE = `mutation UTP($id:ID!,$i:UpdateClassTemplateInput!){ updateClassTemplate(id:$id,input:$i){ id title } }`;
+export const M_CREATE_TEMPLATE = `mutation CTP($i:CreateClassTemplateInput!){ createClassTemplate(input:$i){ id title activityType durationMinutes capacity priceCents } }`;
+export const M_UPDATE_TEMPLATE = `mutation UTP($id:ID!,$i:CreateClassTemplateInput!){ updateClassTemplate(id:$id,input:$i){ id title } }`;
 export const M_DELETE_TEMPLATE = `mutation DTP($id:ID!){ deleteClassTemplate(id:$id) }`;
-export const M_SET_HOST_AVAIL = `mutation SHA($i:SetHostAvailabilityInput!){ setHostAvailability(input:$i){ acceptingBookings } }`;
-export const M_CREATE_BLACKOUT = `mutation CB($i:CreateBlackoutInput!){ createBlackout(input:$i){ id startDate endDate reason } }`;
-export const M_DELETE_BLACKOUT = `mutation DB($id:ID!){ deleteBlackout(id:$id) }`;
-export const M_CREATE_SUPPORT = `mutation CS($i:CreateSupportTicketInput!){ createSupportTicket(input:$i){ id subject status } }`;
-export const M_RESPOND_REVIEW = `mutation RR($id:ID!,$r:String!){ respondToReview(id:$id, response:$r){ id response respondedAt } }`;
-export const M_FLAG_REVIEW = `mutation FR($id:ID!,$r:String!){ flagReview(id:$id, reason:$r) }`;
-export const M_SUBMIT_PAYOUT_PROFILE = `mutation SPP($i:SubmitHostPayoutProfileInput!){ submitHostPayoutProfile(input:$i){ id status brand last4 } }`;
-export const M_CASH_OUT = `mutation CO{ cashOutHost{ id amount status } }`;
+export const M_SET_HOST_AVAIL = `mutation SHA($i:SetHostAvailabilityInput!){ setHostAvailability(input:$i){ timezone weekly{ weekday startMinutes endMinutes } blackouts{ date reason } } }`;
+export const M_CREATE_SUPPORT = `mutation CS($s:String!,$b:String!){ createSupportTicket(subject:$s, body:$b){ id subject body status createdAt } }`;
+export const M_RESPOND_REVIEW = `mutation RR($id:ID!,$r:String!){ respondToReview(reviewId:$id, response:$r){ id response respondedAt } }`;
+export const M_FLAG_REVIEW = `mutation FR($id:ID!,$r:String!){ flagReview(reviewId:$id, reason:$r) }`;
+export const M_SUBMIT_PAYOUT_PROFILE = `mutation SPP($i:HostPayoutProfileInput!){ submitHostPayoutProfile(input:$i){ status payoutsEnabled bankLast4 availableCents pendingCents currency } }`;
+export const M_CASH_OUT = `mutation CO{ cashOutHost{ id amountCents currency status arrivalDate createdAt } }`;
 
-export type ApiPayout = { id: string; amount: number; currency: string; status: string; scheduledAt?: string; paidAt?: string | null; createdAt: string };
-export type ApiHostEarnings = { period: string; total: number; currency: string; series: { label: string; value: number }[]; recent: { id: string; title: string; amount: number; date: string }[] };
-export type ApiHostPayoutAccount = { id: string; status: string; brand?: string | null; last4?: string | null; currency?: string | null; payoutSchedule?: string | null };
-export type ApiClassTemplate = { id: string; title: string; description?: string | null; activityType: string; durationMinutes: number; capacity: number; priceCents: number; uses?: number };
-export type ApiHostAvailability = { acceptingBookings: boolean; weekly: { day: string; slots: { start: string; end: string }[] }[]; blackouts: { id: string; startDate: string; endDate: string; reason?: string | null }[] };
-export type ApiSupportTicket = { id: string; subject: string; status: string; createdAt: string; lastMessageAt?: string | null };
-export type ApiTopClass = { classId: string; title: string; fillRate: number; rating: number; repeat: number };
-export type ApiAttendanceStat = { label: string; impressions: number; views: number };
+export type ApiPayout = { id: string; amountCents: number; currency: string; status: string; arrivalDate?: string | null; createdAt: string; failureMessage?: string | null };
+export type ApiHostEarnings = { period: string; grossCents: number; netCents: number; platformFeeCents: number; refundedCents: number; bookingCount: number; series: { date: string; grossCents: number; netCents: number; bookings: number }[] };
+export type ApiHostPayoutAccount = { status: string; payoutsEnabled: boolean; requirementsDue: string[]; bankLast4?: string | null; availableCents: number; pendingCents: number; currency: string };
+export type ApiClassTemplate = { id: string; gymId: string; title: string; description?: string | null; activityType: string; durationMinutes: number; capacity: number; priceCents: number; createdAt: string; updatedAt: string };
+export type ApiHostAvailability = { timezone: string; weekly: { weekday: number; startMinutes: number; endMinutes: number }[]; blackouts: { date: string; reason?: string | null }[] };
+export type ApiSupportTicket = { id: string; subject: string; body: string; status: string; createdAt: string };
+export type ApiTopClass = { classId: string; title: string; bookings: number; revenueCents: number };
+export type ApiAttendanceStats = { period: string; scheduled: number; attended: number; noShows: number; cancellations: number };
 
 /* ============================================================ */
 /* Types (loose — the gateway is source of truth)               */
