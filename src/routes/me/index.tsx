@@ -47,7 +47,7 @@ function MePage() {
     { label: "Payment methods", sub: "Visa •••• 4242", icon: CreditCard, to: "/me/payment" as const },
     { label: "Saved classes", sub: savedCount === 0 ? "No saved classes yet" : `${savedCount} saved`, icon: Heart, to: "/saved" as const },
     { label: "Notifications", sub: "Push & email", icon: Bell, to: "/me/notifications" as const },
-    
+    { label: "Become a host", sub: "Share your craft with the community", icon: Sparkles, to: "/me/become-host" as const },
     { label: "Help & support", sub: "FAQ, contact us", icon: HelpCircle, to: "/me/help" as const },
   ];
 
