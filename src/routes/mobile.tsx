@@ -312,18 +312,53 @@ const CLASSES: ClassItem[] = [
 ];
 
 function MobileShowcase() {
+  return <MobileShowcaseInner />;
+}
+
+/**
+ * Signed-in banner shown above each phone. Also exposes a sign-out control
+ * scoped to the surrounding PulstractAuthProvider.
+ */
+function SessionBanner() {
+  const { session, signOut, scope } = usePulstractAuth();
+  if (!session) return null;
   return (
-    <PulstractAuthProvider>
-      <MobileShowcaseInner />
-    </PulstractAuthProvider>
+    <div className="flex items-center justify-between text-xs bg-card border rounded-md px-3 py-2 mb-3">
+      <span className="text-muted-foreground">
+        <span className="font-medium capitalize text-foreground/80 mr-1">{scope}</span>
+        signed in as <span className="font-semibold text-foreground">{session.email}</span>
+      </span>
+      <button
+        onClick={signOut}
+        className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+      >
+        <LogOut className="h-3 w-3" /> Sign out
+      </button>
+    </div>
   );
+}
+
+/**
+ * Phone-shaped auth or content wrapper: renders the sign-in screen when there
+ * is no session for the surrounding scope, otherwise renders `children` (the
+ * flow itself). Each section on this page mounts its own copy with a distinct
+ * auth scope so User and Host sign-ins never collide.
+ */
+function ScopedPhone({ children }: { children: React.ReactNode }) {
+  const { session } = usePulstractAuth();
+  if (!session) {
+    return (
+      <PhoneFrame>
+        <PhoneStatusBar />
+        <AuthScreens />
+      </PhoneFrame>
+    );
+  }
+  return <>{children}</>;
 }
 
 function MobileShowcaseInner() {
   const { flow, screen } = Route.useSearch();
-  const showUser = !flow || flow === "user";
-  const showHost = !flow || flow === "host";
-  const { session, signOut } = usePulstractAuth();
 
   return (
     <div className="min-h-screen">
@@ -333,67 +368,45 @@ function MobileShowcaseInner() {
         <div className="text-center mb-8">
           <Badge variant="secondary" className="mb-3">Mobile preview · live backend</Badge>
           <h1 className="font-display text-4xl md:text-5xl font-semibold tracking-tight">
-            The Pulstract app, end to end
+            Two apps, one backend
           </h1>
           <p className="mt-3 text-muted-foreground max-w-2xl mx-auto">
-            Interactive prototype wired to the real Pulstract dev backend —
-            classes, bookings and profile all round-trip through the gateway.
+            The User app and Host app are separate products with their own sign-in.
+            Both round-trip through the same Pulstract gateway.
           </p>
         </div>
 
-        <div className="mb-8 space-y-3">
+        <div className="mb-8">
           <ServiceHealthBar />
-          {session && (
-            <div className="flex items-center justify-between text-xs bg-card border rounded-md px-3 py-2">
-              <span className="text-muted-foreground">
-                Signed in as <span className="font-semibold text-foreground">{session.email}</span>
-              </span>
-              <button
-                onClick={signOut}
-                className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
-              >
-                <LogOut className="h-3 w-3" /> Sign out
-              </button>
-            </div>
-          )}
         </div>
 
-        {!session ? (
-          <div className="flex flex-col items-center">
-            <p className="text-sm text-muted-foreground mb-4 text-center max-w-md">
-              Sign in or create an account to use the mobile prototype against
-              the live backend. Dev accounts are auto-confirmed.
-            </p>
-            <PhoneFrame>
-              <PhoneStatusBar />
-              <AuthScreens />
-            </PhoneFrame>
-          </div>
-        ) : (
-          <>
-            {showUser && (
-              <FlowSection
-                eyebrow="User flow"
-                title="Book a class"
-                description="Browse, check the host, review the class, pick a date, pay, and confirm."
-              >
-                <UserFlow initialScreen={flow === "user" ? (screen as Screen | undefined) : undefined} />
-              </FlowSection>
-            )}
+        <PulstractAuthProvider scope="user">
+          <FlowSection
+            eyebrow="User app"
+            title="Book a class"
+            description="Browse, check the host, review the class, pick a date, pay, and confirm."
+          >
+            <SessionBanner />
+            <ScopedPhone>
+              <UserFlow initialScreen={flow === "user" ? (screen as Screen | undefined) : undefined} />
+            </ScopedPhone>
+          </FlowSection>
+        </PulstractAuthProvider>
 
-            {showUser && showHost && <div className="my-16 border-t" />}
+        <div className="my-16 border-t" />
 
-            {showHost && (
-              <FlowSection
-                eyebrow="Host flow"
-                title="Run your classes"
-                description="See today's schedule, publish a class, manage attendees, and track earnings."
-              >
-                <HostFlow initialScreen={flow === "host" ? (screen as HostScreenId | undefined) : undefined} />
-              </FlowSection>
-            )}
-          </>
-        )}
+        <PulstractAuthProvider scope="host">
+          <FlowSection
+            eyebrow="Host app"
+            title="Run your classes"
+            description="See today's schedule, publish a class, manage attendees, and track earnings."
+          >
+            <SessionBanner />
+            <ScopedPhone>
+              <HostFlow initialScreen={flow === "host" ? (screen as HostScreenId | undefined) : undefined} />
+            </ScopedPhone>
+          </FlowSection>
+        </PulstractAuthProvider>
       </div>
     </div>
   );
