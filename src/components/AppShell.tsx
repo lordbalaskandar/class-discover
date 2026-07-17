@@ -52,7 +52,6 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthModal } from "@/components/AuthModal";
-import { AppSwitcher } from "@/components/AppSwitcher";
 
 type NavItem = { to: string; label: string; icon: typeof Compass; search?: Record<string, unknown> };
 type NavGroup = { label: string; items: NavItem[] };
