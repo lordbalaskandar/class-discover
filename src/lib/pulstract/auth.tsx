@@ -15,7 +15,7 @@ export type PulstractSession = {
 type Ctx = {
   session: PulstractSession | null;
   loading: boolean;
-  signIn: (email: string) => Promise<void>;
+  signIn: (email: string, password?: string) => Promise<void>;
   signUp: (email: string, name: string) => Promise<void>;
   signOut: () => void;
 };
