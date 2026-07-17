@@ -81,6 +81,24 @@ import {
   useUpdateMember,
   useRemoveMember,
   useBookingsByClass,
+  useMyGymReviews,
+  useHostEarnings,
+  useNextPayout,
+  useCashOut,
+  usePayouts,
+  useHostPayoutAccount,
+  useSubmitPayoutProfile,
+  useClassTemplates,
+  useCreateTemplate,
+  useDeleteTemplate,
+  useHostAvailability,
+  useSetHostAvailability,
+  useCreateBlackout,
+  useDeleteBlackout,
+  useRespondToReview,
+  useFlagReview,
+  useHostSupportTickets,
+  useCreateSupportTicket,
 } from "@/lib/pulstract/hooks";
 import { toast } from "sonner";
 
@@ -3974,26 +3992,30 @@ function HostManageScreen({
 }
 
 function HostEarningsScreen({ onBack }: { onBack: () => void }) {
-  const bars = [40, 65, 30, 80, 55, 90, 70];
-  const days = ["M", "T", "W", "T", "F", "S", "S"];
-  const recent = [
-    { label: "Sunrise Vinyasa", date: "Today", amount: 176 },
-    { label: "Lunchtime Mobility", date: "Today", amount: 90 },
-    { label: "Evening Power Flow", date: "Yesterday", amount: 308 },
-    { label: "Trail Run", date: "Mon", amount: 120 },
-    { label: "Sunrise Vinyasa", date: "Sun", amount: 198 },
-  ];
+  const { data: earnings, isLoading } = useHostEarnings("week");
+  const { data: nextPayout } = useNextPayout();
+  const cashOut = useCashOut();
+  const series = earnings?.series ?? [];
+  const max = Math.max(1, ...series.map((s) => s.value));
+  const currency = earnings?.currency ?? nextPayout?.currency ?? "USD";
+  const sym = currency === "EUR" ? "€" : currency === "GBP" ? "£" : "$";
+  const nextAmt = nextPayout ? (nextPayout.amount / 100).toFixed(2) : "0.00";
+  const nextDate = nextPayout?.scheduledAt ? new Date(nextPayout.scheduledAt).toLocaleDateString(undefined, { weekday: "short" }) : "—";
   return (
     <ScreenScroll>
       <ScreenHeader title="Earnings" onBack={onBack} />
       <div className="px-5 py-4 space-y-5">
         <div className="rounded-2xl p-4 bg-gradient-to-br from-foreground to-foreground/70 text-background shadow-elegant">
           <p className="text-[10px] uppercase tracking-widest opacity-80">Available to cash out</p>
-          <p className="font-display text-3xl font-semibold mt-1">$842.50</p>
+          <p className="font-display text-3xl font-semibold mt-1">{sym}{nextAmt}</p>
           <div className="flex items-center justify-between mt-4 text-xs">
-            <span className="opacity-80">Next payout · Fri</span>
-            <button className="px-3 py-1.5 rounded-full bg-background text-foreground font-semibold">
-              Cash out
+            <span className="opacity-80">Next payout · {nextDate}</span>
+            <button
+              onClick={() => cashOut.mutate(undefined, { onSuccess: () => toast.success("Cash out requested"), onError: (e: any) => toast.error(e.message) })}
+              disabled={cashOut.isPending || !nextPayout || nextPayout.amount <= 0}
+              className="px-3 py-1.5 rounded-full bg-background text-foreground font-semibold disabled:opacity-50"
+            >
+              {cashOut.isPending ? "…" : "Cash out"}
             </button>
           </div>
         </div>
@@ -4001,61 +4023,73 @@ function HostEarningsScreen({ onBack }: { onBack: () => void }) {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">This week</p>
-              <p className="font-display text-xl font-semibold">$842</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">This {earnings?.period ?? "week"}</p>
+              <p className="font-display text-xl font-semibold">{sym}{earnings ? (earnings.total / 100).toFixed(0) : "0"}</p>
             </div>
             <Badge variant="secondary" className="text-[10px]">
-              <BarChart3 className="h-3 w-3 mr-1" /> +18%
+              <BarChart3 className="h-3 w-3 mr-1" /> Live
             </Badge>
           </div>
           <div className="mt-4">
-            <svg viewBox="0 0 280 80" className="w-full h-20" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="gradEarnings" x1="0" x2="0" y1="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.6" />
-                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.05" />
-                </linearGradient>
-              </defs>
-              {(() => {
-                const w = 280, h = 76;
-                const pts = bars.map((v, i) => {
-                  const x = (i / (bars.length - 1)) * w;
-                  const y = h - (v / 100) * h + 2;
-                  return [x, y] as const;
-                });
-                const line = pts.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x},${y}`).join(" ");
-                const area = `${line} L${w},${h + 2} L0,${h + 2} Z`;
-                return (
-                  <>
-                    <path d={area} fill="url(#gradEarnings)" />
-                    <path d={line} fill="none" stroke="hsl(var(--primary))" strokeWidth="1.5" />
-                    {pts.map(([x, y], i) => (
-                      <circle key={i} cx={x} cy={y} r={bars[i] > 70 ? 3 : 2} fill="hsl(var(--primary))" />
-                    ))}
-                  </>
-                );
-              })()}
-            </svg>
-            <div className="flex justify-between mt-1 px-0.5">
-              {days.map((d, i) => (
-                <span key={i} className="text-[10px] text-muted-foreground">{d}</span>
-              ))}
-            </div>
+            {isLoading ? (
+              <p className="text-xs text-muted-foreground">Loading…</p>
+            ) : series.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No data yet.</p>
+            ) : (
+              <>
+                <svg viewBox="0 0 280 80" className="w-full h-20" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="gradEarnings" x1="0" x2="0" y1="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.6" />
+                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.05" />
+                    </linearGradient>
+                  </defs>
+                  {(() => {
+                    const w = 280, h = 76;
+                    const pts = series.map((s, i) => {
+                      const x = (i / Math.max(1, series.length - 1)) * w;
+                      const y = h - (s.value / max) * h + 2;
+                      return [x, y] as const;
+                    });
+                    const line = pts.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x},${y}`).join(" ");
+                    const area = `${line} L${w},${h + 2} L0,${h + 2} Z`;
+                    return (
+                      <>
+                        <path d={area} fill="url(#gradEarnings)" />
+                        <path d={line} fill="none" stroke="hsl(var(--primary))" strokeWidth="1.5" />
+                        {pts.map(([x, y], i) => (
+                          <circle key={i} cx={x} cy={y} r={2} fill="hsl(var(--primary))" />
+                        ))}
+                      </>
+                    );
+                  })()}
+                </svg>
+                <div className="flex justify-between mt-1 px-0.5">
+                  {series.map((s, i) => (
+                    <span key={i} className="text-[10px] text-muted-foreground">{s.label}</span>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </Card>
 
         <div>
           <h3 className="font-semibold text-sm mb-2">Recent</h3>
           <div className="space-y-2 pb-4">
-            {recent.map((r, i) => (
-              <Card key={i} className="p-3 flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-sm">{r.label}</p>
-                  <p className="text-[11px] text-muted-foreground">{r.date}</p>
-                </div>
-                <span className="font-semibold text-sm">+${r.amount}</span>
-              </Card>
-            ))}
+            {(earnings?.recent ?? []).length === 0 ? (
+              <Card className="p-3 text-xs text-muted-foreground">No recent earnings.</Card>
+            ) : (
+              (earnings?.recent ?? []).map((r) => (
+                <Card key={r.id} className="p-3 flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm">{r.title}</p>
+                    <p className="text-[11px] text-muted-foreground">{new Date(r.date).toLocaleDateString()}</p>
+                  </div>
+                  <span className="font-semibold text-sm">+{sym}{(r.amount / 100).toFixed(0)}</span>
+                </Card>
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -4070,31 +4104,42 @@ function HostProfileScreen({
   onDashboard: () => void;
   onOpenSection: (s: HostScreenId) => void;
 }) {
+  const { data: me } = useMe();
+  const { data: reviews } = useMyGymReviews();
+  const { data: templates } = useClassTemplates();
+  const { data: payout } = useHostPayoutAccount();
+  const initials = (me?.name ?? me?.email ?? "H").slice(0, 1).toUpperCase();
+  const avgRating = reviews && reviews.length > 0
+    ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+    : "—";
   const stats = [
-    { label: "Classes", value: "128" },
-    { label: "Students", value: "1.2k" },
-    { label: "Rating", value: "4.9" },
+    { label: "Reviews", value: String(reviews?.length ?? 0) },
+    { label: "Templates", value: String(templates?.length ?? 0) },
+    { label: "Rating", value: avgRating },
   ];
+  const payoutSub = payout?.last4 ? `${payout.brand ?? "Bank"} •••• ${payout.last4}` : payout?.status ? `Status: ${payout.status}` : "Not set up";
   const rows: { id: HostScreenId; label: string; sub: string }[] = [
     { id: "hpGym", label: "My gym", sub: "Manage gym & members" },
-    { id: "hpTemplates", label: "Class templates", sub: "5 saved" },
-    { id: "hpPayouts", label: "Payout settings", sub: "Bank •••• 6201" },
-    { id: "hpAvailability", label: "Availability", sub: "Mon–Sat mornings" },
-    { id: "hpReviews", label: "Reviews", sub: "184 reviews" },
+    { id: "hpTemplates", label: "Class templates", sub: `${templates?.length ?? 0} saved` },
+    { id: "hpPayouts", label: "Payout settings", sub: payoutSub },
+    { id: "hpAvailability", label: "Availability", sub: "Weekly hours & time off" },
+    { id: "hpReviews", label: "Reviews", sub: `${reviews?.length ?? 0} reviews` },
     { id: "hpSupport", label: "Help & support", sub: "FAQ, contact us" },
   ];
   return (
     <ScreenScroll>
       <div className="px-5 pt-6 pb-4 flex flex-col items-center text-center">
         <div className="h-20 w-20 rounded-full bg-gradient-hero text-primary-foreground flex items-center justify-center font-display text-2xl font-semibold shadow-elegant">
-          M
+          {initials}
         </div>
-        <h2 className="font-display text-xl font-semibold mt-3">Maya Calder</h2>
-        <p className="text-xs text-muted-foreground">RYT-500 · SF, CA</p>
-        <Badge variant="secondary" className="mt-2 text-[10px]">
-          <Sparkles className="h-3 w-3 mr-1" />
-          Top host 2025
-        </Badge>
+        <h2 className="font-display text-xl font-semibold mt-3">{me?.name ?? "Host"}</h2>
+        <p className="text-xs text-muted-foreground">{me?.email}</p>
+        {me?.isHost && (
+          <Badge variant="secondary" className="mt-2 text-[10px]">
+            <Sparkles className="h-3 w-3 mr-1" />
+            Verified host
+          </Badge>
+        )}
       </div>
 
       <div className="px-5">
@@ -4136,40 +4181,54 @@ function HostProfileScreen({
 }
 
 function HostTemplatesScreen({ onBack }: { onBack: () => void }) {
-  const templates = [
-    { title: "Sunrise Vinyasa Flow", activity: "Yoga", duration: "60 min", price: 22, uses: 42 },
-    { title: "Lunchtime Mobility", activity: "Mobility", duration: "45 min", price: 18, uses: 18 },
-    { title: "Evening Power Flow", activity: "Yoga", duration: "75 min", price: 28, uses: 31 },
-    { title: "Yin & Restore", activity: "Yoga", duration: "60 min", price: 20, uses: 12 },
-    { title: "Core & Breath", activity: "Pilates", duration: "45 min", price: 19, uses: 7 },
-  ];
+  const { data: templates, isLoading } = useClassTemplates();
+  const createTpl = useCreateTemplate();
+  const deleteTpl = useDeleteTemplate();
+  const createClass = useCreateClass();
+  const handleUse = (t: any) => {
+    const startAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    createClass.mutate(
+      { title: t.title, description: t.description ?? undefined, activityType: t.activityType, startAt, durationMinutes: t.durationMinutes, capacity: t.capacity, priceCents: t.priceCents },
+      { onSuccess: () => toast.success(`Published "${t.title}"`), onError: (e: any) => toast.error(e.message) },
+    );
+  };
+  const handleNew = () => {
+    createTpl.mutate(
+      { title: "New template", activityType: "Yoga", durationMinutes: 60, capacity: 12, priceCents: 2000 },
+      { onSuccess: () => toast.success("Template created"), onError: (e: any) => toast.error(e.message) },
+    );
+  };
   return (
     <ScreenScroll>
       <ScreenHeader title="Class templates" onBack={onBack} />
       <div className="px-5 pb-4 space-y-2">
-        <p className="text-xs text-muted-foreground mb-1">
-          Reuse a template to publish a class in seconds.
-        </p>
-        {templates.map((t) => (
-          <Card key={t.title} className="p-3">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="font-medium text-sm truncate">{t.title}</p>
-                <p className="text-[11px] text-muted-foreground">
-                  {t.activity} · {t.duration} · ${t.price}
-                </p>
+        <p className="text-xs text-muted-foreground mb-1">Reuse a template to publish a class in seconds.</p>
+        {isLoading ? (
+          <p className="text-xs text-muted-foreground">Loading…</p>
+        ) : (templates ?? []).length === 0 ? (
+          <Card className="p-3 text-xs text-muted-foreground">No templates yet.</Card>
+        ) : (
+          (templates ?? []).map((t) => (
+            <Card key={t.id} className="p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-medium text-sm truncate">{t.title}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {t.activityType} · {t.durationMinutes} min · ${(t.priceCents / 100).toFixed(0)}
+                  </p>
+                </div>
+                {typeof t.uses === "number" && (
+                  <Badge variant="secondary" className="text-[10px] shrink-0">Used {t.uses}×</Badge>
+                )}
               </div>
-              <Badge variant="secondary" className="text-[10px] shrink-0">
-                Used {t.uses}×
-              </Badge>
-            </div>
-            <div className="flex gap-2 mt-3">
-              <Button size="sm" className="flex-1 h-8 text-xs">Use template</Button>
-              <Button size="sm" variant="outline" className="h-8 text-xs">Edit</Button>
-            </div>
-          </Card>
-        ))}
-        <Button variant="outline" className="w-full mt-2">
+              <div className="flex gap-2 mt-3">
+                <Button size="sm" className="flex-1 h-8 text-xs" onClick={() => handleUse(t)} disabled={createClass.isPending}>Use template</Button>
+                <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => deleteTpl.mutate(t.id)}>Delete</Button>
+              </div>
+            </Card>
+          ))
+        )}
+        <Button variant="outline" className="w-full mt-2" onClick={handleNew} disabled={createTpl.isPending}>
           <Plus className="h-4 w-4 mr-1" /> New template
         </Button>
       </div>
@@ -4178,70 +4237,72 @@ function HostTemplatesScreen({ onBack }: { onBack: () => void }) {
 }
 
 function HostPayoutsScreen({ onBack }: { onBack: () => void }) {
-  const payouts = [
-    { date: "May 28", amount: 1240, status: "Paid" },
-    { date: "May 14", amount: 980, status: "Paid" },
-    { date: "Apr 30", amount: 1105, status: "Paid" },
-    { date: "Apr 16", amount: 860, status: "Paid" },
-  ];
+  const { data: payouts, isLoading } = usePayouts();
+  const { data: nextPayout } = useNextPayout();
+  const { data: account } = useHostPayoutAccount();
+  const submit = useSubmitPayoutProfile();
+  const currency = nextPayout?.currency ?? account?.currency ?? "USD";
+  const sym = currency === "EUR" ? "€" : currency === "GBP" ? "£" : "$";
+  const handleSubmit = () => {
+    submit.mutate(
+      { accountHolderName: "Test Host", iban: "DE89370400440532013000", country: "DE" },
+      { onSuccess: () => toast.success("Payout profile submitted"), onError: (e: any) => toast.error(e.message) },
+    );
+  };
   return (
     <ScreenScroll>
       <ScreenHeader title="Payout settings" onBack={onBack} />
       <div className="px-5 pb-4 space-y-3">
         <Card className="p-4">
           <p className="text-xs text-muted-foreground">Next payout</p>
-          <p className="font-display text-2xl font-semibold mt-1">$842.50</p>
-          <p className="text-[11px] text-muted-foreground">Scheduled June 11</p>
+          <p className="font-display text-2xl font-semibold mt-1">
+            {sym}{nextPayout ? (nextPayout.amount / 100).toFixed(2) : "0.00"}
+          </p>
+          <p className="text-[11px] text-muted-foreground">
+            {nextPayout?.scheduledAt ? `Scheduled ${new Date(nextPayout.scheduledAt).toLocaleDateString()}` : "No scheduled payout"}
+          </p>
         </Card>
 
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-            Payout method
-          </p>
-          <Card className="p-3 flex items-center gap-3">
-            <div className="h-9 w-9 rounded-md bg-muted flex items-center justify-center">
-              <DollarSign className="h-4 w-4" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm">Chase Checking</p>
-              <p className="text-[11px] text-muted-foreground">Bank •••• 6201</p>
-            </div>
-            <Badge variant="secondary" className="text-[10px]">Default</Badge>
-          </Card>
-          <Button variant="outline" size="sm" className="w-full mt-2 h-8 text-xs">
-            <Plus className="h-3.5 w-3.5 mr-1" /> Add payout method
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Payout method</p>
+          {account ? (
+            <Card className="p-3 flex items-center gap-3">
+              <div className="h-9 w-9 rounded-md bg-muted flex items-center justify-center">
+                <DollarSign className="h-4 w-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm">{account.brand ?? "Bank"}</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {account.last4 ? `•••• ${account.last4}` : "Pending"} · {account.status}
+                </p>
+              </div>
+              <Badge variant="secondary" className="text-[10px]">{account.payoutSchedule ?? "Default"}</Badge>
+            </Card>
+          ) : (
+            <Card className="p-3 text-xs text-muted-foreground">No payout method on file.</Card>
+          )}
+          <Button variant="outline" size="sm" className="w-full mt-2 h-8 text-xs" onClick={handleSubmit} disabled={submit.isPending}>
+            <Plus className="h-3.5 w-3.5 mr-1" /> {account ? "Update payout profile" : "Add payout method"}
           </Button>
         </div>
 
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-            Schedule
-          </p>
-          <Card className="p-3 space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Frequency</span>
-              <span className="font-medium">Bi-weekly</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Currency</span>
-              <span className="font-medium">USD</span>
-            </div>
-          </Card>
-        </div>
-
-        <div>
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-            Recent payouts
-          </p>
-          <Card className="p-2 divide-y">
-            {payouts.map((p) => (
-              <div key={p.date} className="flex items-center justify-between px-2 py-2 text-sm">
-                <span>{p.date}</span>
-                <span className="font-medium">${p.amount.toLocaleString()}</span>
-                <Badge variant="secondary" className="text-[10px]">{p.status}</Badge>
-              </div>
-            ))}
-          </Card>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Recent payouts</p>
+          {isLoading ? (
+            <Card className="p-3 text-xs text-muted-foreground">Loading…</Card>
+          ) : (payouts ?? []).length === 0 ? (
+            <Card className="p-3 text-xs text-muted-foreground">No payouts yet.</Card>
+          ) : (
+            <Card className="p-2 divide-y">
+              {(payouts ?? []).map((p) => (
+                <div key={p.id} className="flex items-center justify-between px-2 py-2 text-sm">
+                  <span>{new Date(p.paidAt ?? p.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+                  <span className="font-medium">{sym}{(p.amount / 100).toFixed(2)}</span>
+                  <Badge variant="secondary" className="text-[10px]">{p.status}</Badge>
+                </div>
+              ))}
+            </Card>
+          )}
         </div>
       </div>
     </ScreenScroll>
@@ -4249,62 +4310,90 @@ function HostPayoutsScreen({ onBack }: { onBack: () => void }) {
 }
 
 function HostAvailabilityScreen({ onBack }: { onBack: () => void }) {
-  const days = [
-    { d: "Mon", slots: ["7–9a", "12–1p"] },
-    { d: "Tue", slots: ["7–9a"] },
-    { d: "Wed", slots: ["7–9a", "6–8p"] },
-    { d: "Thu", slots: ["7–9a"] },
-    { d: "Fri", slots: ["7–9a", "12–1p"] },
-    { d: "Sat", slots: ["8–11a"] },
-    { d: "Sun", slots: [] },
-  ];
+  const { data: avail, isLoading } = useHostAvailability();
+  const setAvail = useSetHostAvailability();
+  const createBlackout = useCreateBlackout();
+  const deleteBlackout = useDeleteBlackout();
+  const DAY_ORDER = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const weekly = DAY_ORDER.map((d) => {
+    const w = avail?.weekly.find((x) => x.day.toLowerCase().startsWith(d.toLowerCase().slice(0, 3)));
+    return { d, slots: w?.slots ?? [] };
+  });
+  const fmt = (t: string) => t.length === 5 ? t : t;
+  const handleToggle = () => {
+    if (!avail) return;
+    setAvail.mutate({ acceptingBookings: !avail.acceptingBookings });
+  };
+  const handleAddTimeOff = () => {
+    const start = new Date();
+    start.setDate(start.getDate() + 7);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 3);
+    createBlackout.mutate(
+      { startDate: start.toISOString().slice(0, 10), endDate: end.toISOString().slice(0, 10), reason: "Time off" },
+      { onSuccess: () => toast.success("Blackout added"), onError: (e: any) => toast.error(e.message) },
+    );
+  };
   return (
     <ScreenScroll>
       <ScreenHeader title="Availability" onBack={onBack} />
       <div className="px-5 pb-4 space-y-3">
-        <Card className="p-3 flex items-center justify-between">
-          <div>
-            <p className="font-medium text-sm">Accepting bookings</p>
-            <p className="text-[11px] text-muted-foreground">Show your classes in browse</p>
-          </div>
-          <div className="h-6 w-10 rounded-full bg-primary relative">
-            <div className="absolute right-0.5 top-0.5 h-5 w-5 rounded-full bg-background shadow" />
-          </div>
-        </Card>
+        <button onClick={handleToggle} className="w-full">
+          <Card className="p-3 flex items-center justify-between">
+            <div className="text-left">
+              <p className="font-medium text-sm">Accepting bookings</p>
+              <p className="text-[11px] text-muted-foreground">{avail?.acceptingBookings ? "Live in browse" : "Paused"}</p>
+            </div>
+            <div className={cn("h-6 w-10 rounded-full relative transition-colors", avail?.acceptingBookings ? "bg-primary" : "bg-muted")}>
+              <div className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-all", avail?.acceptingBookings ? "right-0.5" : "left-0.5")} />
+            </div>
+          </Card>
+        </button>
 
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-            Weekly hours
-          </p>
-          <Card className="p-2 divide-y">
-            {days.map((d) => (
-              <div key={d.d} className="flex items-center justify-between px-2 py-2.5">
-                <span className="font-medium text-sm w-12">{d.d}</span>
-                <div className="flex-1 flex flex-wrap gap-1 justify-end">
-                  {d.slots.length === 0 ? (
-                    <span className="text-[11px] text-muted-foreground">Unavailable</span>
-                  ) : (
-                    d.slots.map((s) => (
-                      <Badge key={s} variant="secondary" className="text-[10px]">
-                        {s}
-                      </Badge>
-                    ))
-                  )}
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Weekly hours</p>
+          {isLoading ? (
+            <Card className="p-3 text-xs text-muted-foreground">Loading…</Card>
+          ) : (
+            <Card className="p-2 divide-y">
+              {weekly.map((d) => (
+                <div key={d.d} className="flex items-center justify-between px-2 py-2.5">
+                  <span className="font-medium text-sm w-12">{d.d}</span>
+                  <div className="flex-1 flex flex-wrap gap-1 justify-end">
+                    {d.slots.length === 0 ? (
+                      <span className="text-[11px] text-muted-foreground">Unavailable</span>
+                    ) : (
+                      d.slots.map((s, i) => (
+                        <Badge key={i} variant="secondary" className="text-[10px]">
+                          {fmt(s.start)}–{fmt(s.end)}
+                        </Badge>
+                      ))
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </Card>
+              ))}
+            </Card>
+          )}
         </div>
 
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-            Time off
-          </p>
-          <Card className="p-3 text-sm">
-            <p className="font-medium">Jun 20 – Jun 27</p>
-            <p className="text-[11px] text-muted-foreground">Vacation · classes paused</p>
-          </Card>
-          <Button variant="outline" size="sm" className="w-full mt-2 h-8 text-xs">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Time off</p>
+          {(avail?.blackouts ?? []).length === 0 ? (
+            <Card className="p-3 text-xs text-muted-foreground">No time off scheduled.</Card>
+          ) : (
+            (avail?.blackouts ?? []).map((b) => (
+              <Card key={b.id} className="p-3 text-sm flex items-center justify-between mb-2">
+                <div>
+                  <p className="font-medium">{new Date(b.startDate).toLocaleDateString()} – {new Date(b.endDate).toLocaleDateString()}</p>
+                  <p className="text-[11px] text-muted-foreground">{b.reason ?? "Paused"}</p>
+                </div>
+                <button onClick={() => deleteBlackout.mutate(b.id)} className="text-[11px] text-muted-foreground hover:text-foreground">
+                  <X className="h-4 w-4" />
+                </button>
+              </Card>
+            ))
+          )}
+          <Button variant="outline" size="sm" className="w-full mt-2 h-8 text-xs" onClick={handleAddTimeOff} disabled={createBlackout.isPending}>
             <Plus className="h-3.5 w-3.5 mr-1" /> Add time off
           </Button>
         </div>
@@ -4314,39 +4403,42 @@ function HostAvailabilityScreen({ onBack }: { onBack: () => void }) {
 }
 
 function HostReviewsScreen({ onBack }: { onBack: () => void }) {
-  const summary = [
-    { stars: 5, pct: 86 },
-    { stars: 4, pct: 10 },
-    { stars: 3, pct: 3 },
-    { stars: 2, pct: 1 },
-    { stars: 1, pct: 0 },
-  ];
-  const reviews = [
-    { name: "Priya S.", stars: 5, text: "Maya's flow is the highlight of my week. Calm, clear cues.", when: "2d" },
-    { name: "Devon W.", stars: 5, text: "Best sunrise class in the city. Worth the early alarm.", when: "5d" },
-    { name: "Mika C.", stars: 4, text: "Loved the playlist. Could use a bit more cool-down.", when: "1w" },
-    { name: "Sam R.", stars: 5, text: "Beginner-friendly without being boring.", when: "2w" },
-  ];
+  const { data: reviews, isLoading } = useMyGymReviews();
+  const respond = useRespondToReview();
+  const flag = useFlagReview();
+  const [replyOpen, setReplyOpen] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const count = reviews?.length ?? 0;
+  const avg = count > 0 ? reviews!.reduce((s, r) => s + r.rating, 0) / count : 0;
+  const buckets = [5, 4, 3, 2, 1].map((stars) => {
+    const n = (reviews ?? []).filter((r) => r.rating === stars).length;
+    return { stars, pct: count === 0 ? 0 : Math.round((n / count) * 100) };
+  });
+  const submitReply = (id: string) => {
+    if (!replyText.trim()) return;
+    respond.mutate(
+      { id, response: replyText },
+      {
+        onSuccess: () => { toast.success("Reply posted"); setReplyOpen(null); setReplyText(""); },
+        onError: (e: any) => toast.error(e.message),
+      },
+    );
+  };
   return (
     <ScreenScroll>
       <ScreenHeader title="Reviews" onBack={onBack} />
       <div className="px-5 pb-4 space-y-3">
         <Card className="p-4 flex items-center gap-4">
           <div className="text-center">
-            <p className="font-display text-3xl font-semibold">4.9</p>
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              184 reviews
-            </p>
+            <p className="font-display text-3xl font-semibold">{count === 0 ? "—" : avg.toFixed(1)}</p>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{count} reviews</p>
           </div>
           <div className="flex-1 space-y-1">
-            {summary.map((s) => (
+            {buckets.map((s) => (
               <div key={s.stars} className="flex items-center gap-2 text-[11px]">
                 <span className="w-3 text-muted-foreground">{s.stars}</span>
                 <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="h-full bg-primary"
-                    style={{ width: `${s.pct}%` }}
-                  />
+                  <div className="h-full bg-primary" style={{ width: `${s.pct}%` }} />
                 </div>
                 <span className="w-7 text-right text-muted-foreground">{s.pct}%</span>
               </div>
@@ -4354,83 +4446,120 @@ function HostReviewsScreen({ onBack }: { onBack: () => void }) {
           </div>
         </Card>
 
-        {reviews.map((r) => (
-          <Card key={r.name} className="p-3">
-            <div className="flex items-center justify-between">
-              <p className="font-medium text-sm">{r.name}</p>
-              <span className="text-[10px] text-muted-foreground">{r.when}</span>
-            </div>
-            <div className="flex gap-0.5 my-1">
-              {Array.from({ length: r.stars }).map((_, i) => (
-                <Sparkles key={i} className="h-3 w-3 text-primary" />
-              ))}
-            </div>
-            <p className="text-[12px] text-muted-foreground leading-snug">{r.text}</p>
-          </Card>
-        ))}
+        {isLoading ? (
+          <Card className="p-3 text-xs text-muted-foreground">Loading…</Card>
+        ) : count === 0 ? (
+          <Card className="p-3 text-xs text-muted-foreground">No reviews yet.</Card>
+        ) : (
+          (reviews ?? []).map((r) => (
+            <Card key={r.id} className="p-3">
+              <div className="flex items-center justify-between">
+                <p className="font-medium text-sm">User {r.userId.slice(0, 6)}</p>
+                <span className="text-[10px] text-muted-foreground">{new Date(r.createdAt).toLocaleDateString()}</span>
+              </div>
+              <div className="flex gap-0.5 my-1">
+                {Array.from({ length: r.rating }).map((_, i) => (
+                  <Star key={i} className="h-3 w-3 text-primary fill-primary" />
+                ))}
+              </div>
+              {r.comment && <p className="text-[12px] text-muted-foreground leading-snug">{r.comment}</p>}
+              {(r as any).response ? (
+                <div className="mt-2 border-l-2 border-primary/40 pl-2 text-[11px] text-muted-foreground">
+                  <p className="font-medium">Your reply</p>
+                  <p>{(r as any).response}</p>
+                </div>
+              ) : replyOpen === r.id ? (
+                <div className="mt-2 space-y-1">
+                  <Input value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="Reply…" className="h-8 text-xs" />
+                  <div className="flex gap-1">
+                    <Button size="sm" className="h-7 text-[11px] flex-1" onClick={() => submitReply(r.id)} disabled={respond.isPending}>Send</Button>
+                    <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => { setReplyOpen(null); setReplyText(""); }}>Cancel</Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-2 mt-2">
+                  <button onClick={() => { setReplyOpen(r.id); setReplyText(""); }} className="text-[11px] font-medium text-primary hover:underline">Reply</button>
+                  <button onClick={() => flag.mutate({ id: r.id, reason: "Inappropriate" })} className="text-[11px] text-muted-foreground hover:text-foreground">Flag</button>
+                </div>
+              )}
+            </Card>
+          ))
+        )}
       </div>
     </ScreenScroll>
   );
 }
 
 function HostSupportScreen({ onBack }: { onBack: () => void }) {
-  const faqs = [
-    "How do payouts work?",
-    "Can I cancel or reschedule a class?",
-    "What happens if a student no-shows?",
-    "How do I edit my host profile?",
-    "Tax documents and 1099s",
-  ];
+  const { data: tickets, isLoading } = useHostSupportTickets();
+  const createTicket = useCreateSupportTicket();
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const [open, setOpen] = useState(false);
+  const submit = () => {
+    if (!subject.trim() || !body.trim()) return;
+    createTicket.mutate(
+      { subject, body },
+      {
+        onSuccess: () => { toast.success("Ticket sent"); setSubject(""); setBody(""); setOpen(false); },
+        onError: (e: any) => toast.error(e.message),
+      },
+    );
+  };
   return (
     <ScreenScroll>
       <ScreenHeader title="Help & support" onBack={onBack} />
       <div className="px-5 pb-4 space-y-3">
         <Card className="p-4 bg-gradient-hero text-primary-foreground">
           <p className="font-display text-lg font-semibold">Need a hand?</p>
-          <p className="text-[12px] opacity-90 mt-0.5">
-            Our host team replies in under 2 hours, 7 days a week.
-          </p>
-          <Button size="sm" variant="secondary" className="mt-3 h-8 text-xs">
-            Message support
+          <p className="text-[12px] opacity-90 mt-0.5">Our host team replies in under 2 hours, 7 days a week.</p>
+          <Button size="sm" variant="secondary" className="mt-3 h-8 text-xs" onClick={() => setOpen((v) => !v)}>
+            {open ? "Close" : "Message support"}
           </Button>
         </Card>
 
-        <div>
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-            Popular questions
-          </p>
-          <Card className="p-1 divide-y">
-            {faqs.map((q) => (
-              <button
-                key={q}
-                className="w-full flex items-center justify-between px-3 py-3 text-left text-sm hover:bg-muted rounded-md"
-              >
-                <span className="pr-3">{q}</span>
-                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-              </button>
-            ))}
+        {open && (
+          <Card className="p-3 space-y-2">
+            <Input placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} className="h-9 text-sm" />
+            <textarea
+              placeholder="How can we help?"
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              className="w-full min-h-[80px] rounded-md border bg-background px-3 py-2 text-sm"
+            />
+            <Button size="sm" className="w-full h-8 text-xs" onClick={submit} disabled={createTicket.isPending}>
+              {createTicket.isPending ? "Sending…" : "Send ticket"}
+            </Button>
           </Card>
-        </div>
+        )}
 
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-            Contact
-          </p>
-          <Card className="p-3 space-y-2 text-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Email</span>
-              <span className="font-medium">hosts@pulstract.app</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">Response time</span>
-              <span className="font-medium">~2 hours</span>
-            </div>
-          </Card>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Your tickets</p>
+          {isLoading ? (
+            <Card className="p-3 text-xs text-muted-foreground">Loading…</Card>
+          ) : (tickets ?? []).length === 0 ? (
+            <Card className="p-3 text-xs text-muted-foreground">No tickets yet.</Card>
+          ) : (
+            <Card className="p-1 divide-y">
+              {(tickets ?? []).map((t) => (
+                <div key={t.id} className="w-full flex items-center justify-between px-3 py-3 text-left text-sm">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{t.subject}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {new Date(t.lastMessageAt ?? t.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <Badge variant="secondary" className="text-[10px] ml-2 shrink-0">{t.status}</Badge>
+                </div>
+              ))}
+            </Card>
+          )}
         </div>
       </div>
     </ScreenScroll>
   );
 }
+
 
 function HostMetricsScreen({ onBack }: { onBack: () => void }) {
   const range = ["7d", "30d", "90d"];
