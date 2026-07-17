@@ -99,6 +99,8 @@ import {
   useFlagReview,
   useHostSupportTickets,
   useCreateSupportTicket,
+  useTopClasses,
+  useAttendanceStats,
 } from "@/lib/pulstract/hooks";
 import { toast } from "sonner";
 
