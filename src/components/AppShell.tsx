@@ -97,7 +97,7 @@ const GROUPS: NavGroup[] = [
       { to: "/me", label: "Profile", icon: UserIcon },
       { to: "/me/payment", label: "Payment methods", icon: CreditCard },
       { to: "/me/notifications", label: "Notifications", icon: Bell },
-      
+      { to: "/me/become-host", label: "Become a host", icon: Sparkles },
       { to: "/me/help", label: "Help & support", icon: HelpCircle },
       { to: "/me/settings", label: "Settings", icon: Settings },
     ],
