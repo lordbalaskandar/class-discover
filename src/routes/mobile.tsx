@@ -3995,13 +3995,15 @@ function HostManageScreen({
 function HostEarningsScreen({ onBack }: { onBack: () => void }) {
   const { data: earnings, isLoading } = useHostEarnings("week");
   const { data: nextPayout } = useNextPayout();
+  const { data: account } = useHostPayoutAccount();
   const cashOut = useCashOut();
   const series = earnings?.series ?? [];
-  const max = Math.max(1, ...series.map((s) => s.value));
-  const currency = earnings?.currency ?? nextPayout?.currency ?? "USD";
+  const max = Math.max(1, ...series.map((s) => s.grossCents));
+  const currency = nextPayout?.currency ?? account?.currency ?? "USD";
   const sym = currency === "EUR" ? "€" : currency === "GBP" ? "£" : "$";
-  const nextAmt = nextPayout ? (nextPayout.amount / 100).toFixed(2) : "0.00";
-  const nextDate = nextPayout?.scheduledAt ? new Date(nextPayout.scheduledAt).toLocaleDateString(undefined, { weekday: "short" }) : "—";
+  const availableCents = account?.availableCents ?? 0;
+  const nextAmt = nextPayout ? (nextPayout.amountCents / 100).toFixed(2) : (availableCents / 100).toFixed(2);
+  const nextDate = nextPayout?.arrivalDate ? new Date(nextPayout.arrivalDate).toLocaleDateString(undefined, { weekday: "short" }) : "—";
   return (
     <ScreenScroll>
       <ScreenHeader title="Earnings" onBack={onBack} />
@@ -4013,7 +4015,7 @@ function HostEarningsScreen({ onBack }: { onBack: () => void }) {
             <span className="opacity-80">Next payout · {nextDate}</span>
             <button
               onClick={() => cashOut.mutate(undefined, { onSuccess: () => toast.success("Cash out requested"), onError: (e: any) => toast.error(e.message) })}
-              disabled={cashOut.isPending || !nextPayout || nextPayout.amount <= 0}
+              disabled={cashOut.isPending || availableCents <= 0}
               className="px-3 py-1.5 rounded-full bg-background text-foreground font-semibold disabled:opacity-50"
             >
               {cashOut.isPending ? "…" : "Cash out"}
@@ -4025,7 +4027,10 @@ function HostEarningsScreen({ onBack }: { onBack: () => void }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground">This {earnings?.period ?? "week"}</p>
-              <p className="font-display text-xl font-semibold">{sym}{earnings ? (earnings.total / 100).toFixed(0) : "0"}</p>
+              <p className="font-display text-xl font-semibold">{sym}{earnings ? (earnings.grossCents / 100).toFixed(0) : "0"}</p>
+              {earnings && (
+                <p className="text-[11px] text-muted-foreground mt-0.5">Net {sym}{(earnings.netCents / 100).toFixed(0)} · {earnings.bookingCount} bookings</p>
+              )}
             </div>
             <Badge variant="secondary" className="text-[10px]">
               <BarChart3 className="h-3 w-3 mr-1" /> Live
@@ -4049,7 +4054,7 @@ function HostEarningsScreen({ onBack }: { onBack: () => void }) {
                     const w = 280, h = 76;
                     const pts = series.map((s, i) => {
                       const x = (i / Math.max(1, series.length - 1)) * w;
-                      const y = h - (s.value / max) * h + 2;
+                      const y = h - (s.grossCents / max) * h + 2;
                       return [x, y] as const;
                     });
                     const line = pts.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x},${y}`).join(" ");
@@ -4067,7 +4072,7 @@ function HostEarningsScreen({ onBack }: { onBack: () => void }) {
                 </svg>
                 <div className="flex justify-between mt-1 px-0.5">
                   {series.map((s, i) => (
-                    <span key={i} className="text-[10px] text-muted-foreground">{s.label}</span>
+                    <span key={i} className="text-[10px] text-muted-foreground">{new Date(s.date).toLocaleDateString(undefined, { weekday: "short" })}</span>
                   ))}
                 </div>
               </>
@@ -4075,24 +4080,17 @@ function HostEarningsScreen({ onBack }: { onBack: () => void }) {
           </div>
         </Card>
 
-        <div>
-          <h3 className="font-semibold text-sm mb-2">Recent</h3>
-          <div className="space-y-2 pb-4">
-            {(earnings?.recent ?? []).length === 0 ? (
-              <Card className="p-3 text-xs text-muted-foreground">No recent earnings.</Card>
-            ) : (
-              (earnings?.recent ?? []).map((r) => (
-                <Card key={r.id} className="p-3 flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">{r.title}</p>
-                    <p className="text-[11px] text-muted-foreground">{new Date(r.date).toLocaleDateString()}</p>
-                  </div>
-                  <span className="font-semibold text-sm">+{sym}{(r.amount / 100).toFixed(0)}</span>
-                </Card>
-              ))
-            )}
+        {earnings && (
+          <div>
+            <h3 className="font-semibold text-sm mb-2">Breakdown</h3>
+            <Card className="p-3 space-y-1.5 text-sm">
+              <div className="flex justify-between"><span className="text-muted-foreground">Gross</span><span className="font-medium">{sym}{(earnings.grossCents / 100).toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Platform fee</span><span className="font-medium">-{sym}{(earnings.platformFeeCents / 100).toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Refunded</span><span className="font-medium">-{sym}{(earnings.refundedCents / 100).toFixed(2)}</span></div>
+              <div className="flex justify-between border-t pt-1.5 mt-1"><span className="font-semibold">Net</span><span className="font-semibold">{sym}{(earnings.netCents / 100).toFixed(2)}</span></div>
+            </Card>
           </div>
-        </div>
+        )}
       </div>
     </ScreenScroll>
   );
