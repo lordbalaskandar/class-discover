@@ -14,6 +14,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthModal } from "@/components/AuthModal";
+import { AppSwitcher } from "@/components/AppSwitcher";
 
 function useThemeToggle() {
   const [isDark, setIsDark] = useState(false);
@@ -83,6 +84,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <AppSwitcher className="hidden md:inline-flex" />
           <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme" className="rounded-full">
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>

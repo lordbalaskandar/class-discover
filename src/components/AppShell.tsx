@@ -52,6 +52,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthModal } from "@/components/AuthModal";
+import { AppSwitcher } from "@/components/AppSwitcher";
 
 type NavItem = { to: string; label: string; icon: typeof Compass; search?: Record<string, unknown> };
 type NavGroup = { label: string; items: NavItem[] };
@@ -96,7 +97,7 @@ const GROUPS: NavGroup[] = [
       { to: "/me", label: "Profile", icon: UserIcon },
       { to: "/me/payment", label: "Payment methods", icon: CreditCard },
       { to: "/me/notifications", label: "Notifications", icon: Bell },
-      
+      { to: "/me/become-host", label: "Become a host", icon: Sparkles },
       { to: "/me/help", label: "Help & support", icon: HelpCircle },
       { to: "/me/settings", label: "Settings", icon: Settings },
     ],
@@ -188,6 +189,7 @@ function Topbar({ title, actions }: { title?: string; actions?: ReactNode }) {
     <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/85 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <SidebarTrigger />
       {title && <h1 className="text-sm font-medium text-muted-foreground">{title}</h1>}
+      <AppSwitcher className="ml-2 hidden sm:inline-flex" />
       <div className="ml-auto flex items-center gap-2">
         {actions}
         <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme" className="rounded-full">
