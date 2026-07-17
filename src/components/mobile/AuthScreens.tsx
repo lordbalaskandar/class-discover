@@ -13,6 +13,7 @@ export function AuthScreens() {
   const { signIn, signUp, loading } = usePulstractAuth();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -21,7 +22,7 @@ export function AuthScreens() {
     setError(null);
     try {
       if (mode === "signin") {
-        await signIn(email.trim());
+        await signIn(email.trim(), password ? password : undefined);
       } else {
         await signUp(email.trim(), name.trim() || email.split("@")[0]);
       }
