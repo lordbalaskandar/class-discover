@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { cognito, COGNITO_CLIENT_ID, cryptoRandomPassword } from "./api";
 
-const STORAGE_KEY = "pulstract-mobile-auth-v1";
+// v2: invalidates any legacy sessions that may have persisted IdToken as accessToken.
+const STORAGE_KEY = "pulstract-mobile-auth-v2";
 
 export type PulstractSession = {
   email: string;
@@ -14,7 +15,7 @@ export type PulstractSession = {
 type Ctx = {
   session: PulstractSession | null;
   loading: boolean;
-  signIn: (email: string) => Promise<void>;
+  signIn: (email: string, password?: string) => Promise<void>;
   signUp: (email: string, name: string) => Promise<void>;
   signOut: () => void;
 };
@@ -46,13 +47,15 @@ export function PulstractAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = useCallback(
-    async (email: string) => {
+    async (email: string, password?: string) => {
       setLoading(true);
       try {
         const res: any = await cognito("InitiateAuth", {
           ClientId: COGNITO_CLIENT_ID,
-          AuthFlow: "CUSTOM_AUTH",
-          AuthParameters: { USERNAME: email },
+          AuthFlow: password ? "USER_PASSWORD_AUTH" : "CUSTOM_AUTH",
+          AuthParameters: password
+            ? { USERNAME: email, PASSWORD: password }
+            : { USERNAME: email },
         });
         const r = res.AuthenticationResult;
         if (!r) throw new Error("Sign-in did not return tokens");

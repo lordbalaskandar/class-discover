@@ -13,6 +13,7 @@ export function AuthScreens() {
   const { signIn, signUp, loading } = usePulstractAuth();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -21,7 +22,7 @@ export function AuthScreens() {
     setError(null);
     try {
       if (mode === "signin") {
-        await signIn(email.trim());
+        await signIn(email.trim(), password ? password : undefined);
       } else {
         await signUp(email.trim(), name.trim() || email.split("@")[0]);
       }
@@ -71,6 +72,20 @@ export function AuthScreens() {
             autoComplete="email"
           />
         </div>
+        {mode === "signin" && (
+          <div className="space-y-1.5">
+            <Label htmlFor="password" className="text-xs">Password <span className="text-muted-foreground">(optional for passwordless)</span></Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Leave blank for magic-link style"
+              autoComplete="current-password"
+            />
+          </div>
+        )}
+
 
         {error && (
           <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/10 rounded-md p-2">
@@ -96,7 +111,7 @@ export function AuthScreens() {
       </form>
 
       <p className="text-xs text-muted-foreground mt-4">
-        Dev backend uses passwordless CUSTOM_AUTH — no password required.
+        Enter a password for seeded accounts, or leave blank to use passwordless CUSTOM_AUTH.
       </p>
 
       <div className="mt-auto pt-6 text-center text-xs text-muted-foreground">
