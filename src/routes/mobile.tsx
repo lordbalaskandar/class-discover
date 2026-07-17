@@ -4602,8 +4602,10 @@ function HostMetricsScreen({ onBack }: { onBack: () => void }) {
   const { data: topClasses, isLoading: tcLoading } = useTopClasses(period);
   const { data: attendance, isLoading: aLoading } = useAttendanceStats(period);
 
-  const maxImp = Math.max(1, ...(attendance ?? []).map((v) => v.impressions));
   const convPct = liveFunnel && liveFunnel.views > 0 ? (liveFunnel.bookings / liveFunnel.views) * 100 : 0;
+  const attendPct = attendance && attendance.scheduled > 0 ? (attendance.attended / attendance.scheduled) * 100 : 0;
+  const maxTopRev = Math.max(1, ...(topClasses ?? []).map((t) => t.revenueCents));
+
 
   return (
     <ScreenScroll>
