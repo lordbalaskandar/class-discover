@@ -49,12 +49,12 @@ export function PulstractAuthProvider({ children, scope = "default" }: { childre
   const persist = useCallback((s: PulstractSession | null) => {
     setSession(s);
     try {
-      if (s) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
-      else window.localStorage.removeItem(STORAGE_KEY);
+      if (s) window.localStorage.setItem(storageKey, JSON.stringify(s));
+      else window.localStorage.removeItem(storageKey);
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [storageKey]);
 
   const signIn = useCallback(
     async (email: string, password?: string) => {
@@ -75,12 +75,13 @@ export function PulstractAuthProvider({ children, scope = "default" }: { childre
           accessToken: r.AccessToken,
           refreshToken: r.RefreshToken,
           idToken: r.IdToken,
+          scope,
         });
       } finally {
         setLoading(false);
       }
     },
-    [persist],
+    [persist, scope],
   );
 
   const signUp = useCallback(
@@ -114,19 +115,20 @@ export function PulstractAuthProvider({ children, scope = "default" }: { childre
           accessToken: r.AccessToken,
           refreshToken: r.RefreshToken,
           idToken: r.IdToken,
+          scope,
         });
       } finally {
         setLoading(false);
       }
     },
-    [persist],
+    [persist, scope],
   );
 
   const signOut = useCallback(() => persist(null), [persist]);
 
   const value = useMemo<Ctx>(
-    () => ({ session, loading, signIn, signUp, signOut }),
-    [session, loading, signIn, signUp, signOut],
+    () => ({ scope, session, loading, signIn, signUp, signOut }),
+    [scope, session, loading, signIn, signUp, signOut],
   );
 
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;
