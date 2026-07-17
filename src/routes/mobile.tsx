@@ -4242,7 +4242,18 @@ function HostPayoutsScreen({ onBack }: { onBack: () => void }) {
   const sym = currency === "EUR" ? "€" : currency === "GBP" ? "£" : "$";
   const handleSubmit = () => {
     submit.mutate(
-      { accountHolderName: "Test Host", iban: "DE89370400440532013000", country: "DE" },
+      {
+        bankToken: "tok_test_bank",
+        firstName: "Test",
+        lastName: "Host",
+        email: "host@pulstract.test",
+        dob: "1990-01-01",
+        addressLine1: "1 Test Street",
+        city: "Berlin",
+        postalCode: "10115",
+        country: "DE",
+        tosIp: "127.0.0.1",
+      },
       { onSuccess: () => toast.success("Payout profile submitted"), onError: (e: any) => toast.error(e.message) },
     );
   };
@@ -4253,11 +4264,17 @@ function HostPayoutsScreen({ onBack }: { onBack: () => void }) {
         <Card className="p-4">
           <p className="text-xs text-muted-foreground">Next payout</p>
           <p className="font-display text-2xl font-semibold mt-1">
-            {sym}{nextPayout ? (nextPayout.amount / 100).toFixed(2) : "0.00"}
+            {sym}{nextPayout ? (nextPayout.amountCents / 100).toFixed(2) : "0.00"}
           </p>
           <p className="text-[11px] text-muted-foreground">
-            {nextPayout?.scheduledAt ? `Scheduled ${new Date(nextPayout.scheduledAt).toLocaleDateString()}` : "No scheduled payout"}
+            {nextPayout?.arrivalDate ? `Scheduled ${new Date(nextPayout.arrivalDate).toLocaleDateString()}` : "No scheduled payout"}
           </p>
+          {account && (
+            <div className="grid grid-cols-2 gap-2 mt-3 text-[11px]">
+              <div className="rounded-md border p-2"><p className="text-muted-foreground">Available</p><p className="font-semibold text-sm">{sym}{(account.availableCents / 100).toFixed(2)}</p></div>
+              <div className="rounded-md border p-2"><p className="text-muted-foreground">Pending</p><p className="font-semibold text-sm">{sym}{(account.pendingCents / 100).toFixed(2)}</p></div>
+            </div>
+          )}
         </Card>
 
         <div>
@@ -4268,15 +4285,25 @@ function HostPayoutsScreen({ onBack }: { onBack: () => void }) {
                 <DollarSign className="h-4 w-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">{account.brand ?? "Bank"}</p>
+                <p className="font-medium text-sm">Bank account</p>
                 <p className="text-[11px] text-muted-foreground">
-                  {account.last4 ? `•••• ${account.last4}` : "Pending"} · {account.status}
+                  {account.bankLast4 ? `•••• ${account.bankLast4}` : "Pending"} · {account.status}
                 </p>
               </div>
-              <Badge variant="secondary" className="text-[10px]">{account.payoutSchedule ?? "Default"}</Badge>
+              <Badge variant={account.payoutsEnabled ? "secondary" : "outline"} className="text-[10px]">
+                {account.payoutsEnabled ? "Enabled" : "Setup needed"}
+              </Badge>
             </Card>
           ) : (
             <Card className="p-3 text-xs text-muted-foreground">No payout method on file.</Card>
+          )}
+          {account && account.requirementsDue.length > 0 && (
+            <Card className="p-3 mt-2 text-[11px]">
+              <p className="font-medium mb-1">Requirements outstanding</p>
+              <ul className="list-disc pl-4 space-y-0.5 text-muted-foreground">
+                {account.requirementsDue.map((r) => <li key={r}>{r}</li>)}
+              </ul>
+            </Card>
           )}
           <Button variant="outline" size="sm" className="w-full mt-2 h-8 text-xs" onClick={handleSubmit} disabled={submit.isPending}>
             <Plus className="h-3.5 w-3.5 mr-1" /> {account ? "Update payout profile" : "Add payout method"}
@@ -4293,8 +4320,8 @@ function HostPayoutsScreen({ onBack }: { onBack: () => void }) {
             <Card className="p-2 divide-y">
               {(payouts ?? []).map((p) => (
                 <div key={p.id} className="flex items-center justify-between px-2 py-2 text-sm">
-                  <span>{new Date(p.paidAt ?? p.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
-                  <span className="font-medium">{sym}{(p.amount / 100).toFixed(2)}</span>
+                  <span>{new Date(p.arrivalDate ?? p.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+                  <span className="font-medium">{sym}{(p.amountCents / 100).toFixed(2)}</span>
                   <Badge variant="secondary" className="text-[10px]">{p.status}</Badge>
                 </div>
               ))}
@@ -4305,6 +4332,7 @@ function HostPayoutsScreen({ onBack }: { onBack: () => void }) {
     </ScreenScroll>
   );
 }
+
 
 function HostAvailabilityScreen({ onBack }: { onBack: () => void }) {
   const { data: avail, isLoading } = useHostAvailability();
