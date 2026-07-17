@@ -75,7 +75,6 @@ import {
   useRemovePaymentMethod,
   useSetDefaultPaymentMethod,
   useUpdateNotificationPrefs,
-  useBecomeHost,
   useMetricsFunnel,
   useGymMemberships,
   useInviteMember,
