@@ -117,7 +117,6 @@ type Screen =
   | "saved"
   | "pPayment"
   | "pNotifications"
-  | "pBecomeHost"
   | "pHelp"
   | "pMyGym"
   | "filters";
