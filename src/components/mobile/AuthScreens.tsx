@@ -72,6 +72,20 @@ export function AuthScreens() {
             autoComplete="email"
           />
         </div>
+        {mode === "signin" && (
+          <div className="space-y-1.5">
+            <Label htmlFor="password" className="text-xs">Password <span className="text-muted-foreground">(optional for passwordless)</span></Label>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Leave blank for magic-link style"
+              autoComplete="current-password"
+            />
+          </div>
+        )}
+
 
         {error && (
           <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/10 rounded-md p-2">
