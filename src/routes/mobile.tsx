@@ -664,7 +664,7 @@ function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
             ["pPayment", "Payment methods", 1],
             ["pNotifications", "Notifications", 1],
             ["pMyGym", "My gym", 1],
-            ["pBecomeHost", "Become a host", 1],
+            
             ["pHelp", "Help & support", 1],
           ] as [Screen, string, number][]
         ).map(([s, label, level]) => (
