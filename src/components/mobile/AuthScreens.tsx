@@ -111,7 +111,7 @@ export function AuthScreens() {
       </form>
 
       <p className="text-xs text-muted-foreground mt-4">
-        Dev backend uses passwordless CUSTOM_AUTH — no password required.
+        Enter a password for seeded accounts, or leave blank to use passwordless CUSTOM_AUTH.
       </p>
 
       <div className="mt-auto pt-6 text-center text-xs text-muted-foreground">
