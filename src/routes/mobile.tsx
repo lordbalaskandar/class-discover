@@ -4116,7 +4116,7 @@ function HostProfileScreen({
     { label: "Templates", value: String(templates?.length ?? 0) },
     { label: "Rating", value: avgRating },
   ];
-  const payoutSub = payout?.last4 ? `${payout.brand ?? "Bank"} •••• ${payout.last4}` : payout?.status ? `Status: ${payout.status}` : "Not set up";
+  const payoutSub = payout?.bankLast4 ? `Bank •••• ${payout.bankLast4}` : payout?.status ? `Status: ${payout.status}` : "Not set up";
   const rows: { id: HostScreenId; label: string; sub: string }[] = [
     { id: "hpGym", label: "My gym", sub: "Manage gym & members" },
     { id: "hpTemplates", label: "Class templates", sub: `${templates?.length ?? 0} saved` },
