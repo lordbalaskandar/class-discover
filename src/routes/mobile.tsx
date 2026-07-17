@@ -63,7 +63,6 @@ import {
 } from "@/lib/pulstract/live-data";
 import {
   useMe,
-  useMyGym,
   useProfile,
   useCreateBooking,
   useCreatePaymentIntent,
@@ -76,7 +75,6 @@ import {
   useRemovePaymentMethod,
   useSetDefaultPaymentMethod,
   useUpdateNotificationPrefs,
-  useBecomeHost,
   useMetricsFunnel,
   useGymMemberships,
   useInviteMember,
@@ -117,7 +115,6 @@ type Screen =
   | "saved"
   | "pPayment"
   | "pNotifications"
-  | "pBecomeHost"
   | "pHelp"
   | "pMyGym"
   | "filters";
@@ -313,18 +310,53 @@ const CLASSES: ClassItem[] = [
 ];
 
 function MobileShowcase() {
+  return <MobileShowcaseInner />;
+}
+
+/**
+ * Signed-in banner shown above each phone. Also exposes a sign-out control
+ * scoped to the surrounding PulstractAuthProvider.
+ */
+function SessionBanner() {
+  const { session, signOut, scope } = usePulstractAuth();
+  if (!session) return null;
   return (
-    <PulstractAuthProvider>
-      <MobileShowcaseInner />
-    </PulstractAuthProvider>
+    <div className="flex items-center justify-between text-xs bg-card border rounded-md px-3 py-2 mb-3">
+      <span className="text-muted-foreground">
+        <span className="font-medium capitalize text-foreground/80 mr-1">{scope}</span>
+        signed in as <span className="font-semibold text-foreground">{session.email}</span>
+      </span>
+      <button
+        onClick={signOut}
+        className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
+      >
+        <LogOut className="h-3 w-3" /> Sign out
+      </button>
+    </div>
   );
+}
+
+/**
+ * Phone-shaped auth or content wrapper: renders the sign-in screen when there
+ * is no session for the surrounding scope, otherwise renders `children` (the
+ * flow itself). Each section on this page mounts its own copy with a distinct
+ * auth scope so User and Host sign-ins never collide.
+ */
+function ScopedPhone({ children }: { children: React.ReactNode }) {
+  const { session } = usePulstractAuth();
+  if (!session) {
+    return (
+      <PhoneFrame>
+        <PhoneStatusBar />
+        <AuthScreens />
+      </PhoneFrame>
+    );
+  }
+  return <>{children}</>;
 }
 
 function MobileShowcaseInner() {
   const { flow, screen } = Route.useSearch();
-  const showUser = !flow || flow === "user";
-  const showHost = !flow || flow === "host";
-  const { session, signOut } = usePulstractAuth();
 
   return (
     <div className="min-h-screen">
@@ -334,67 +366,45 @@ function MobileShowcaseInner() {
         <div className="text-center mb-8">
           <Badge variant="secondary" className="mb-3">Mobile preview · live backend</Badge>
           <h1 className="font-display text-4xl md:text-5xl font-semibold tracking-tight">
-            The Pulstract app, end to end
+            Two apps, one backend
           </h1>
           <p className="mt-3 text-muted-foreground max-w-2xl mx-auto">
-            Interactive prototype wired to the real Pulstract dev backend —
-            classes, bookings and profile all round-trip through the gateway.
+            The User app and Host app are separate products with their own sign-in.
+            Both round-trip through the same Pulstract gateway.
           </p>
         </div>
 
-        <div className="mb-8 space-y-3">
+        <div className="mb-8">
           <ServiceHealthBar />
-          {session && (
-            <div className="flex items-center justify-between text-xs bg-card border rounded-md px-3 py-2">
-              <span className="text-muted-foreground">
-                Signed in as <span className="font-semibold text-foreground">{session.email}</span>
-              </span>
-              <button
-                onClick={signOut}
-                className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground"
-              >
-                <LogOut className="h-3 w-3" /> Sign out
-              </button>
-            </div>
-          )}
         </div>
 
-        {!session ? (
-          <div className="flex flex-col items-center">
-            <p className="text-sm text-muted-foreground mb-4 text-center max-w-md">
-              Sign in or create an account to use the mobile prototype against
-              the live backend. Dev accounts are auto-confirmed.
-            </p>
-            <PhoneFrame>
-              <PhoneStatusBar />
-              <AuthScreens />
-            </PhoneFrame>
-          </div>
-        ) : (
-          <>
-            {showUser && (
-              <FlowSection
-                eyebrow="User flow"
-                title="Book a class"
-                description="Browse, check the host, review the class, pick a date, pay, and confirm."
-              >
-                <UserFlow initialScreen={flow === "user" ? (screen as Screen | undefined) : undefined} />
-              </FlowSection>
-            )}
+        <PulstractAuthProvider scope="user">
+          <FlowSection
+            eyebrow="User app"
+            title="Book a class"
+            description="Browse, check the host, review the class, pick a date, pay, and confirm."
+          >
+            <SessionBanner />
+            <ScopedPhone>
+              <UserFlow initialScreen={flow === "user" ? (screen as Screen | undefined) : undefined} />
+            </ScopedPhone>
+          </FlowSection>
+        </PulstractAuthProvider>
 
-            {showUser && showHost && <div className="my-16 border-t" />}
+        <div className="my-16 border-t" />
 
-            {showHost && (
-              <FlowSection
-                eyebrow="Host flow"
-                title="Run your classes"
-                description="See today's schedule, publish a class, manage attendees, and track earnings."
-              >
-                <HostFlow initialScreen={flow === "host" ? (screen as HostScreenId | undefined) : undefined} />
-              </FlowSection>
-            )}
-          </>
-        )}
+        <PulstractAuthProvider scope="host">
+          <FlowSection
+            eyebrow="Host app"
+            title="Run your classes"
+            description="See today's schedule, publish a class, manage attendees, and track earnings."
+          >
+            <SessionBanner />
+            <ScopedPhone>
+              <HostFlow initialScreen={flow === "host" ? (screen as HostScreenId | undefined) : undefined} />
+            </ScopedPhone>
+          </FlowSection>
+        </PulstractAuthProvider>
       </div>
     </div>
   );
@@ -626,9 +636,6 @@ function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
           {screen === "pNotifications" && (
             <ProfileNotificationsScreen onBack={() => setScreen("profile")} />
           )}
-          {screen === "pBecomeHost" && (
-            <ProfileBecomeHostScreen onBack={() => setScreen("profile")} />
-          )}
           {screen === "pHelp" && (
             <ProfileHelpScreen onBack={() => setScreen("profile")} />
           )}
@@ -668,7 +675,7 @@ function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
             ["pPayment", "Payment methods", 1],
             ["pNotifications", "Notifications", 1],
             ["pMyGym", "My gym", 1],
-            ["pBecomeHost", "Become a host", 1],
+            
             ["pHelp", "Help & support", 1],
           ] as [Screen, string, number][]
         ).map(([s, label, level]) => (
@@ -2821,7 +2828,7 @@ function SavedScreen({
   );
 }
 
-type ProfileSection = "pPayment" | "pNotifications" | "pBecomeHost" | "pHelp" | "pMyGym";
+type ProfileSection = "pPayment" | "pNotifications" | "pHelp" | "pMyGym";
 
 function ProfileScreen({
   onBookings,
@@ -2860,7 +2867,7 @@ function ProfileScreen({
       onClick: onSaved,
     },
     { label: "Notifications", sub: "Push & email", onClick: () => onOpenSection("pNotifications") },
-    { label: "Become a host", sub: "Share your craft with the community", onClick: () => onOpenSection("pBecomeHost") },
+    
     { label: "Help & support", sub: "FAQ, contact us", onClick: () => onOpenSection("pHelp") },
   ];
 
@@ -3062,98 +3069,6 @@ function ProfileNotificationsScreen({ onBack }: { onBack: () => void }) {
   );
 }
 
-function ProfileBecomeHostScreen({ onBack }: { onBack: () => void }) {
-  const { data: me } = useMe();
-  const { data: myGym } = useMyGym();
-  const becomeHost = useBecomeHost();
-  // Some hosts are seeded directly in the DB (isHost=false but they own a gym).
-  // Gate on either flag so those accounts aren't locked out of onboarding UI.
-  const alreadyHost = !!me?.isHost || !!myGym;
-  const handleStart = async () => {
-    try {
-      await becomeHost.mutateAsync();
-      toast.success("You're a host! Switch to the host flow to get started.");
-    } catch (e: any) {
-      toast.error(e?.message ?? "Could not upgrade account");
-    }
-  };
-  const benefits = [
-    { icon: DollarSign, label: "Set your own price", sub: "Keep 90% of every booking" },
-    { icon: CalendarDays, label: "Flexible schedule", sub: "List sessions when you're free" },
-    { icon: Users, label: "Reach new clients", sub: "Get discovered by people nearby" },
-    { icon: TrendingUp, label: "Grow your brand", sub: "Reviews, followers, and metrics" },
-  ];
-  const steps = [
-    "Tell us about you and your craft",
-    "Add your first class or service",
-    "Verify your ID and payouts",
-    "Go live and start hosting",
-  ];
-  return (
-    <div className="h-full flex flex-col">
-      <ScreenHeader title="Become a host" onBack={onBack} />
-      <ScreenScroll>
-        <div
-          className="mx-5 mt-3 rounded-2xl p-5 text-primary-foreground shadow-elegant"
-          style={{ background: "linear-gradient(135deg,#f4b942,#e07a5f)" }}
-        >
-          <Badge className="bg-background/20 text-primary-foreground hover:bg-background/20 border-0 mb-2">
-            Earn on Pulstract
-          </Badge>
-          <h3 className="font-display text-xl font-semibold leading-tight">
-            Turn your craft into income
-          </h3>
-          <p className="text-xs opacity-90 mt-1">
-            Host yoga, BJJ, running clubs, PT sessions and more.
-          </p>
-        </div>
-
-        <div className="px-5 mt-4 space-y-2">
-          {benefits.map((b) => (
-            <Card key={b.label} className="p-3 flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
-                <b.icon className="h-4 w-4" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">{b.label}</p>
-                <p className="text-[11px] text-muted-foreground">{b.sub}</p>
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        <div className="px-5 mt-5">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold mb-2">
-            How it works
-          </p>
-          <Card className="p-3 space-y-2">
-            {steps.map((s, i) => (
-              <div key={s} className="flex items-center gap-3">
-                <div className="h-6 w-6 rounded-full bg-foreground text-background text-[11px] font-semibold flex items-center justify-center">
-                  {i + 1}
-                </div>
-                <p className="text-sm">{s}</p>
-              </div>
-            ))}
-          </Card>
-        </div>
-
-        <div className="px-5 mt-5 pb-2">
-          <Button
-            className="w-full bg-gradient-hero shadow-elegant"
-            onClick={handleStart}
-            disabled={alreadyHost || becomeHost.isPending}
-          >
-            {alreadyHost ? "You're already a host" : becomeHost.isPending ? "Upgrading…" : "Start hosting"}
-          </Button>
-          <p className="text-[10px] text-muted-foreground text-center mt-2">
-            {alreadyHost ? "Head to the host flow to manage classes" : "Takes about 5 minutes"}
-          </p>
-        </div>
-      </ScreenScroll>
-    </div>
-  );
-}
 
 function ProfileHelpScreen({ onBack }: { onBack: () => void }) {
   const [open, setOpen] = useState<string | null>(null);
