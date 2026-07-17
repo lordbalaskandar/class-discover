@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { cognito, COGNITO_CLIENT_ID, cryptoRandomPassword } from "./api";
 
-const STORAGE_KEY = "pulstract-mobile-auth-v1";
+// v2: invalidates any legacy sessions that may have persisted IdToken as accessToken.
+const STORAGE_KEY = "pulstract-mobile-auth-v2";
 
 export type PulstractSession = {
   email: string;
