@@ -47,13 +47,15 @@ export function PulstractAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = useCallback(
-    async (email: string) => {
+    async (email: string, password?: string) => {
       setLoading(true);
       try {
         const res: any = await cognito("InitiateAuth", {
           ClientId: COGNITO_CLIENT_ID,
-          AuthFlow: "CUSTOM_AUTH",
-          AuthParameters: { USERNAME: email },
+          AuthFlow: password ? "USER_PASSWORD_AUTH" : "CUSTOM_AUTH",
+          AuthParameters: password
+            ? { USERNAME: email, PASSWORD: password }
+            : { USERNAME: email },
         });
         const r = res.AuthenticationResult;
         if (!r) throw new Error("Sign-in did not return tokens");
