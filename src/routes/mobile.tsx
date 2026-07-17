@@ -63,7 +63,6 @@ import {
 } from "@/lib/pulstract/live-data";
 import {
   useMe,
-  useMyGym,
   useProfile,
   useCreateBooking,
   useCreatePaymentIntent,
