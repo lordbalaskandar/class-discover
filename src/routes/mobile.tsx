@@ -3062,8 +3062,11 @@ function ProfileNotificationsScreen({ onBack }: { onBack: () => void }) {
 
 function ProfileBecomeHostScreen({ onBack }: { onBack: () => void }) {
   const { data: me } = useMe();
+  const { data: myGym } = useMyGym();
   const becomeHost = useBecomeHost();
-  const alreadyHost = !!me?.isHost;
+  // Some hosts are seeded directly in the DB (isHost=false but they own a gym).
+  // Gate on either flag so those accounts aren't locked out of onboarding UI.
+  const alreadyHost = !!me?.isHost || !!myGym;
   const handleStart = async () => {
     try {
       await becomeHost.mutateAsync();
