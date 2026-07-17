@@ -635,12 +635,11 @@ import {
   Q_HOST_SUPPORT_TICKETS,
   Q_TOP_CLASSES,
   Q_ATTENDANCE_STATS,
+  Q_HOST_RETENTION,
   M_CREATE_TEMPLATE,
   M_UPDATE_TEMPLATE,
   M_DELETE_TEMPLATE,
   M_SET_HOST_AVAIL,
-  M_CREATE_BLACKOUT,
-  M_DELETE_BLACKOUT,
   M_CREATE_SUPPORT,
   M_RESPOND_REVIEW,
   M_FLAG_REVIEW,
@@ -653,7 +652,7 @@ import {
   type ApiHostAvailability,
   type ApiSupportTicket,
   type ApiTopClass,
-  type ApiAttendanceStat,
+  type ApiAttendanceStats,
 } from "./api";
 
 export function usePayouts() {
@@ -676,9 +675,7 @@ export function useNextPayout() {
     enabled: !!token,
     queryKey: ["nextPayout"],
     queryFn: async () => {
-      const d = await gql<{ nextPayout: { amount: number; currency: string; scheduledAt: string } | null }>(
-        Q_NEXT_PAYOUT, undefined, token,
-      );
+      const d = await gql<{ nextPayout: ApiPayout | null }>(Q_NEXT_PAYOUT, undefined, token);
       return d.nextPayout;
     },
   });
@@ -764,8 +761,22 @@ export function useAttendanceStats(period: string = "week") {
     enabled: !!token,
     queryKey: ["attendanceStats", period],
     queryFn: async () => {
-      const d = await gql<{ attendanceStats: ApiAttendanceStat[] }>(Q_ATTENDANCE_STATS, { p: period }, token);
-      return d.attendanceStats ?? [];
+      const d = await gql<{ attendanceStats: ApiAttendanceStats | null }>(Q_ATTENDANCE_STATS, { p: period }, token);
+      return d.attendanceStats;
+    },
+  });
+}
+
+export function useHostRetention(period: string = "month") {
+  const token = useToken();
+  return useQuery({
+    enabled: !!token,
+    queryKey: ["hostRetention", period],
+    queryFn: async () => {
+      const d = await gql<{ hostRetention: { period: string; ltvCents: number; activeMembers: number; atRiskCount: number; cohorts: { cohort: string; size: number; retained: number[] }[] } | null }>(
+        Q_HOST_RETENTION, { p: period }, token,
+      );
+      return d.hostRetention;
     },
   });
 }
@@ -798,33 +809,14 @@ export function useSetHostAvailability() {
   const token = useToken();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { acceptingBookings?: boolean; weekly?: { day: string; slots: { start: string; end: string }[] }[] }) => {
-      const d = await gql<{ setHostAvailability: { acceptingBookings: boolean } }>(M_SET_HOST_AVAIL, { i: input }, token);
+    mutationFn: async (input: ApiHostAvailability) => {
+      const payload = {
+        timezone: input.timezone,
+        weekly: input.weekly.map((w) => ({ weekday: w.weekday, startMinutes: w.startMinutes, endMinutes: w.endMinutes })),
+        blackouts: input.blackouts.map((b) => ({ date: b.date, reason: b.reason ?? null })),
+      };
+      const d = await gql<{ setHostAvailability: ApiHostAvailability }>(M_SET_HOST_AVAIL, { i: payload }, token);
       return d.setHostAvailability;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hostAvailability"] }),
-  });
-}
-
-export function useCreateBlackout() {
-  const token = useToken();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (input: { startDate: string; endDate: string; reason?: string }) => {
-      const d = await gql(M_CREATE_BLACKOUT, { i: input }, token);
-      return d;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["hostAvailability"] }),
-  });
-}
-
-export function useDeleteBlackout() {
-  const token = useToken();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await gql(M_DELETE_BLACKOUT, { id }, token);
-      return id;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hostAvailability"] }),
   });
@@ -835,7 +827,7 @@ export function useCreateSupportTicket() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: { subject: string; body: string }) => {
-      const d = await gql<{ createSupportTicket: ApiSupportTicket }>(M_CREATE_SUPPORT, { i: input }, token);
+      const d = await gql<{ createSupportTicket: ApiSupportTicket }>(M_CREATE_SUPPORT, { s: input.subject, b: input.body }, token);
       return d.createSupportTicket;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["hostSupportTickets"] }),
@@ -868,7 +860,10 @@ export function useSubmitPayoutProfile() {
   const token = useToken();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { accountHolderName: string; iban?: string; routingNumber?: string; accountNumber?: string; country: string }) => {
+    mutationFn: async (input: {
+      bankToken: string; firstName: string; lastName: string; email: string;
+      dob: string; addressLine1: string; city: string; postalCode: string; country: string; tosIp: string;
+    }) => {
       const d = await gql<{ submitHostPayoutProfile: ApiHostPayoutAccount }>(M_SUBMIT_PAYOUT_PROFILE, { i: input }, token);
       return d.submitHostPayoutProfile;
     },
@@ -881,7 +876,7 @@ export function useCashOut() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async () => {
-      const d = await gql<{ cashOutHost: ApiPayout }>(M_CASH_OUT, undefined, token);
+      const d = await gql<{ cashOutHost: ApiPayout | null }>(M_CASH_OUT, undefined, token);
       return d.cashOutHost;
     },
     onSuccess: () => {
@@ -891,6 +886,7 @@ export function useCashOut() {
     },
   });
 }
+
 
 /* ============================= Helpers ============================= */
 
