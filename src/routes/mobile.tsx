@@ -625,9 +625,6 @@ function UserFlow({ initialScreen }: { initialScreen?: Screen }) {
           {screen === "pNotifications" && (
             <ProfileNotificationsScreen onBack={() => setScreen("profile")} />
           )}
-          {screen === "pBecomeHost" && (
-            <ProfileBecomeHostScreen onBack={() => setScreen("profile")} />
-          )}
           {screen === "pHelp" && (
             <ProfileHelpScreen onBack={() => setScreen("profile")} />
           )}
