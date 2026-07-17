@@ -4337,43 +4337,46 @@ function HostPayoutsScreen({ onBack }: { onBack: () => void }) {
 function HostAvailabilityScreen({ onBack }: { onBack: () => void }) {
   const { data: avail, isLoading } = useHostAvailability();
   const setAvail = useSetHostAvailability();
-  const createBlackout = useCreateBlackout();
-  const deleteBlackout = useDeleteBlackout();
-  const DAY_ORDER = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const weekly = DAY_ORDER.map((d) => {
-    const w = avail?.weekly.find((x) => x.day.toLowerCase().startsWith(d.toLowerCase().slice(0, 3)));
-    return { d, slots: w?.slots ?? [] };
+  const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const weekly = Array.from({ length: 7 }, (_, weekday) => {
+    const w = avail?.weekly.filter((x) => x.weekday === weekday) ?? [];
+    return { weekday, label: DAY_LABELS[weekday], slots: w };
   });
-  const fmt = (t: string) => t.length === 5 ? t : t;
-  const handleToggle = () => {
-    if (!avail) return;
-    setAvail.mutate({ acceptingBookings: !avail.acceptingBookings });
+  const fmt = (mins: number) => {
+    const h = Math.floor(mins / 60).toString().padStart(2, "0");
+    const m = (mins % 60).toString().padStart(2, "0");
+    return `${h}:${m}`;
   };
   const handleAddTimeOff = () => {
+    if (!avail) return;
     const start = new Date();
     start.setDate(start.getDate() + 7);
-    const end = new Date(start);
-    end.setDate(end.getDate() + 3);
-    createBlackout.mutate(
-      { startDate: start.toISOString().slice(0, 10), endDate: end.toISOString().slice(0, 10), reason: "Time off" },
+    const date = start.toISOString().slice(0, 10);
+    setAvail.mutate(
+      { ...avail, blackouts: [...avail.blackouts, { date, reason: "Time off" }] },
       { onSuccess: () => toast.success("Blackout added"), onError: (e: any) => toast.error(e.message) },
+    );
+  };
+  const handleRemoveBlackout = (date: string) => {
+    if (!avail) return;
+    setAvail.mutate(
+      { ...avail, blackouts: avail.blackouts.filter((b) => b.date !== date) },
+      { onError: (e: any) => toast.error(e.message) },
     );
   };
   return (
     <ScreenScroll>
       <ScreenHeader title="Availability" onBack={onBack} />
       <div className="px-5 pb-4 space-y-3">
-        <button onClick={handleToggle} className="w-full">
+        {avail && (
           <Card className="p-3 flex items-center justify-between">
-            <div className="text-left">
-              <p className="font-medium text-sm">Accepting bookings</p>
-              <p className="text-[11px] text-muted-foreground">{avail?.acceptingBookings ? "Live in browse" : "Paused"}</p>
+            <div>
+              <p className="font-medium text-sm">Time zone</p>
+              <p className="text-[11px] text-muted-foreground">{avail.timezone}</p>
             </div>
-            <div className={cn("h-6 w-10 rounded-full relative transition-colors", avail?.acceptingBookings ? "bg-primary" : "bg-muted")}>
-              <div className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-all", avail?.acceptingBookings ? "right-0.5" : "left-0.5")} />
-            </div>
+            <Badge variant="secondary" className="text-[10px]">{avail.weekly.length} slots</Badge>
           </Card>
-        </button>
+        )}
 
         <div>
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Weekly hours</p>
@@ -4382,15 +4385,15 @@ function HostAvailabilityScreen({ onBack }: { onBack: () => void }) {
           ) : (
             <Card className="p-2 divide-y">
               {weekly.map((d) => (
-                <div key={d.d} className="flex items-center justify-between px-2 py-2.5">
-                  <span className="font-medium text-sm w-12">{d.d}</span>
+                <div key={d.weekday} className="flex items-center justify-between px-2 py-2.5">
+                  <span className="font-medium text-sm w-12">{d.label}</span>
                   <div className="flex-1 flex flex-wrap gap-1 justify-end">
                     {d.slots.length === 0 ? (
                       <span className="text-[11px] text-muted-foreground">Unavailable</span>
                     ) : (
                       d.slots.map((s, i) => (
                         <Badge key={i} variant="secondary" className="text-[10px]">
-                          {fmt(s.start)}–{fmt(s.end)}
+                          {fmt(s.startMinutes)}–{fmt(s.endMinutes)}
                         </Badge>
                       ))
                     )}
@@ -4407,18 +4410,18 @@ function HostAvailabilityScreen({ onBack }: { onBack: () => void }) {
             <Card className="p-3 text-xs text-muted-foreground">No time off scheduled.</Card>
           ) : (
             (avail?.blackouts ?? []).map((b) => (
-              <Card key={b.id} className="p-3 text-sm flex items-center justify-between mb-2">
+              <Card key={b.date} className="p-3 text-sm flex items-center justify-between mb-2">
                 <div>
-                  <p className="font-medium">{new Date(b.startDate).toLocaleDateString()} – {new Date(b.endDate).toLocaleDateString()}</p>
+                  <p className="font-medium">{new Date(b.date).toLocaleDateString()}</p>
                   <p className="text-[11px] text-muted-foreground">{b.reason ?? "Paused"}</p>
                 </div>
-                <button onClick={() => deleteBlackout.mutate(b.id)} className="text-[11px] text-muted-foreground hover:text-foreground">
+                <button onClick={() => handleRemoveBlackout(b.date)} className="text-[11px] text-muted-foreground hover:text-foreground">
                   <X className="h-4 w-4" />
                 </button>
               </Card>
             ))
           )}
-          <Button variant="outline" size="sm" className="w-full mt-2 h-8 text-xs" onClick={handleAddTimeOff} disabled={createBlackout.isPending}>
+          <Button variant="outline" size="sm" className="w-full mt-2 h-8 text-xs" onClick={handleAddTimeOff} disabled={setAvail.isPending || !avail}>
             <Plus className="h-3.5 w-3.5 mr-1" /> Add time off
           </Button>
         </div>
@@ -4426,6 +4429,7 @@ function HostAvailabilityScreen({ onBack }: { onBack: () => void }) {
     </ScreenScroll>
   );
 }
+
 
 function HostReviewsScreen({ onBack }: { onBack: () => void }) {
   const { data: reviews, isLoading } = useMyGymReviews();
