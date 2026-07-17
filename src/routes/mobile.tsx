@@ -93,8 +93,7 @@ import {
   useDeleteTemplate,
   useHostAvailability,
   useSetHostAvailability,
-  useCreateBlackout,
-  useDeleteBlackout,
+
   useRespondToReview,
   useFlagReview,
   useHostSupportTickets,
@@ -3338,7 +3337,7 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
           .map((s) => s[0]?.toUpperCase() ?? "")
           .join("") || "??";
         return {
-          id: m.id,
+          id: m.userId ?? m.id,
           name: m.email.split("@")[0],
           initials,
           email: m.email,
@@ -3514,14 +3513,14 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
               onRemove={
                 liveGym
                   ? async (id) => {
-                      try { await removeMemberMut.mutateAsync(id); } catch (e: any) { toast.error(e?.message ?? "Failed"); }
+                      try { await removeMemberMut.mutateAsync({ gymId: liveGym.id, userId: id }); } catch (e: any) { toast.error(e?.message ?? "Failed"); }
                     }
                   : undefined
               }
               onSetStatus={
                 liveGym
                   ? async (id, status) => {
-                      try { await updateMemberMut.mutateAsync({ id, input: { status } }); } catch (e: any) { toast.error(e?.message ?? "Failed"); }
+                      try { await updateMemberMut.mutateAsync({ gymId: liveGym.id, userId: id, input: { status } }); } catch (e: any) { toast.error(e?.message ?? "Failed"); }
                     }
                   : undefined
               }
@@ -3996,13 +3995,15 @@ function HostManageScreen({
 function HostEarningsScreen({ onBack }: { onBack: () => void }) {
   const { data: earnings, isLoading } = useHostEarnings("week");
   const { data: nextPayout } = useNextPayout();
+  const { data: account } = useHostPayoutAccount();
   const cashOut = useCashOut();
   const series = earnings?.series ?? [];
-  const max = Math.max(1, ...series.map((s) => s.value));
-  const currency = earnings?.currency ?? nextPayout?.currency ?? "USD";
+  const max = Math.max(1, ...series.map((s) => s.grossCents));
+  const currency = nextPayout?.currency ?? account?.currency ?? "USD";
   const sym = currency === "EUR" ? "€" : currency === "GBP" ? "£" : "$";
-  const nextAmt = nextPayout ? (nextPayout.amount / 100).toFixed(2) : "0.00";
-  const nextDate = nextPayout?.scheduledAt ? new Date(nextPayout.scheduledAt).toLocaleDateString(undefined, { weekday: "short" }) : "—";
+  const availableCents = account?.availableCents ?? 0;
+  const nextAmt = nextPayout ? (nextPayout.amountCents / 100).toFixed(2) : (availableCents / 100).toFixed(2);
+  const nextDate = nextPayout?.arrivalDate ? new Date(nextPayout.arrivalDate).toLocaleDateString(undefined, { weekday: "short" }) : "—";
   return (
     <ScreenScroll>
       <ScreenHeader title="Earnings" onBack={onBack} />
@@ -4014,7 +4015,7 @@ function HostEarningsScreen({ onBack }: { onBack: () => void }) {
             <span className="opacity-80">Next payout · {nextDate}</span>
             <button
               onClick={() => cashOut.mutate(undefined, { onSuccess: () => toast.success("Cash out requested"), onError: (e: any) => toast.error(e.message) })}
-              disabled={cashOut.isPending || !nextPayout || nextPayout.amount <= 0}
+              disabled={cashOut.isPending || availableCents <= 0}
               className="px-3 py-1.5 rounded-full bg-background text-foreground font-semibold disabled:opacity-50"
             >
               {cashOut.isPending ? "…" : "Cash out"}
@@ -4026,7 +4027,10 @@ function HostEarningsScreen({ onBack }: { onBack: () => void }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground">This {earnings?.period ?? "week"}</p>
-              <p className="font-display text-xl font-semibold">{sym}{earnings ? (earnings.total / 100).toFixed(0) : "0"}</p>
+              <p className="font-display text-xl font-semibold">{sym}{earnings ? (earnings.grossCents / 100).toFixed(0) : "0"}</p>
+              {earnings && (
+                <p className="text-[11px] text-muted-foreground mt-0.5">Net {sym}{(earnings.netCents / 100).toFixed(0)} · {earnings.bookingCount} bookings</p>
+              )}
             </div>
             <Badge variant="secondary" className="text-[10px]">
               <BarChart3 className="h-3 w-3 mr-1" /> Live
@@ -4050,7 +4054,7 @@ function HostEarningsScreen({ onBack }: { onBack: () => void }) {
                     const w = 280, h = 76;
                     const pts = series.map((s, i) => {
                       const x = (i / Math.max(1, series.length - 1)) * w;
-                      const y = h - (s.value / max) * h + 2;
+                      const y = h - (s.grossCents / max) * h + 2;
                       return [x, y] as const;
                     });
                     const line = pts.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x},${y}`).join(" ");
@@ -4068,7 +4072,7 @@ function HostEarningsScreen({ onBack }: { onBack: () => void }) {
                 </svg>
                 <div className="flex justify-between mt-1 px-0.5">
                   {series.map((s, i) => (
-                    <span key={i} className="text-[10px] text-muted-foreground">{s.label}</span>
+                    <span key={i} className="text-[10px] text-muted-foreground">{new Date(s.date).toLocaleDateString(undefined, { weekday: "short" })}</span>
                   ))}
                 </div>
               </>
@@ -4076,24 +4080,17 @@ function HostEarningsScreen({ onBack }: { onBack: () => void }) {
           </div>
         </Card>
 
-        <div>
-          <h3 className="font-semibold text-sm mb-2">Recent</h3>
-          <div className="space-y-2 pb-4">
-            {(earnings?.recent ?? []).length === 0 ? (
-              <Card className="p-3 text-xs text-muted-foreground">No recent earnings.</Card>
-            ) : (
-              (earnings?.recent ?? []).map((r) => (
-                <Card key={r.id} className="p-3 flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">{r.title}</p>
-                    <p className="text-[11px] text-muted-foreground">{new Date(r.date).toLocaleDateString()}</p>
-                  </div>
-                  <span className="font-semibold text-sm">+{sym}{(r.amount / 100).toFixed(0)}</span>
-                </Card>
-              ))
-            )}
+        {earnings && (
+          <div>
+            <h3 className="font-semibold text-sm mb-2">Breakdown</h3>
+            <Card className="p-3 space-y-1.5 text-sm">
+              <div className="flex justify-between"><span className="text-muted-foreground">Gross</span><span className="font-medium">{sym}{(earnings.grossCents / 100).toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Platform fee</span><span className="font-medium">-{sym}{(earnings.platformFeeCents / 100).toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Refunded</span><span className="font-medium">-{sym}{(earnings.refundedCents / 100).toFixed(2)}</span></div>
+              <div className="flex justify-between border-t pt-1.5 mt-1"><span className="font-semibold">Net</span><span className="font-semibold">{sym}{(earnings.netCents / 100).toFixed(2)}</span></div>
+            </Card>
           </div>
-        </div>
+        )}
       </div>
     </ScreenScroll>
   );
@@ -4119,7 +4116,7 @@ function HostProfileScreen({
     { label: "Templates", value: String(templates?.length ?? 0) },
     { label: "Rating", value: avgRating },
   ];
-  const payoutSub = payout?.last4 ? `${payout.brand ?? "Bank"} •••• ${payout.last4}` : payout?.status ? `Status: ${payout.status}` : "Not set up";
+  const payoutSub = payout?.bankLast4 ? `Bank •••• ${payout.bankLast4}` : payout?.status ? `Status: ${payout.status}` : "Not set up";
   const rows: { id: HostScreenId; label: string; sub: string }[] = [
     { id: "hpGym", label: "My gym", sub: "Manage gym & members" },
     { id: "hpTemplates", label: "Class templates", sub: `${templates?.length ?? 0} saved` },
@@ -4219,9 +4216,7 @@ function HostTemplatesScreen({ onBack }: { onBack: () => void }) {
                     {t.activityType} · {t.durationMinutes} min · ${(t.priceCents / 100).toFixed(0)}
                   </p>
                 </div>
-                {typeof t.uses === "number" && (
-                  <Badge variant="secondary" className="text-[10px] shrink-0">Used {t.uses}×</Badge>
-                )}
+                <Badge variant="secondary" className="text-[10px] shrink-0">Cap {t.capacity}</Badge>
               </div>
               <div className="flex gap-2 mt-3">
                 <Button size="sm" className="flex-1 h-8 text-xs" onClick={() => handleUse(t)} disabled={createClass.isPending}>Use template</Button>
@@ -4247,7 +4242,18 @@ function HostPayoutsScreen({ onBack }: { onBack: () => void }) {
   const sym = currency === "EUR" ? "€" : currency === "GBP" ? "£" : "$";
   const handleSubmit = () => {
     submit.mutate(
-      { accountHolderName: "Test Host", iban: "DE89370400440532013000", country: "DE" },
+      {
+        bankToken: "tok_test_bank",
+        firstName: "Test",
+        lastName: "Host",
+        email: "host@pulstract.test",
+        dob: "1990-01-01",
+        addressLine1: "1 Test Street",
+        city: "Berlin",
+        postalCode: "10115",
+        country: "DE",
+        tosIp: "127.0.0.1",
+      },
       { onSuccess: () => toast.success("Payout profile submitted"), onError: (e: any) => toast.error(e.message) },
     );
   };
@@ -4258,11 +4264,17 @@ function HostPayoutsScreen({ onBack }: { onBack: () => void }) {
         <Card className="p-4">
           <p className="text-xs text-muted-foreground">Next payout</p>
           <p className="font-display text-2xl font-semibold mt-1">
-            {sym}{nextPayout ? (nextPayout.amount / 100).toFixed(2) : "0.00"}
+            {sym}{nextPayout ? (nextPayout.amountCents / 100).toFixed(2) : "0.00"}
           </p>
           <p className="text-[11px] text-muted-foreground">
-            {nextPayout?.scheduledAt ? `Scheduled ${new Date(nextPayout.scheduledAt).toLocaleDateString()}` : "No scheduled payout"}
+            {nextPayout?.arrivalDate ? `Scheduled ${new Date(nextPayout.arrivalDate).toLocaleDateString()}` : "No scheduled payout"}
           </p>
+          {account && (
+            <div className="grid grid-cols-2 gap-2 mt-3 text-[11px]">
+              <div className="rounded-md border p-2"><p className="text-muted-foreground">Available</p><p className="font-semibold text-sm">{sym}{(account.availableCents / 100).toFixed(2)}</p></div>
+              <div className="rounded-md border p-2"><p className="text-muted-foreground">Pending</p><p className="font-semibold text-sm">{sym}{(account.pendingCents / 100).toFixed(2)}</p></div>
+            </div>
+          )}
         </Card>
 
         <div>
@@ -4273,15 +4285,25 @@ function HostPayoutsScreen({ onBack }: { onBack: () => void }) {
                 <DollarSign className="h-4 w-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">{account.brand ?? "Bank"}</p>
+                <p className="font-medium text-sm">Bank account</p>
                 <p className="text-[11px] text-muted-foreground">
-                  {account.last4 ? `•••• ${account.last4}` : "Pending"} · {account.status}
+                  {account.bankLast4 ? `•••• ${account.bankLast4}` : "Pending"} · {account.status}
                 </p>
               </div>
-              <Badge variant="secondary" className="text-[10px]">{account.payoutSchedule ?? "Default"}</Badge>
+              <Badge variant={account.payoutsEnabled ? "secondary" : "outline"} className="text-[10px]">
+                {account.payoutsEnabled ? "Enabled" : "Setup needed"}
+              </Badge>
             </Card>
           ) : (
             <Card className="p-3 text-xs text-muted-foreground">No payout method on file.</Card>
+          )}
+          {account && account.requirementsDue.length > 0 && (
+            <Card className="p-3 mt-2 text-[11px]">
+              <p className="font-medium mb-1">Requirements outstanding</p>
+              <ul className="list-disc pl-4 space-y-0.5 text-muted-foreground">
+                {account.requirementsDue.map((r) => <li key={r}>{r}</li>)}
+              </ul>
+            </Card>
           )}
           <Button variant="outline" size="sm" className="w-full mt-2 h-8 text-xs" onClick={handleSubmit} disabled={submit.isPending}>
             <Plus className="h-3.5 w-3.5 mr-1" /> {account ? "Update payout profile" : "Add payout method"}
@@ -4298,8 +4320,8 @@ function HostPayoutsScreen({ onBack }: { onBack: () => void }) {
             <Card className="p-2 divide-y">
               {(payouts ?? []).map((p) => (
                 <div key={p.id} className="flex items-center justify-between px-2 py-2 text-sm">
-                  <span>{new Date(p.paidAt ?? p.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
-                  <span className="font-medium">{sym}{(p.amount / 100).toFixed(2)}</span>
+                  <span>{new Date(p.arrivalDate ?? p.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+                  <span className="font-medium">{sym}{(p.amountCents / 100).toFixed(2)}</span>
                   <Badge variant="secondary" className="text-[10px]">{p.status}</Badge>
                 </div>
               ))}
@@ -4311,46 +4333,50 @@ function HostPayoutsScreen({ onBack }: { onBack: () => void }) {
   );
 }
 
+
 function HostAvailabilityScreen({ onBack }: { onBack: () => void }) {
   const { data: avail, isLoading } = useHostAvailability();
   const setAvail = useSetHostAvailability();
-  const createBlackout = useCreateBlackout();
-  const deleteBlackout = useDeleteBlackout();
-  const DAY_ORDER = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const weekly = DAY_ORDER.map((d) => {
-    const w = avail?.weekly.find((x) => x.day.toLowerCase().startsWith(d.toLowerCase().slice(0, 3)));
-    return { d, slots: w?.slots ?? [] };
+  const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const weekly = Array.from({ length: 7 }, (_, weekday) => {
+    const w = avail?.weekly.filter((x) => x.weekday === weekday) ?? [];
+    return { weekday, label: DAY_LABELS[weekday], slots: w };
   });
-  const fmt = (t: string) => t.length === 5 ? t : t;
-  const handleToggle = () => {
-    if (!avail) return;
-    setAvail.mutate({ acceptingBookings: !avail.acceptingBookings });
+  const fmt = (mins: number) => {
+    const h = Math.floor(mins / 60).toString().padStart(2, "0");
+    const m = (mins % 60).toString().padStart(2, "0");
+    return `${h}:${m}`;
   };
   const handleAddTimeOff = () => {
+    if (!avail) return;
     const start = new Date();
     start.setDate(start.getDate() + 7);
-    const end = new Date(start);
-    end.setDate(end.getDate() + 3);
-    createBlackout.mutate(
-      { startDate: start.toISOString().slice(0, 10), endDate: end.toISOString().slice(0, 10), reason: "Time off" },
+    const date = start.toISOString().slice(0, 10);
+    setAvail.mutate(
+      { ...avail, blackouts: [...avail.blackouts, { date, reason: "Time off" }] },
       { onSuccess: () => toast.success("Blackout added"), onError: (e: any) => toast.error(e.message) },
+    );
+  };
+  const handleRemoveBlackout = (date: string) => {
+    if (!avail) return;
+    setAvail.mutate(
+      { ...avail, blackouts: avail.blackouts.filter((b) => b.date !== date) },
+      { onError: (e: any) => toast.error(e.message) },
     );
   };
   return (
     <ScreenScroll>
       <ScreenHeader title="Availability" onBack={onBack} />
       <div className="px-5 pb-4 space-y-3">
-        <button onClick={handleToggle} className="w-full">
+        {avail && (
           <Card className="p-3 flex items-center justify-between">
-            <div className="text-left">
-              <p className="font-medium text-sm">Accepting bookings</p>
-              <p className="text-[11px] text-muted-foreground">{avail?.acceptingBookings ? "Live in browse" : "Paused"}</p>
+            <div>
+              <p className="font-medium text-sm">Time zone</p>
+              <p className="text-[11px] text-muted-foreground">{avail.timezone}</p>
             </div>
-            <div className={cn("h-6 w-10 rounded-full relative transition-colors", avail?.acceptingBookings ? "bg-primary" : "bg-muted")}>
-              <div className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-background shadow transition-all", avail?.acceptingBookings ? "right-0.5" : "left-0.5")} />
-            </div>
+            <Badge variant="secondary" className="text-[10px]">{avail.weekly.length} slots</Badge>
           </Card>
-        </button>
+        )}
 
         <div>
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">Weekly hours</p>
@@ -4359,15 +4385,15 @@ function HostAvailabilityScreen({ onBack }: { onBack: () => void }) {
           ) : (
             <Card className="p-2 divide-y">
               {weekly.map((d) => (
-                <div key={d.d} className="flex items-center justify-between px-2 py-2.5">
-                  <span className="font-medium text-sm w-12">{d.d}</span>
+                <div key={d.weekday} className="flex items-center justify-between px-2 py-2.5">
+                  <span className="font-medium text-sm w-12">{d.label}</span>
                   <div className="flex-1 flex flex-wrap gap-1 justify-end">
                     {d.slots.length === 0 ? (
                       <span className="text-[11px] text-muted-foreground">Unavailable</span>
                     ) : (
                       d.slots.map((s, i) => (
                         <Badge key={i} variant="secondary" className="text-[10px]">
-                          {fmt(s.start)}–{fmt(s.end)}
+                          {fmt(s.startMinutes)}–{fmt(s.endMinutes)}
                         </Badge>
                       ))
                     )}
@@ -4384,18 +4410,18 @@ function HostAvailabilityScreen({ onBack }: { onBack: () => void }) {
             <Card className="p-3 text-xs text-muted-foreground">No time off scheduled.</Card>
           ) : (
             (avail?.blackouts ?? []).map((b) => (
-              <Card key={b.id} className="p-3 text-sm flex items-center justify-between mb-2">
+              <Card key={b.date} className="p-3 text-sm flex items-center justify-between mb-2">
                 <div>
-                  <p className="font-medium">{new Date(b.startDate).toLocaleDateString()} – {new Date(b.endDate).toLocaleDateString()}</p>
+                  <p className="font-medium">{new Date(b.date).toLocaleDateString()}</p>
                   <p className="text-[11px] text-muted-foreground">{b.reason ?? "Paused"}</p>
                 </div>
-                <button onClick={() => deleteBlackout.mutate(b.id)} className="text-[11px] text-muted-foreground hover:text-foreground">
+                <button onClick={() => handleRemoveBlackout(b.date)} className="text-[11px] text-muted-foreground hover:text-foreground">
                   <X className="h-4 w-4" />
                 </button>
               </Card>
             ))
           )}
-          <Button variant="outline" size="sm" className="w-full mt-2 h-8 text-xs" onClick={handleAddTimeOff} disabled={createBlackout.isPending}>
+          <Button variant="outline" size="sm" className="w-full mt-2 h-8 text-xs" onClick={handleAddTimeOff} disabled={setAvail.isPending || !avail}>
             <Plus className="h-3.5 w-3.5 mr-1" /> Add time off
           </Button>
         </div>
@@ -4403,6 +4429,7 @@ function HostAvailabilityScreen({ onBack }: { onBack: () => void }) {
     </ScreenScroll>
   );
 }
+
 
 function HostReviewsScreen({ onBack }: { onBack: () => void }) {
   const { data: reviews, isLoading } = useMyGymReviews();
@@ -4548,7 +4575,7 @@ function HostSupportScreen({ onBack }: { onBack: () => void }) {
                   <div className="min-w-0">
                     <p className="font-medium truncate">{t.subject}</p>
                     <p className="text-[11px] text-muted-foreground">
-                      {new Date(t.lastMessageAt ?? t.createdAt).toLocaleDateString()}
+                      {new Date(t.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                   <Badge variant="secondary" className="text-[10px] ml-2 shrink-0">{t.status}</Badge>
@@ -4575,8 +4602,10 @@ function HostMetricsScreen({ onBack }: { onBack: () => void }) {
   const { data: topClasses, isLoading: tcLoading } = useTopClasses(period);
   const { data: attendance, isLoading: aLoading } = useAttendanceStats(period);
 
-  const maxImp = Math.max(1, ...(attendance ?? []).map((v) => v.impressions));
   const convPct = liveFunnel && liveFunnel.views > 0 ? (liveFunnel.bookings / liveFunnel.views) * 100 : 0;
+  const attendPct = attendance && attendance.scheduled > 0 ? (attendance.attended / attendance.scheduled) * 100 : 0;
+  const maxTopRev = Math.max(1, ...(topClasses ?? []).map((t) => t.revenueCents));
+
 
   return (
     <ScreenScroll>
@@ -4627,65 +4656,37 @@ function HostMetricsScreen({ onBack }: { onBack: () => void }) {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Visibility</p>
-              <p className="font-display text-lg font-semibold">Impressions vs views</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Attendance</p>
+              <p className="font-display text-lg font-semibold">Show-up rate</p>
             </div>
-            <div className="flex items-center gap-3 text-[10px]">
-              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-foreground/70" /> Impr.</span>
-              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-primary" /> Views</span>
+            <Badge variant="secondary" className="text-[10px]">
+              {aLoading ? "…" : `${attendPct.toFixed(0)}%`}
+            </Badge>
+          </div>
+          {aLoading ? (
+            <p className="text-xs text-muted-foreground mt-3">Loading…</p>
+          ) : !attendance ? (
+            <p className="text-xs text-muted-foreground mt-3">No attendance data yet.</p>
+          ) : (
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="p-3 rounded-xl border bg-muted/30">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Scheduled</p>
+                <p className="font-display text-xl font-semibold mt-1">{attendance.scheduled}</p>
+              </div>
+              <div className="p-3 rounded-xl border bg-muted/30">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Attended</p>
+                <p className="font-display text-xl font-semibold mt-1">{attendance.attended}</p>
+              </div>
+              <div className="p-3 rounded-xl border bg-muted/30">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">No-shows</p>
+                <p className="font-display text-xl font-semibold mt-1">{attendance.noShows}</p>
+              </div>
+              <div className="p-3 rounded-xl border bg-muted/30">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Cancellations</p>
+                <p className="font-display text-xl font-semibold mt-1">{attendance.cancellations}</p>
+              </div>
             </div>
-          </div>
-          <div className="mt-4">
-            {aLoading ? (
-              <p className="text-xs text-muted-foreground">Loading…</p>
-            ) : !attendance || attendance.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No visibility data yet.</p>
-            ) : (
-              <>
-                <svg viewBox="0 0 280 110" className="w-full h-28" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="gradImp" x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--foreground))" stopOpacity="0.45" />
-                      <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity="0.05" />
-                    </linearGradient>
-                    <linearGradient id="gradViews" x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.7" />
-                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.05" />
-                    </linearGradient>
-                  </defs>
-                  {(() => {
-                    const w = 280, h = 100;
-                    const n = attendance.length;
-                    const pts = (key: "impressions" | "views") =>
-                      attendance.map((d, i) => {
-                        const x = (i / Math.max(1, n - 1)) * w;
-                        const y = h - (d[key] / maxImp) * h;
-                        return [x, y] as const;
-                      });
-                    const toPath = (p: readonly (readonly [number, number])[]) =>
-                      p.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x},${y}`).join(" ");
-                    const toArea = (p: readonly (readonly [number, number])[]) => `${toPath(p)} L${w},${h} L0,${h} Z`;
-                    const impPts = pts("impressions");
-                    const viewPts = pts("views");
-                    return (
-                      <>
-                        <path d={toArea(impPts)} fill="url(#gradImp)" />
-                        <path d={toPath(impPts)} fill="none" stroke="hsl(var(--foreground))" strokeOpacity="0.6" strokeWidth="1.5" />
-                        <path d={toArea(viewPts)} fill="url(#gradViews)" />
-                        <path d={toPath(viewPts)} fill="none" stroke="hsl(var(--primary))" strokeWidth="1.5" />
-                        {viewPts.map(([x, y], i) => <circle key={i} cx={x} cy={y} r="2" fill="hsl(var(--primary))" />)}
-                      </>
-                    );
-                  })()}
-                </svg>
-                <div className="flex justify-between mt-1 px-0.5">
-                  {attendance.map((d, i) => (
-                    <span key={i} className="text-[10px] text-muted-foreground">{d.label}</span>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          )}
         </Card>
 
         <div>
@@ -4696,24 +4697,27 @@ function HostMetricsScreen({ onBack }: { onBack: () => void }) {
             ) : (topClasses ?? []).length === 0 ? (
               <Card className="p-3 text-xs text-muted-foreground">No class performance data yet.</Card>
             ) : (
-              (topClasses ?? []).map((t) => (
-                <Card key={t.classId} className="p-3">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium text-sm">{t.title}</p>
-                    <span className="text-xs font-semibold">{Math.round(t.fillRate * 100)}% full</span>
-                  </div>
-                  <div className="mt-1.5 h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div className="h-full bg-primary" style={{ width: `${Math.round(t.fillRate * 100)}%` }} />
-                  </div>
-                  <div className="mt-2 flex items-center gap-3 text-[11px] text-muted-foreground">
-                    <span className="flex items-center gap-1"><Star className="h-3 w-3 fill-primary text-primary" /> {t.rating.toFixed(1)}</span>
-                    <span className="flex items-center gap-1"><Repeat className="h-3 w-3" /> {Math.round(t.repeat * 100)}% return</span>
-                  </div>
-                </Card>
-              ))
+              (topClasses ?? []).map((t) => {
+                const pct = Math.round((t.revenueCents / maxTopRev) * 100);
+                return (
+                  <Card key={t.classId} className="p-3">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-sm truncate">{t.title}</p>
+                      <span className="text-xs font-semibold">${(t.revenueCents / 100).toFixed(0)}</span>
+                    </div>
+                    <div className="mt-1.5 h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
+                    </div>
+                    <div className="mt-2 flex items-center gap-3 text-[11px] text-muted-foreground">
+                      <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {t.bookings} bookings</span>
+                    </div>
+                  </Card>
+                );
+              })
             )}
           </div>
         </div>
+
 
         <div className="pb-4" />
       </div>
