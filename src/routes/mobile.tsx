@@ -4216,9 +4216,7 @@ function HostTemplatesScreen({ onBack }: { onBack: () => void }) {
                     {t.activityType} · {t.durationMinutes} min · ${(t.priceCents / 100).toFixed(0)}
                   </p>
                 </div>
-                {typeof t.uses === "number" && (
-                  <Badge variant="secondary" className="text-[10px] shrink-0">Used {t.uses}×</Badge>
-                )}
+                <Badge variant="secondary" className="text-[10px] shrink-0">Cap {t.capacity}</Badge>
               </div>
               <div className="flex gap-2 mt-3">
                 <Button size="sm" className="flex-1 h-8 text-xs" onClick={() => handleUse(t)} disabled={createClass.isPending}>Use template</Button>
