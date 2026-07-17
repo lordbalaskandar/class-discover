@@ -2817,7 +2817,7 @@ function SavedScreen({
   );
 }
 
-type ProfileSection = "pPayment" | "pNotifications" | "pBecomeHost" | "pHelp" | "pMyGym";
+type ProfileSection = "pPayment" | "pNotifications" | "pHelp" | "pMyGym";
 
 function ProfileScreen({
   onBookings,
