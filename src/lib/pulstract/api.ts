@@ -70,7 +70,7 @@ export const Q_BOOKINGS_BY_CLASS = `query BBC($id:ID!){ bookingsByClass(classId:
 export const Q_COACH_TIP = `query CT{ coachTip{ hostId tip generatedAt } }`;
 export const Q_SAVED_CLASSES = `query SC{ savedClasses{ id gymId title activityType startAt durationMinutes capacity priceCents status gymName city } }`;
 export const Q_PAYMENT_METHODS = `query PM{ paymentMethods{ id brand last4 expMonth expYear isDefault } }`;
-export const Q_MY_GYM_REVIEWS = `query MGR{ myGymReviews{ id userId gymId rating comment createdAt } }`;
+export const Q_MY_GYM_REVIEWS = `query MGR{ myGymReviews{ id userId userName userAvatarUrl gymId rating comment createdAt response respondedAt flagged } }`;
 export const Q_METRICS_FUNNEL = `query MF($p:String){ metricsFunnel(period:$p){ gymId period views bookings conversions } }`;
 export const Q_GYM_MEMBERSHIPS = `query GM($g:ID!){ gymMemberships(gymId:$g){ id gymId userId email status monthlyPriceCents joinedAt } }`;
 
