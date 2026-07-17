@@ -4656,65 +4656,37 @@ function HostMetricsScreen({ onBack }: { onBack: () => void }) {
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Visibility</p>
-              <p className="font-display text-lg font-semibold">Impressions vs views</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Attendance</p>
+              <p className="font-display text-lg font-semibold">Show-up rate</p>
             </div>
-            <div className="flex items-center gap-3 text-[10px]">
-              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-foreground/70" /> Impr.</span>
-              <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-primary" /> Views</span>
+            <Badge variant="secondary" className="text-[10px]">
+              {aLoading ? "…" : `${attendPct.toFixed(0)}%`}
+            </Badge>
+          </div>
+          {aLoading ? (
+            <p className="text-xs text-muted-foreground mt-3">Loading…</p>
+          ) : !attendance ? (
+            <p className="text-xs text-muted-foreground mt-3">No attendance data yet.</p>
+          ) : (
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div className="p-3 rounded-xl border bg-muted/30">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Scheduled</p>
+                <p className="font-display text-xl font-semibold mt-1">{attendance.scheduled}</p>
+              </div>
+              <div className="p-3 rounded-xl border bg-muted/30">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Attended</p>
+                <p className="font-display text-xl font-semibold mt-1">{attendance.attended}</p>
+              </div>
+              <div className="p-3 rounded-xl border bg-muted/30">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">No-shows</p>
+                <p className="font-display text-xl font-semibold mt-1">{attendance.noShows}</p>
+              </div>
+              <div className="p-3 rounded-xl border bg-muted/30">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Cancellations</p>
+                <p className="font-display text-xl font-semibold mt-1">{attendance.cancellations}</p>
+              </div>
             </div>
-          </div>
-          <div className="mt-4">
-            {aLoading ? (
-              <p className="text-xs text-muted-foreground">Loading…</p>
-            ) : !attendance || attendance.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No visibility data yet.</p>
-            ) : (
-              <>
-                <svg viewBox="0 0 280 110" className="w-full h-28" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="gradImp" x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--foreground))" stopOpacity="0.45" />
-                      <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity="0.05" />
-                    </linearGradient>
-                    <linearGradient id="gradViews" x1="0" x2="0" y1="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity="0.7" />
-                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.05" />
-                    </linearGradient>
-                  </defs>
-                  {(() => {
-                    const w = 280, h = 100;
-                    const n = attendance.length;
-                    const pts = (key: "impressions" | "views") =>
-                      attendance.map((d, i) => {
-                        const x = (i / Math.max(1, n - 1)) * w;
-                        const y = h - (d[key] / maxImp) * h;
-                        return [x, y] as const;
-                      });
-                    const toPath = (p: readonly (readonly [number, number])[]) =>
-                      p.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x},${y}`).join(" ");
-                    const toArea = (p: readonly (readonly [number, number])[]) => `${toPath(p)} L${w},${h} L0,${h} Z`;
-                    const impPts = pts("impressions");
-                    const viewPts = pts("views");
-                    return (
-                      <>
-                        <path d={toArea(impPts)} fill="url(#gradImp)" />
-                        <path d={toPath(impPts)} fill="none" stroke="hsl(var(--foreground))" strokeOpacity="0.6" strokeWidth="1.5" />
-                        <path d={toArea(viewPts)} fill="url(#gradViews)" />
-                        <path d={toPath(viewPts)} fill="none" stroke="hsl(var(--primary))" strokeWidth="1.5" />
-                        {viewPts.map(([x, y], i) => <circle key={i} cx={x} cy={y} r="2" fill="hsl(var(--primary))" />)}
-                      </>
-                    );
-                  })()}
-                </svg>
-                <div className="flex justify-between mt-1 px-0.5">
-                  {attendance.map((d, i) => (
-                    <span key={i} className="text-[10px] text-muted-foreground">{d.label}</span>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          )}
         </Card>
 
         <div>
@@ -4725,24 +4697,27 @@ function HostMetricsScreen({ onBack }: { onBack: () => void }) {
             ) : (topClasses ?? []).length === 0 ? (
               <Card className="p-3 text-xs text-muted-foreground">No class performance data yet.</Card>
             ) : (
-              (topClasses ?? []).map((t) => (
-                <Card key={t.classId} className="p-3">
-                  <div className="flex items-center justify-between">
-                    <p className="font-medium text-sm">{t.title}</p>
-                    <span className="text-xs font-semibold">{Math.round(t.fillRate * 100)}% full</span>
-                  </div>
-                  <div className="mt-1.5 h-1.5 rounded-full bg-muted overflow-hidden">
-                    <div className="h-full bg-primary" style={{ width: `${Math.round(t.fillRate * 100)}%` }} />
-                  </div>
-                  <div className="mt-2 flex items-center gap-3 text-[11px] text-muted-foreground">
-                    <span className="flex items-center gap-1"><Star className="h-3 w-3 fill-primary text-primary" /> {t.rating.toFixed(1)}</span>
-                    <span className="flex items-center gap-1"><Repeat className="h-3 w-3" /> {Math.round(t.repeat * 100)}% return</span>
-                  </div>
-                </Card>
-              ))
+              (topClasses ?? []).map((t) => {
+                const pct = Math.round((t.revenueCents / maxTopRev) * 100);
+                return (
+                  <Card key={t.classId} className="p-3">
+                    <div className="flex items-center justify-between">
+                      <p className="font-medium text-sm truncate">{t.title}</p>
+                      <span className="text-xs font-semibold">${(t.revenueCents / 100).toFixed(0)}</span>
+                    </div>
+                    <div className="mt-1.5 h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
+                    </div>
+                    <div className="mt-2 flex items-center gap-3 text-[11px] text-muted-foreground">
+                      <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {t.bookings} bookings</span>
+                    </div>
+                  </Card>
+                );
+              })
             )}
           </div>
         </div>
+
 
         <div className="pb-4" />
       </div>
