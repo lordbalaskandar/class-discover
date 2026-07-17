@@ -93,8 +93,7 @@ import {
   useDeleteTemplate,
   useHostAvailability,
   useSetHostAvailability,
-  useCreateBlackout,
-  useDeleteBlackout,
+
   useRespondToReview,
   useFlagReview,
   useHostSupportTickets,
