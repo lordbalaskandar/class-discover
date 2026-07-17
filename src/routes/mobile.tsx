@@ -4575,7 +4575,7 @@ function HostSupportScreen({ onBack }: { onBack: () => void }) {
                   <div className="min-w-0">
                     <p className="font-medium truncate">{t.subject}</p>
                     <p className="text-[11px] text-muted-foreground">
-                      {new Date(t.lastMessageAt ?? t.createdAt).toLocaleDateString()}
+                      {new Date(t.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                   <Badge variant="secondary" className="text-[10px] ml-2 shrink-0">{t.status}</Badge>
