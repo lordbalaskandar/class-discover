@@ -3337,7 +3337,7 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
           .map((s) => s[0]?.toUpperCase() ?? "")
           .join("") || "??";
         return {
-          id: m.id,
+          id: m.userId ?? m.id,
           name: m.email.split("@")[0],
           initials,
           email: m.email,
