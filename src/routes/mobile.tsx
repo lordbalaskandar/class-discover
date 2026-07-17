@@ -4105,7 +4105,6 @@ function HostProfileScreen({
   onOpenSection: (s: HostScreenId) => void;
 }) {
   const { data: me } = useMe();
-  const { data: myClasses } = useLiveHostClasses ? { data: undefined } : { data: undefined };
   const { data: reviews } = useMyGymReviews();
   const { data: templates } = useClassTemplates();
   const { data: payout } = useHostPayoutAccount();
