@@ -616,6 +616,275 @@ export function useUpdateNotificationPrefs() {
   });
 }
 
+/* ============================= Host: payouts / earnings / templates / availability / support ============================= */
+
+import {
+  Q_PAYOUTS,
+  Q_NEXT_PAYOUT,
+  Q_HOST_EARNINGS,
+  Q_HOST_PAYOUT_ACCOUNT,
+  Q_CLASS_TEMPLATES,
+  Q_HOST_AVAILABILITY,
+  Q_HOST_SUPPORT_TICKETS,
+  Q_TOP_CLASSES,
+  Q_ATTENDANCE_STATS,
+  M_CREATE_TEMPLATE,
+  M_UPDATE_TEMPLATE,
+  M_DELETE_TEMPLATE,
+  M_SET_HOST_AVAIL,
+  M_CREATE_BLACKOUT,
+  M_DELETE_BLACKOUT,
+  M_CREATE_SUPPORT,
+  M_RESPOND_REVIEW,
+  M_FLAG_REVIEW,
+  M_SUBMIT_PAYOUT_PROFILE,
+  M_CASH_OUT,
+  type ApiPayout,
+  type ApiHostEarnings,
+  type ApiHostPayoutAccount,
+  type ApiClassTemplate,
+  type ApiHostAvailability,
+  type ApiSupportTicket,
+  type ApiTopClass,
+  type ApiAttendanceStat,
+} from "./api";
+
+export function usePayouts() {
+  const token = useToken();
+  return useQuery({
+    enabled: !!token,
+    queryKey: ["payouts"],
+    queryFn: async () => {
+      const d = await gql<{ payouts: { items: ApiPayout[]; nextToken: string | null } }>(
+        Q_PAYOUTS, { p: { limit: 20 } }, token,
+      );
+      return d.payouts.items ?? [];
+    },
+  });
+}
+
+export function useNextPayout() {
+  const token = useToken();
+  return useQuery({
+    enabled: !!token,
+    queryKey: ["nextPayout"],
+    queryFn: async () => {
+      const d = await gql<{ nextPayout: { amount: number; currency: string; scheduledAt: string } | null }>(
+        Q_NEXT_PAYOUT, undefined, token,
+      );
+      return d.nextPayout;
+    },
+  });
+}
+
+export function useHostEarnings(period: string = "week") {
+  const token = useToken();
+  return useQuery({
+    enabled: !!token,
+    queryKey: ["hostEarnings", period],
+    queryFn: async () => {
+      const d = await gql<{ hostEarnings: ApiHostEarnings | null }>(Q_HOST_EARNINGS, { p: period }, token);
+      return d.hostEarnings;
+    },
+  });
+}
+
+export function useHostPayoutAccount() {
+  const token = useToken();
+  return useQuery({
+    enabled: !!token,
+    queryKey: ["hostPayoutAccount"],
+    queryFn: async () => {
+      const d = await gql<{ hostPayoutAccount: ApiHostPayoutAccount | null }>(
+        Q_HOST_PAYOUT_ACCOUNT, undefined, token,
+      );
+      return d.hostPayoutAccount;
+    },
+  });
+}
+
+export function useClassTemplates() {
+  const token = useToken();
+  return useQuery({
+    enabled: !!token,
+    queryKey: ["classTemplates"],
+    queryFn: async () => {
+      const d = await gql<{ classTemplates: ApiClassTemplate[] }>(Q_CLASS_TEMPLATES, undefined, token);
+      return d.classTemplates ?? [];
+    },
+  });
+}
+
+export function useHostAvailability() {
+  const token = useToken();
+  return useQuery({
+    enabled: !!token,
+    queryKey: ["hostAvailability"],
+    queryFn: async () => {
+      const d = await gql<{ hostAvailability: ApiHostAvailability | null }>(Q_HOST_AVAILABILITY, undefined, token);
+      return d.hostAvailability;
+    },
+  });
+}
+
+export function useHostSupportTickets() {
+  const token = useToken();
+  return useQuery({
+    enabled: !!token,
+    queryKey: ["hostSupportTickets"],
+    queryFn: async () => {
+      const d = await gql<{ hostSupportTickets: ApiSupportTicket[] }>(Q_HOST_SUPPORT_TICKETS, undefined, token);
+      return d.hostSupportTickets ?? [];
+    },
+  });
+}
+
+export function useTopClasses(period: string = "month") {
+  const token = useToken();
+  return useQuery({
+    enabled: !!token,
+    queryKey: ["topClasses", period],
+    queryFn: async () => {
+      const d = await gql<{ topClasses: ApiTopClass[] }>(Q_TOP_CLASSES, { p: period }, token);
+      return d.topClasses ?? [];
+    },
+  });
+}
+
+export function useAttendanceStats(period: string = "week") {
+  const token = useToken();
+  return useQuery({
+    enabled: !!token,
+    queryKey: ["attendanceStats", period],
+    queryFn: async () => {
+      const d = await gql<{ attendanceStats: ApiAttendanceStat[] }>(Q_ATTENDANCE_STATS, { p: period }, token);
+      return d.attendanceStats ?? [];
+    },
+  });
+}
+
+export function useCreateTemplate() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { title: string; activityType: string; durationMinutes: number; capacity: number; priceCents: number; description?: string }) => {
+      const d = await gql<{ createClassTemplate: ApiClassTemplate }>(M_CREATE_TEMPLATE, { i: input }, token);
+      return d.createClassTemplate;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["classTemplates"] }),
+  });
+}
+
+export function useDeleteTemplate() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await gql(M_DELETE_TEMPLATE, { id }, token);
+      return id;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["classTemplates"] }),
+  });
+}
+
+export function useSetHostAvailability() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { acceptingBookings?: boolean; weekly?: { day: string; slots: { start: string; end: string }[] }[] }) => {
+      const d = await gql<{ setHostAvailability: { acceptingBookings: boolean } }>(M_SET_HOST_AVAIL, { i: input }, token);
+      return d.setHostAvailability;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["hostAvailability"] }),
+  });
+}
+
+export function useCreateBlackout() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { startDate: string; endDate: string; reason?: string }) => {
+      const d = await gql(M_CREATE_BLACKOUT, { i: input }, token);
+      return d;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["hostAvailability"] }),
+  });
+}
+
+export function useDeleteBlackout() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await gql(M_DELETE_BLACKOUT, { id }, token);
+      return id;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["hostAvailability"] }),
+  });
+}
+
+export function useCreateSupportTicket() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { subject: string; body: string }) => {
+      const d = await gql<{ createSupportTicket: ApiSupportTicket }>(M_CREATE_SUPPORT, { i: input }, token);
+      return d.createSupportTicket;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["hostSupportTickets"] }),
+  });
+}
+
+export function useRespondToReview() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, response }: { id: string; response: string }) => {
+      const d = await gql(M_RESPOND_REVIEW, { id, r: response }, token);
+      return d;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["myGymReviews"] }),
+  });
+}
+
+export function useFlagReview() {
+  const token = useToken();
+  return useMutation({
+    mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
+      await gql(M_FLAG_REVIEW, { id, r: reason }, token);
+      return id;
+    },
+  });
+}
+
+export function useSubmitPayoutProfile() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { accountHolderName: string; iban?: string; routingNumber?: string; accountNumber?: string; country: string }) => {
+      const d = await gql<{ submitHostPayoutProfile: ApiHostPayoutAccount }>(M_SUBMIT_PAYOUT_PROFILE, { i: input }, token);
+      return d.submitHostPayoutProfile;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["hostPayoutAccount"] }),
+  });
+}
+
+export function useCashOut() {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const d = await gql<{ cashOutHost: ApiPayout }>(M_CASH_OUT, undefined, token);
+      return d.cashOutHost;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["payouts"] });
+      qc.invalidateQueries({ queryKey: ["nextPayout"] });
+      qc.invalidateQueries({ queryKey: ["hostEarnings"] });
+    },
+  });
+}
+
 /* ============================= Helpers ============================= */
 
 /** Cents → "$22" style label (no trailing zeros when whole). */
