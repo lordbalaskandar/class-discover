@@ -2859,7 +2859,6 @@ function ProfileScreen({
       onClick: onSaved,
     },
     { label: "Notifications", sub: "Push & email", onClick: () => onOpenSection("pNotifications") },
-    { label: "Become a host", sub: "Share your craft on Pulstract", onClick: () => onOpenSection("pBecomeHost") },
     { label: "Help & support", sub: "FAQ, contact us", onClick: () => onOpenSection("pHelp") },
   ];
 

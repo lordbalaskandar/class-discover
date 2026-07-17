@@ -283,22 +283,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Hosts CTA */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="rounded-2xl bg-gradient-hero text-primary-foreground p-10 md:p-14 shadow-elegant relative overflow-hidden">
-          <Sparkles className="absolute top-6 right-6 h-12 w-12 opacity-20" />
-          <div className="max-w-2xl">
-            <Badge className="bg-background/20 text-primary-foreground border-background/30 mb-3">For hosts</Badge>
-            <h2 className="text-2xl md:text-4xl font-bold">Teach what you love.</h2>
-            <p className="mt-3 text-primary-foreground/90">
-              List your classes or trainer profile on Pulstract and fill seats faster. Free to get started.
-            </p>
-            <Button asChild size="lg" variant="secondary" className="mt-6">
-              <Link to="/host">Become a host</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
 
       <footer className="border-t py-8 text-center text-sm text-muted-foreground">
         © {new Date().getFullYear()} Pulstract · Move together
