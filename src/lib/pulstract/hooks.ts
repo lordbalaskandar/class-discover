@@ -549,7 +549,11 @@ export function useInviteMember() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: { gymId: string; email: string; monthlyPriceCents?: number }) => {
-      const d = await gql<{ inviteMember: ApiGymMembership }>(M_INVITE_MEMBER, { i: input }, token);
+      const d = await gql<{ inviteMember: ApiGymMembership }>(
+        M_INVITE_MEMBER,
+        { g: input.gymId, e: input.email, p: input.monthlyPriceCents },
+        token,
+      );
       return d.inviteMember;
     },
     onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: ["gymMemberships", vars.gymId] }),
@@ -561,15 +565,17 @@ export function useUpdateMember() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({
-      id,
+      gymId,
+      userId,
       input,
     }: {
-      id: string;
+      gymId: string;
+      userId: string;
       input: { monthlyPriceCents?: number; status?: string };
     }) => {
       const d = await gql<{ updateMember: ApiGymMembership | null }>(
         M_UPDATE_MEMBER,
-        { id, i: input },
+        { g: gymId, u: userId, i: input },
         token,
       );
       return d.updateMember;
@@ -582,13 +588,14 @@ export function useRemoveMember() {
   const token = useToken();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      await gql<{ removeMember: boolean }>(M_REMOVE_MEMBER, { id }, token);
-      return id;
+    mutationFn: async ({ gymId, userId }: { gymId: string; userId: string }) => {
+      await gql<{ removeMember: boolean }>(M_REMOVE_MEMBER, { g: gymId, u: userId }, token);
+      return userId;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["gymMemberships"] }),
   });
 }
+
 
 export function useBecomeHost() {
   const token = useToken();
