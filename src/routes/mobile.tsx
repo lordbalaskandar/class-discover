@@ -3513,14 +3513,14 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
               onRemove={
                 liveGym
                   ? async (id) => {
-                      try { await removeMemberMut.mutateAsync(id); } catch (e: any) { toast.error(e?.message ?? "Failed"); }
+                      try { await removeMemberMut.mutateAsync({ gymId: liveGym.id, userId: id }); } catch (e: any) { toast.error(e?.message ?? "Failed"); }
                     }
                   : undefined
               }
               onSetStatus={
                 liveGym
                   ? async (id, status) => {
-                      try { await updateMemberMut.mutateAsync({ id, input: { status } }); } catch (e: any) { toast.error(e?.message ?? "Failed"); }
+                      try { await updateMemberMut.mutateAsync({ gymId: liveGym.id, userId: id, input: { status } }); } catch (e: any) { toast.error(e?.message ?? "Failed"); }
                     }
                   : undefined
               }
