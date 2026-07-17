@@ -2,7 +2,14 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { cognito, COGNITO_CLIENT_ID, cryptoRandomPassword } from "./api";
 
 // v2: invalidates any legacy sessions that may have persisted IdToken as accessToken.
-const STORAGE_KEY = "pulstract-mobile-auth-v2";
+const STORAGE_KEY_BASE = "pulstract-mobile-auth-v2";
+
+/**
+ * Auth scope — the User app and Host app are separate apps that share the same
+ * Cognito user pool. Each scope persists its session under a distinct storage
+ * key so a signed-in User does not leak a session into the Host phone.
+ */
+export type AuthScope = "user" | "host" | "default";
 
 export type PulstractSession = {
   email: string;
@@ -10,9 +17,11 @@ export type PulstractSession = {
   accessToken: string;
   refreshToken: string;
   idToken: string;
+  scope: AuthScope;
 };
 
 type Ctx = {
+  scope: AuthScope;
   session: PulstractSession | null;
   loading: boolean;
   signIn: (email: string, password?: string) => Promise<void>;
@@ -22,19 +31,20 @@ type Ctx = {
 
 const AuthCtx = createContext<Ctx | null>(null);
 
-export function PulstractAuthProvider({ children }: { children: ReactNode }) {
+export function PulstractAuthProvider({ children, scope = "default" }: { children: ReactNode; scope?: AuthScope }) {
   const [session, setSession] = useState<PulstractSession | null>(null);
   const [loading, setLoading] = useState(false);
+  const storageKey = `${STORAGE_KEY_BASE}:${scope}`;
 
-  // Hydrate persisted session on mount
+  // Hydrate persisted session on mount / when scope changes
   useEffect(() => {
     try {
-      const raw = typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY) : null;
-      if (raw) setSession(JSON.parse(raw) as PulstractSession);
+      const raw = typeof window !== "undefined" ? window.localStorage.getItem(storageKey) : null;
+      setSession(raw ? (JSON.parse(raw) as PulstractSession) : null);
     } catch {
-      /* ignore */
+      setSession(null);
     }
-  }, []);
+  }, [storageKey]);
 
   const persist = useCallback((s: PulstractSession | null) => {
     setSession(s);
