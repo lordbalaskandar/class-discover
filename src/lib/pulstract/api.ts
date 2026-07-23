@@ -3,7 +3,7 @@
 
 export const GQL_URL = "https://dev.api.gateway.pulstract.com/graphql";
 export const COGNITO_REGION = "eu-central-1";
-export const COGNITO_CLIENT_ID = "7rqtsmq8sf8mfd2dfacpmqpvg4";
+export const COGNITO_CLIENT_ID = "79sv9id14uivekvkdju89qg5tf";
 export const COGNITO_URL = `https://cognito-idp.${COGNITO_REGION}.amazonaws.com/`;
 
 export async function cognito<T = any>(target: string, body: unknown): Promise<T> {

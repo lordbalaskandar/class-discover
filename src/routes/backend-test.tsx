@@ -48,7 +48,7 @@ export const Route = createFileRoute("/backend-test")({
 
 const GQL_URL = "https://dev.api.gateway.pulstract.com/graphql";
 const COGNITO_REGION = "eu-central-1";
-const COGNITO_CLIENT_ID = "7rqtsmq8sf8mfd2dfacpmqpvg4";
+const COGNITO_CLIENT_ID = "79sv9id14uivekvkdju89qg5tf";
 const COGNITO_URL = `https://cognito-idp.${COGNITO_REGION}.amazonaws.com/`;
 const STORAGE_KEY = "pulstract-backend-test-state-v1";
 
