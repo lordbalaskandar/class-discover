@@ -2,24 +2,31 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, MailCheck } from "lucide-react";
 import { usePulstractAuth } from "@/lib/pulstract/auth";
 
-/**
- * Renders sign-in / register UI intended to sit inside a PhoneFrame.
- * The parent must render <PhoneStatusBar /> above.
- */
 export function AuthScreens() {
-  const { signIn, signUp, loading } = usePulstractAuth();
+  const {
+    signIn,
+    signUp,
+    loading,
+    pendingConfirmation,
+    confirmSignUp,
+    resendConfirmationCode,
+    cancelConfirmation,
+  } = usePulstractAuth();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
+    setInfo(null);
     try {
       if (mode === "signin") {
         await signIn(email.trim(), password ? password : undefined);
@@ -31,6 +38,103 @@ export function AuthScreens() {
     }
   };
 
+  const submitCode = async (e: FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setInfo(null);
+    try {
+      await confirmSignUp(code);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Invalid code");
+    }
+  };
+
+  const resend = async () => {
+    setError(null);
+    setInfo(null);
+    try {
+      await resendConfirmationCode();
+      setInfo("A new code has been sent.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not resend code");
+    }
+  };
+
+  // ---------- Confirmation code screen ----------
+  if (pendingConfirmation) {
+    return (
+      <div className="flex-1 overflow-y-auto px-6 pt-6 pb-8 bg-background flex flex-col">
+        <div className="mb-6">
+          <div className="h-14 w-14 rounded-2xl bg-gradient-hero mb-4 flex items-center justify-center text-primary-foreground shadow-elegant">
+            <MailCheck className="h-6 w-6" />
+          </div>
+          <h1 className="font-display text-2xl font-semibold tracking-tight">Confirm your email</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            We sent a verification code to{" "}
+            <span className="font-medium text-foreground">
+              {pendingConfirmation.destination || pendingConfirmation.email}
+            </span>
+            . Enter it below to activate your account.
+          </p>
+        </div>
+
+        <form onSubmit={submitCode} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="code" className="text-xs">Verification code</Label>
+            <Input
+              id="code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              required
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\s+/g, ""))}
+              placeholder="123456"
+              className="tracking-[0.4em] text-center text-lg"
+              maxLength={10}
+            />
+          </div>
+
+          {error && (
+            <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/10 rounded-md p-2">
+              <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+          {info && !error && (
+            <div className="text-xs text-muted-foreground bg-muted/60 rounded-md p-2">{info}</div>
+          )}
+
+          <Button type="submit" disabled={loading || code.length < 4} className="w-full bg-gradient-hero shadow-elegant">
+            {loading ? (
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Verifying…</>
+            ) : (
+              "Verify & continue"
+            )}
+          </Button>
+        </form>
+
+        <div className="mt-4 flex items-center justify-between text-xs">
+          <button type="button" onClick={resend} className="text-primary font-semibold" disabled={loading}>
+            Resend code
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              cancelConfirmation();
+              setCode("");
+              setError(null);
+              setInfo(null);
+            }}
+            className="text-muted-foreground"
+          >
+            Use a different email
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------- Sign in / Sign up ----------
   return (
     <div className="flex-1 overflow-y-auto px-6 pt-6 pb-8 bg-background flex flex-col">
       <div className="mb-6">
@@ -43,7 +147,7 @@ export function AuthScreens() {
         <p className="text-sm text-muted-foreground mt-1">
           {mode === "signin"
             ? "Sign in to book classes and manage your gym."
-            : "Sign up in seconds — dev accounts are auto-confirmed."}
+            : "We'll email you a verification code to activate your account."}
         </p>
       </div>
 
@@ -74,7 +178,9 @@ export function AuthScreens() {
         </div>
         {mode === "signin" && (
           <div className="space-y-1.5">
-            <Label htmlFor="password" className="text-xs">Password <span className="text-muted-foreground">(optional for passwordless)</span></Label>
+            <Label htmlFor="password" className="text-xs">
+              Password <span className="text-muted-foreground">(optional for passwordless)</span>
+            </Label>
             <Input
               id="password"
               type="password"
@@ -85,7 +191,6 @@ export function AuthScreens() {
             />
           </div>
         )}
-
 
         {error && (
           <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/10 rounded-md p-2">
@@ -109,10 +214,6 @@ export function AuthScreens() {
           )}
         </Button>
       </form>
-
-      <p className="text-xs text-muted-foreground mt-4">
-        Enter a password for seeded accounts, or leave blank to use passwordless CUSTOM_AUTH.
-      </p>
 
       <div className="mt-auto pt-6 text-center text-xs text-muted-foreground">
         {mode === "signin" ? "New here?" : "Already have an account?"}{" "}
