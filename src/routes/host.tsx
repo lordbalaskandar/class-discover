@@ -303,13 +303,10 @@ function CreateGymSection() {
     try {
       await create.mutateAsync({
         name: form.name.trim(),
-        description: form.description.trim() || undefined,
-        address: {
-          street: form.street.trim(),
-          city: form.city.trim(),
-          country: form.country.trim() || "GB",
-          postcode: form.postcode.trim(),
-        },
+        street: form.street.trim(),
+        city: form.city.trim(),
+        country: form.country.trim() || "GB",
+        postcode: form.postcode.trim(),
       });
       toast.success("Gym created!");
     } catch (err: any) {
