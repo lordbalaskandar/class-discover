@@ -383,7 +383,6 @@ function ClassesTab() {
     setBusy(true);
     try {
       await create.mutateAsync({
-        gymId: gym.data.id,
         title: form.title.trim(),
         description: form.description.trim() || undefined,
         activityType: form.activityType,
@@ -671,7 +670,6 @@ function TemplatesTab() {
     if (!gym.data?.id) return toast.error("Create a gym first");
     try {
       await create.mutateAsync({
-        gymId: gym.data.id,
         title: form.title.trim(),
         description: form.description.trim() || undefined,
         activityType: form.activityType,
