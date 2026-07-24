@@ -32,7 +32,7 @@ export function ServiceHealthBar({ compact = false, only }: { compact?: boolean;
   const skeletonCount = only?.length ?? 11;
 
   return (
-    <Card className={cn("p-3 sm:p-4", compact && "p-2 sm:p-3")}>
+    <Card className={cn("p-3 sm:p-4", compact && "p-2 sm:p-3", only && "w-auto inline-block")}>
       <div className="flex items-center justify-between gap-3 mb-2">
         <div className="flex items-center gap-2 min-w-0">
           <h2 className="font-semibold text-sm">Service health</h2>
@@ -51,7 +51,7 @@ export function ServiceHealthBar({ compact = false, only }: { compact?: boolean;
           Refresh
         </Button>
       </div>
-      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-11 gap-1.5">
+      <div className={cn("gap-1.5", only ? "flex flex-wrap" : "grid grid-cols-4 sm:grid-cols-6 md:grid-cols-11")}>
         {(health ?? Array.from({ length: skeletonCount })).map((h: any, i) => (
           <div
             key={h?.name ?? i}
