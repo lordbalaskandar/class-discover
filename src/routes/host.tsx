@@ -332,7 +332,7 @@ function CreateGymSection() {
           </div>
           <div className="space-y-1.5">
             <Label>Street</Label>
-            <Input value={form.street} onChange={(e) => setForm((f) => ({ ...f, street: e.target.value }))} />
+            <Input required value={form.street} onChange={(e) => setForm((f) => ({ ...f, street: e.target.value }))} />
           </div>
           <div className="space-y-1.5">
             <Label>City</Label>
@@ -340,7 +340,7 @@ function CreateGymSection() {
           </div>
           <div className="space-y-1.5">
             <Label>Postcode</Label>
-            <Input value={form.postcode} onChange={(e) => setForm((f) => ({ ...f, postcode: e.target.value }))} />
+            <Input required value={form.postcode} onChange={(e) => setForm((f) => ({ ...f, postcode: e.target.value }))} />
           </div>
           <div className="space-y-1.5">
             <Label>Country</Label>
