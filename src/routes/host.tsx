@@ -303,7 +303,7 @@ function CreateGymSection() {
     try {
       await create.mutateAsync({
         name: form.name.trim(),
-        description: form.description.trim() || null,
+        description: form.description.trim() || undefined,
         address: {
           street: form.street.trim(),
           city: form.city.trim(),
@@ -385,7 +385,7 @@ function ClassesTab() {
       await create.mutateAsync({
         gymId: gym.data.id,
         title: form.title.trim(),
-        description: form.description.trim() || null,
+        description: form.description.trim() || undefined,
         activityType: form.activityType,
         startAt: new Date(form.startAt).toISOString(),
         durationMinutes: form.durationMinutes,
@@ -673,7 +673,7 @@ function TemplatesTab() {
       await create.mutateAsync({
         gymId: gym.data.id,
         title: form.title.trim(),
-        description: form.description.trim() || null,
+        description: form.description.trim() || undefined,
         activityType: form.activityType,
         durationMinutes: form.durationMinutes,
         capacity: form.capacity,
