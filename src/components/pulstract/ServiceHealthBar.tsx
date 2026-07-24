@@ -51,7 +51,7 @@ export function ServiceHealthBar({ compact = false, only }: { compact?: boolean;
           Refresh
         </Button>
       </div>
-      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-11 gap-1.5">
+      <div className={cn("gap-1.5", only ? "flex flex-wrap" : "grid grid-cols-4 sm:grid-cols-6 md:grid-cols-11")}>
         {(health ?? Array.from({ length: skeletonCount })).map((h: any, i) => (
           <div
             key={h?.name ?? i}
