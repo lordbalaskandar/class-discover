@@ -548,9 +548,16 @@ function EarningsTab() {
   const submitDemo = async () => {
     try {
       await submitProfile.mutateAsync({
-        legalName: "Demo Studio",
-        countryCode: "GB",
-        bankAccountLast4: "0000",
+        bankToken: "tok_demo",
+        firstName: "Demo",
+        lastName: "Host",
+        email: "demo@pulstract.com",
+        dob: "1990-01-01",
+        addressLine1: "1 Studio Way",
+        city: "London",
+        postalCode: "E1 6AN",
+        country: "GB",
+        tosIp: "127.0.0.1",
       });
       toast.success("Payout profile submitted");
     } catch (err: any) {
