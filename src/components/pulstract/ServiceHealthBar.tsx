@@ -32,7 +32,7 @@ export function ServiceHealthBar({ compact = false, only }: { compact?: boolean;
   const skeletonCount = only?.length ?? 11;
 
   return (
-    <Card className={cn("p-3 sm:p-4", compact && "p-2 sm:p-3")}>
+    <Card className={cn("p-3 sm:p-4", compact && "p-2 sm:p-3", only && "w-auto inline-block")}>
       <div className="flex items-center justify-between gap-3 mb-2">
         <div className="flex items-center gap-2 min-w-0">
           <h2 className="font-semibold text-sm">Service health</h2>
