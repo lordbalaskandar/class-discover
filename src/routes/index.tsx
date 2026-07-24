@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { gql, Q_CLASSES, type ApiClass } from "@/lib/pulstract/api";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,6 @@ import {
   MapPin,
   Search,
   Calendar,
-  Sparkles,
   Users,
   Compass,
   Clock,
@@ -54,35 +53,22 @@ const HERO_SLIDES = [
   { src: "https://images.unsplash.com/photo-1522163182402-834f871fd851?auto=format&fit=crop&w=1920&q=70", label: "Rock Climbing" },
 ];
 
-type FeaturedRow = {
-  id: string;
-  title: string;
-  activity: string;
-  location: string;
-  image_url: string | null;
-  duration_min: number;
-  start_at: string | null;
-  listing_type: "class" | "trainer";
-};
-
-const baseSearch: { q: string; activity: string; location: string; category: "all" | "class" | "trainer"; type: "all" | "scheduled" | "on_request"; when: "any" | "today" | "tomorrow" | "this_week" | "this_weekend" | "next_week"; duration: "any" | "short" | "medium" | "long"; capacity: "any" | "private" | "small" | "medium" | "large"; spots: "any" | "available"; sort: "newest" | "soonest" | "duration" } = { q: "", activity: "", location: "", category: "all", type: "all", when: "any", duration: "any", capacity: "any", spots: "any", sort: "newest" };
+const baseSearch: { q: string; activity: string; city: string; priceMax: string; minRating: string; when: "any" | "today" | "tomorrow" | "this_week" | "this_weekend" | "next_week"; sort: "newest" | "soonest" | "price" } = { q: "", activity: "", city: "", priceMax: "", minRating: "", when: "any", sort: "newest" };
 
 function HomePage() {
   const navigate = useNavigate();
   const [heroActivity, setHeroActivity] = useState<string>("any");
-  const [heroLocation, setHeroLocation] = useState("");
+  const [heroCity, setHeroCity] = useState("");
 
   const { data: featured = [] } = useQuery({
-    queryKey: ["featured", "home"],
+    queryKey: ["home", "featured"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("classes")
-        .select("id, title, activity, location, image_url, duration_min, start_at, listing_type")
-        .eq("is_active", true)
-        .order("created_at", { ascending: false })
-        .limit(10);
-      if (error) throw error;
-      return (data ?? []) as FeaturedRow[];
+      const d = await gql<{ classes: { items: ApiClass[] } }>(
+        Q_CLASSES,
+        { f: null, p: { limit: 10 } },
+        null,
+      );
+      return d.classes?.items ?? [];
     },
   });
 
@@ -90,9 +76,10 @@ function HomePage() {
     e.preventDefault();
     navigate({
       to: "/browse",
-      search: { ...baseSearch, activity: heroActivity === "any" ? "" : heroActivity, location: heroLocation },
+      search: { ...baseSearch, activity: heroActivity === "any" ? "" : heroActivity, city: heroCity },
     });
   }
+
 
   const scrollSlides = [...HERO_SLIDES, ...HERO_SLIDES];
 
