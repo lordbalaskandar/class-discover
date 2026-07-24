@@ -303,13 +303,10 @@ function CreateGymSection() {
     try {
       await create.mutateAsync({
         name: form.name.trim(),
-        description: form.description.trim() || undefined,
-        address: {
-          street: form.street.trim(),
-          city: form.city.trim(),
-          country: form.country.trim() || "GB",
-          postcode: form.postcode.trim(),
-        },
+        street: form.street.trim(),
+        city: form.city.trim(),
+        country: form.country.trim() || "GB",
+        postcode: form.postcode.trim(),
       });
       toast.success("Gym created!");
     } catch (err: any) {
@@ -335,7 +332,7 @@ function CreateGymSection() {
           </div>
           <div className="space-y-1.5">
             <Label>Street</Label>
-            <Input value={form.street} onChange={(e) => setForm((f) => ({ ...f, street: e.target.value }))} />
+            <Input required value={form.street} onChange={(e) => setForm((f) => ({ ...f, street: e.target.value }))} />
           </div>
           <div className="space-y-1.5">
             <Label>City</Label>
@@ -343,7 +340,7 @@ function CreateGymSection() {
           </div>
           <div className="space-y-1.5">
             <Label>Postcode</Label>
-            <Input value={form.postcode} onChange={(e) => setForm((f) => ({ ...f, postcode: e.target.value }))} />
+            <Input required value={form.postcode} onChange={(e) => setForm((f) => ({ ...f, postcode: e.target.value }))} />
           </div>
           <div className="space-y-1.5">
             <Label>Country</Label>
