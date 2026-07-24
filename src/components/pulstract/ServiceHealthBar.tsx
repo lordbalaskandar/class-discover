@@ -52,7 +52,7 @@ export function ServiceHealthBar({ compact = false, only }: { compact?: boolean;
         </Button>
       </div>
       <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-11 gap-1.5">
-        {(health ?? Array.from({ length: 11 })).map((h: any, i) => (
+        {(health ?? Array.from({ length: skeletonCount })).map((h: any, i) => (
           <div
             key={h?.name ?? i}
             title={h ? `${h.name} · ${h.status ?? "err"} · ${h.latencyMs}ms${h.error ? " · " + h.error : ""}` : "…"}
