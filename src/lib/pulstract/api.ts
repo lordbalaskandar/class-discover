@@ -178,7 +178,7 @@ export type ApiProfile = {
   notificationPush?: boolean;
   updatedAt?: string | null;
 };
-export type ApiReview = { id: string; userId: string; gymId?: string; rating: number; comment?: string | null; createdAt: string };
+export type ApiReview = { id: string; userId: string; userName?: string | null; userAvatarUrl?: string | null; gymId?: string; rating: number; comment?: string | null; createdAt: string; response?: string | null; respondedAt?: string | null; flagged?: boolean };
 export type ApiPayment = { id: string; bookingId: string; amount: number; currency: string; status: string; createdAt?: string; clientSecret?: string };
 export type ApiPaymentMethod = { id: string; brand: string; last4: string; expMonth: number; expYear: number; isDefault: boolean };
 export type ApiMetricsFunnel = { gymId: string; period: string; views: number; bookings: number; conversions: number };
