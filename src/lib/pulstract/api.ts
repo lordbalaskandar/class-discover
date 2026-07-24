@@ -22,6 +22,14 @@ export async function cognito<T = any>(target: string, body: unknown): Promise<T
   return json as T;
 }
 
+export class GqlError extends Error {
+  code?: string;
+  constructor(message: string, code?: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
 export async function gql<T = any>(
   query: string,
   variables?: Record<string, unknown>,
@@ -36,7 +44,10 @@ export async function gql<T = any>(
     body: JSON.stringify({ query, variables }),
   });
   const json = await res.json();
-  if (json.errors?.length) throw new Error(json.errors[0].message);
+  if (json.errors?.length) {
+    const e = json.errors[0];
+    throw new GqlError(e.message, e.extensions?.code);
+  }
   return json.data as T;
 }
 
