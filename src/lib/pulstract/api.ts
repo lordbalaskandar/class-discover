@@ -22,6 +22,14 @@ export async function cognito<T = any>(target: string, body: unknown): Promise<T
   return json as T;
 }
 
+export class GqlError extends Error {
+  code?: string;
+  constructor(message: string, code?: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
 export async function gql<T = any>(
   query: string,
   variables?: Record<string, unknown>,
@@ -36,7 +44,10 @@ export async function gql<T = any>(
     body: JSON.stringify({ query, variables }),
   });
   const json = await res.json();
-  if (json.errors?.length) throw new Error(json.errors[0].message);
+  if (json.errors?.length) {
+    const e = json.errors[0];
+    throw new GqlError(e.message, e.extensions?.code);
+  }
   return json.data as T;
 }
 
@@ -167,7 +178,7 @@ export type ApiProfile = {
   notificationPush?: boolean;
   updatedAt?: string | null;
 };
-export type ApiReview = { id: string; userId: string; gymId?: string; rating: number; comment?: string | null; createdAt: string };
+export type ApiReview = { id: string; userId: string; userName?: string | null; userAvatarUrl?: string | null; gymId?: string; rating: number; comment?: string | null; createdAt: string; response?: string | null; respondedAt?: string | null; flagged?: boolean };
 export type ApiPayment = { id: string; bookingId: string; amount: number; currency: string; status: string; createdAt?: string; clientSecret?: string };
 export type ApiPaymentMethod = { id: string; brand: string; last4: string; expMonth: number; expYear: number; isDefault: boolean };
 export type ApiMetricsFunnel = { gymId: string; period: string; views: number; bookings: number; conversions: number };
