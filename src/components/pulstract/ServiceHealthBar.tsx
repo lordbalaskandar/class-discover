@@ -7,7 +7,7 @@ import { CheckCircle2, XCircle, Loader2, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { checkBackendHealth, type HealthResult } from "@/lib/backend-health.functions";
 
-export function ServiceHealthBar({ compact = false }: { compact?: boolean }) {
+export function ServiceHealthBar({ compact = false, only }: { compact?: boolean; only?: string[] }) {
   const check = useServerFn(checkBackendHealth);
   const [health, setHealth] = useState<HealthResult[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -15,7 +15,8 @@ export function ServiceHealthBar({ compact = false }: { compact?: boolean }) {
   const refresh = async () => {
     setLoading(true);
     try {
-      setHealth(await check());
+      const res = await check();
+      setHealth(only ? res.filter((h) => only.includes(h.name)) : res);
     } finally {
       setLoading(false);
     }
@@ -28,6 +29,7 @@ export function ServiceHealthBar({ compact = false }: { compact?: boolean }) {
 
   const allOk = health?.every((h) => h.ok);
   const badCount = health?.filter((h) => !h.ok).length ?? 0;
+  const skeletonCount = only?.length ?? 11;
 
   return (
     <Card className={cn("p-3 sm:p-4", compact && "p-2 sm:p-3")}>
