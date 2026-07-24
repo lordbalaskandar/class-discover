@@ -3482,8 +3482,10 @@ function HostFlow({ initialScreen }: { initialScreen?: HostScreenId }) {
                 try {
                   await createGymMut.mutateAsync({
                     name: g.name,
-                    description: g.tagline,
-                    address: { street: g.address, city: "", country: "", postcode: "" },
+                    street: g.address || "TBD",
+                    city: "TBD",
+                    country: "GB",
+                    postcode: "TBD",
                   });
                   setGym({ ...g, created: true });
                   toast.success("Gym created");
