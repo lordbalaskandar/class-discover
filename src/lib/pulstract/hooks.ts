@@ -381,8 +381,10 @@ export function useCreateGym() {
   return useMutation({
     mutationFn: async (input: {
       name: string;
-      description?: string;
-      address: { street?: string; city?: string; country?: string; postcode?: string };
+      street: string;
+      city: string;
+      country: string;
+      postcode: string;
     }) => {
       const d = await gql<{ createGym: ApiGym }>(M_CREATE_GYM, { i: input }, token);
       return d.createGym;
