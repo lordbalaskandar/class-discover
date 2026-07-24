@@ -394,7 +394,7 @@ function MobileShowcaseInner() {
         </div>
 
         <div className="mb-8">
-          <ServiceHealthBar />
+          <ServiceHealthBar only={["gateway"]} />
         </div>
 
         <PulstractAuthProvider scope="user">
